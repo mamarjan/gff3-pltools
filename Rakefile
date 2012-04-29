@@ -1,5 +1,16 @@
 # encoding: utf-8
 
+task :build do
+  mkdir "build"
+  sh "gcc -c -m32 -g dlib/lib_init_c.c -o build/lib_init_c.o -fPIC"
+  sh "dmd -c -m32 -g dlib/lib_init_d.d -ofbuild/lib_init_d.o -fPIC"
+  sh "gcc -g -m32 build/lib_init_d.o build/lib_init_c.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+end
+
+task :clean do
+  sh "rm -R build"
+end
+
 require 'rubygems'
 require 'bundler'
 begin
@@ -43,3 +54,4 @@ task :default => :spec
 
 require 'yard'
 YARD::Rake::YardocTask.new
+

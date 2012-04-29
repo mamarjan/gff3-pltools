@@ -15,3 +15,6 @@ group :development do
   gem "bio", ">= 1.4.2"
   gem "rdoc", "~> 3.12"
 end
+
+gem "ffi", "~> 1.0.11"
+
