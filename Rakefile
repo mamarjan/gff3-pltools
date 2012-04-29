@@ -9,6 +9,11 @@ end
 
 task :clean do
   sh "rm -R build"
+  sh "rm bio-hpc-dlib.so"
+end
+
+task :rspec do
+  sh "LD_LIBRARY_PATH=\"./\" rspec spec"
 end
 
 require 'rubygems'
