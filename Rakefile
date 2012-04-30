@@ -16,6 +16,10 @@ task :rspec do
   sh "LD_LIBRARY_PATH=\"./\" rspec spec"
 end
 
+task :cucumber do
+  sh "LD_LIBRARY_PATH=\"./\" cucumber"
+end
+
 require 'rubygems'
 require 'bundler'
 begin
