@@ -1,23 +1,19 @@
 # encoding: utf-8
 
-task :build do
+# To be able to load the D library in our tests,
+# we need to add it's path to this env var:
+ENV["LD_LIBRARY_PATH"] = File.dirname(__FILE__)
+
+task :buildd do
   mkdir "build"
   sh "gcc -c -m32 -g dlib/lib_init_c.c -o build/lib_init_c.o -fPIC"
   sh "dmd -c -m32 -g dlib/lib_init_d.d -ofbuild/lib_init_d.o -fPIC"
-  sh "gcc -g -m32 build/lib_init_d.o build/lib_init_c.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+  sh "gcc -g -m32 build/*.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
 end
 
 task :clean do
   sh "rm -R build"
   sh "rm bio-hpc-dlib.so"
-end
-
-task :rspec do
-  sh "LD_LIBRARY_PATH=\"./\" rspec spec"
-end
-
-task :cucumber do
-  sh "LD_LIBRARY_PATH=\"./\" cucumber"
 end
 
 require 'rubygems'
@@ -38,7 +34,7 @@ Jeweler::Tasks.new do |gem|
   gem.homepage = "http://github.com/mamarjan/bioruby-hpc-gff3"
   gem.license = "MIT"
   gem.summary = %Q{Fast parallized GFF3 parser}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.description = %Q{}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]
   # dependencies defined in Gemfile
