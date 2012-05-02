@@ -20,11 +20,23 @@ module BioHPC
 
       def initialize filename
         @filename = filename
+        @open = true
         #@file_pointer = biohpc_gff3_open @filename
       end
 
       def lines
+        if closed?
+          raise RuntimeError, "File closed, operation is not allowed"
+        end
         LineIterator.new @filename
+      end
+
+      def close
+        @open = false
+      end
+
+      def closed?
+        @open == false
       end
 
       class LineIterator

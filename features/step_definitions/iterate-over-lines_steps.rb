@@ -20,9 +20,27 @@ Then /^I should be able to use lines\.each to iterate over lines$/ do
     tmp_list.push line
   end
   TEST_LINES.lines.map { |line| line.chomp }.should == tmp_list
+  @test_file.close
 end
 
 Then /^I should be able to use lines\.count so get the number of lines$/ do
   @test_file.lines.count.should == 3
+  @test_file.close
+end
+
+When /^close it by calling the close method$/ do
+  @test_file.close
+end
+
+When /^I try to read from it$/ do
+  begin
+    @test_file.lines
+  rescue RuntimeError => e
+    @message = e.message
+  end
+end
+
+Then /^I should be informed that the operation is not allowed$/ do
+  @message.should =~ /is not allowed/
 end
 
