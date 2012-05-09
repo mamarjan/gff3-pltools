@@ -4,16 +4,25 @@
 # we need to add it's path to this env var:
 ENV["LD_LIBRARY_PATH"] = File.dirname(__FILE__)
 
-task :buildd do
+task :compiledebug do
   mkdir "build"
-  sh "gcc -c -m32 -g dlib/lib_init_c.c -o build/lib_init_c.o -fPIC"
-  sh "dmd -c -m32 -g dlib/lib_init_d.d -ofbuild/lib_init_d.o -fPIC"
+  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuild/lib_init.o -fPIC"
+  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuild/gff3.o -fPIC"
   sh "gcc -g -m32 build/*.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+  sh "mv bio-hpc-dlib.so lib/"
+end
+
+task :compile do
+  mkdir "build"
+  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuild/lib_init.o -fPIC"
+  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuild/gff3.o -fPIC"
+  sh "gcc -g -m32 build/*.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+  sh "mv bio-hpc-dlib.so lib/"
 end
 
 task :clean do
-  sh "rm -R build"
-  sh "rm bio-hpc-dlib.so"
+  rm_rf "build"
+  rm "lib/bio-hpc-dlib.so"
 end
 
 require 'rubygems'
