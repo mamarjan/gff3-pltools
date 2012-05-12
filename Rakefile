@@ -2,28 +2,33 @@
 
 # To be able to load the D library in our tests,
 # we need to add it's path to this env var:
+
+require 'rake/clean'
+
 ENV["LD_LIBRARY_PATH"] = File.dirname(__FILE__)
 
-task :compiledebug do
-  mkdir "build"
-  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuild/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuild/gff3.o -fPIC"
-  sh "gcc -g -m32 build/*.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+rule ".o" => [".d"] do |t|
+  sh "dmd -c -m32 -g #{t.source} -of#{t.name} -fPIC"
+end
+
+directory "builddir"
+CLEAN.include("builddir")
+
+task :compiledebug => ["builddir"] do
+  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
+  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuilddir/gff3.o -fPIC"
+  sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
   sh "mv bio-hpc-dlib.so lib/"
 end
 
-task :compile do
-  mkdir "build"
-  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuild/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuild/gff3.o -fPIC"
-  sh "gcc -g -m32 build/*.o -o bio-hpc-dlib.so -shared -lphobos2 -lrt -lpthread -fPIC"
+task :compile => ["builddir"] do
+  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
+  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuilddir/gff3.o -fPIC"
+  sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
   sh "mv bio-hpc-dlib.so lib/"
 end
 
-task :clean do
-  rm_rf "build"
-  rm "lib/bio-hpc-dlib.so"
-end
+CLEAN.include("lib/*.so")
 
 require 'rubygems'
 require 'bundler'
