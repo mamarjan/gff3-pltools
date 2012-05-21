@@ -14,7 +14,7 @@ Feature: Reading GFF3 files line by line, without parsing
   Scenario: counting the number of lines in a file
     Given I have a GFF3 file on the disk
     When I open the file for reading
-    Then I should be able to use lines.count so get the number of lines
+    Then I should be able to use lines.count to get the number of lines
 
   Scenario: can't open a closed file
     Given I have a GFF3 file on the disk

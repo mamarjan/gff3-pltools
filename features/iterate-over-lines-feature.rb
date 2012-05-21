@@ -23,7 +23,7 @@ Then /^I should be able to use lines\.each to iterate over lines$/ do
   @test_file.close
 end
 
-Then /^I should be able to use lines\.count so get the number of lines$/ do
+Then /^I should be able to use lines\.count to get the number of lines$/ do
   @test_file.lines.count.should == 3
   @test_file.close
 end
