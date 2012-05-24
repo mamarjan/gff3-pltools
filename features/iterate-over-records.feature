@@ -51,12 +51,11 @@ Feature: Iteration over records
     When I call the "attributes" method on it
     Then I should receive a dictionary of all the attributes in that record
 
-  Scenario: nil for fields that are undefined
+  Scenario: default values for fields that are undefined
     Given I have an example file
     When I open it
-    And call next_record on it
-    When I call the method for a field that is not defined on the first line
-    Then I should receive the nil object
+    And retrieve a record with all fields as dots
+    Then I should receive default values for every field
 
   Scenario: escaped characters
     Given I have and example file with escaped chars

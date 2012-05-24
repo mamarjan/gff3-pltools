@@ -116,15 +116,15 @@ module BioHPC
       end
 
       def seqname
-        @seqname ||= @struct[:seqname]
+        @seqname ||= @struct[:seqname] == "" ? nil : @struct[:seqname]
       end
 
       def source
-        @source ||= @struct[:source]
+        @source ||= @struct[:source] == "" ? nil : @struct[:source]
       end
 
       def feature
-        @feature ||= @struct[:feature]
+        @feature ||= @struct[:feature] == "" ? nil : @struct[:feature]
       end
 
       def start
@@ -152,7 +152,7 @@ module BioHPC
       end
 
       def id
-        @id ||= @struct[:id]
+        @id ||= @struct[:id] == "" ? nil : @struct[:id]
       end
 
       def attributes

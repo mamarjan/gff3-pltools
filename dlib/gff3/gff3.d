@@ -89,15 +89,30 @@ class GFF3File {
         buf = buf[0..$-1];
       auto parts = splitter(buf, delim);
       last_record = GFF3Record();
-      last_record.seqname = (parts.front ~ '\0').ptr;
+      if (parts.front[0] == '.')
+        last_record.seqname = "\0".ptr;
+      else
+        last_record.seqname = cast(immutable(char)*)(parts.front ~ '\0').ptr;
       parts.popFront();
-      last_record.source = (parts.front ~ '\0').ptr;
+      if (parts.front[0] == '.')
+        last_record.source = "\0".ptr;
+      else
+        last_record.source = cast(immutable(char)*)(parts.front ~ '\0').ptr;
       parts.popFront();
-      last_record.feature = (parts.front ~ '\0').ptr;
+      if (parts.front[0] == '.')
+        last_record.feature = "\0".ptr;
+      else
+        last_record.feature = cast(immutable(char)*)(parts.front ~ '\0').ptr;
       parts.popFront();
-      last_record.start = to!ulong(parts.front);
+      if (parts.front[0] == '.')
+        last_record.start = 0;
+      else
+        last_record.start = to!ulong(parts.front);
       parts.popFront();
-      last_record.end = to!ulong(parts.front);
+      if (parts.front[0] == '.')
+        last_record.end = 0;
+      else
+        last_record.end = to!ulong(parts.front);
       parts.popFront();
       if (parts.front[0] == '.')
         last_record.score = 0;
@@ -152,22 +167,24 @@ class GFF3File {
 struct GFF3Record {
   void parseAttributes(string attributes_field) {
     immutable(char)*[] local_cattributes;
-    auto raw_attributes = splitter(attributes_field, ';');
-    foreach(attribute; raw_attributes) {
-      auto attribute_parts = splitter(attribute, '=');
-      auto attribute_name = attribute_parts.front;
-      attribute_parts.popFront();
-      auto attribute_value = attribute_parts.front;
-      attributes[attribute_name] = attribute_value;
-      local_cattributes ~= (attribute_name ~ '\0').ptr;
-      local_cattributes ~= (attribute_value ~ '\0').ptr;
+    if (attributes_field[0] != '.') {
+      auto raw_attributes = splitter(attributes_field, ';');
+      foreach(attribute; raw_attributes) {
+        auto attribute_parts = splitter(attribute, '=');
+        auto attribute_name = attribute_parts.front;
+        attribute_parts.popFront();
+        auto attribute_value = attribute_parts.front;
+        attributes[attribute_name] = attribute_value;
+        local_cattributes ~= (attribute_name ~ '\0').ptr;
+        local_cattributes ~= (attribute_value ~ '\0').ptr;
+      }
     }
     local_cattributes ~= null;
     cattributes = local_cattributes.ptr;
   }
-  char * seqname;
-  char * source;
-  char * feature;
+  immutable(char) * seqname;
+  immutable(char) * source;
+  immutable(char) * feature;
   ulong  start;
   ulong  end;
   double score;
