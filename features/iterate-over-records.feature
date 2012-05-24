@@ -64,3 +64,14 @@ Feature: Iteration over records
     When I call the method for a field that has %XX in it
     Then the result should be without %XX and with the equivalent char instead
 
+  Scenario: comments in a file
+    Given I have an example file
+    When I open it
+    And iterate over records using records.each
+    Then the rows starting with # should be skipped
+
+  Scenario: counting records in a file
+    Given I have an example file
+    When I open it
+    Then I should be able to call records.count to get the number of records
+
