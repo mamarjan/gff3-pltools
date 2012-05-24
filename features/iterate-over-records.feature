@@ -47,9 +47,9 @@ Feature: Iteration over records
   Scenario: reading attributes
     Given I have an example file
     When I open it
-    And call next_record on it
-    When I call the attributes method on the record object
-    Then I should receive a dictionary of all the attributes of the first line
+    And retrieve a record with a few attributes defined
+    When I call the "attributes" method on it
+    Then I should receive a dictionary of all the attributes in that record
 
   Scenario: nil for fields that are undefined
     Given I have an example file

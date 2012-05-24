@@ -79,3 +79,30 @@ Then /^I should receive a boolean value$/ do
   [true, false].should include(@value)
 end
 
+When /^retrieve a record with a few attributes defined$/ do
+  @record = nil
+  @gff3_file.records.each do |rec|
+    @record = rec
+    break
+  end
+  @record.should_not be_nil
+  @record.should be_an_instance_of(BioHPC::GFF3::Record)
+end
+
+Then /^I should receive a dictionary of all the attributes in that record$/ do
+  @value.keys.should include("ID")
+  @value["ID"].should == "ENSRNOG00000019422"
+  @value.keys.should include("Dbxref")
+  @value["Dbxref"].should == "taxon:10116"
+  @value.keys.should include("organism")
+  @value["organism"].should == "Rattus norvegicus"
+  @value.keys.should include("chromosome")
+  @value["chromosome"].should == "18"
+  @value.keys.should include("name")
+  @value["name"].should == "EGR1_RAT"
+  @value.keys.should include("source")
+  @value["source"].should == "UniProtKB/Swiss-Prot"
+  @value.keys.should include("Is_circular")
+  @value["Is_circular"].should == "true"
+end
+

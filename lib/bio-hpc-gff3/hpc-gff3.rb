@@ -14,7 +14,21 @@ module BioHPC
         :strand, :int32,
         :phase, :int32,
         :is_circular, :int32,
-        :id, :string
+        :id, :string,
+        :attributes, :pointer # a NULL terminated list of zero terminated strings
+
+      def get_all_attributes
+        result = {}
+        current_pointer = self[:attributes]
+        while !current_pointer.read_pointer.null?
+          attr_name = current_pointer.read_pointer.read_string_to_null
+          current_pointer += FFI::Pointer.size
+          attr_value = current_pointer.read_pointer.read_string_to_null
+          current_pointer += FFI::Pointer.size
+          result[attr_name] = attr_value
+        end
+        result
+      end
     end
     attach_function :lib_init, [], :void
     attach_function :biohpc_gff3_open, [:string], :int32
@@ -139,6 +153,10 @@ module BioHPC
 
       def id
         @id ||= @struct[:id]
+      end
+
+      def attributes
+        @attributes ||= @struct.get_all_attributes
       end
     end
   end

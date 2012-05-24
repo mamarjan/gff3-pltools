@@ -126,7 +126,7 @@ class GFF3File {
       else
         last_record.phase = to!int(parts.front);
       parts.popFront;
-      last_record.attributes = GFF3Record.parseAttributes(parts.front.idup);
+      last_record.parseAttributes(parts.front.idup);
       if ("Is_circular" in last_record.attributes) {
         if (last_record.attributes["Is_circular"] == "true")
           last_record.is_circular = true;
@@ -150,17 +150,20 @@ class GFF3File {
 }
 
 struct GFF3Record {
-  static string[string] parseAttributes(string attributes_field) {
-    string[string] result;
-    auto attributes = splitter(attributes_field, ';');
-    foreach(attribute; attributes) {
+  void parseAttributes(string attributes_field) {
+    immutable(char)*[] local_cattributes;
+    auto raw_attributes = splitter(attributes_field, ';');
+    foreach(attribute; raw_attributes) {
       auto attribute_parts = splitter(attribute, '=');
       auto attribute_name = attribute_parts.front;
       attribute_parts.popFront();
       auto attribute_value = attribute_parts.front;
-      result[attribute_name] = attribute_value;
+      attributes[attribute_name] = attribute_value;
+      local_cattributes ~= (attribute_name ~ '\0').ptr;
+      local_cattributes ~= (attribute_value ~ '\0').ptr;
     }
-    return result;
+    local_cattributes ~= null;
+    cattributes = local_cattributes.ptr;
   }
   char * seqname;
   char * source;
@@ -172,6 +175,7 @@ struct GFF3Record {
   int    phase;
   int    is_circular;
   immutable(char) * id;
+  immutable(char)** cattributes;
   string[string] attributes;
 }
 
