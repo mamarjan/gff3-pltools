@@ -6,36 +6,52 @@ Feature: Iteration over records
   should split the different fields in a line and replace the escaped
   characters with real characters.
 
+  Scenario: iterating over records
+    Given I have an example file
+    When I open it
+    And call the records method
+    Then I should receive a RecordIterator object
+    And I should be able to use each to iterate over records
+
   Scenario: splitting the fields
     Given I have an example file
     When I open it
-    And call next_record on it
-    Then I should receive a record object
-    And I should be able to read all the fields using methods of that object
+    And retrieve a record with all fields defined
+    Then I should be able to read all the fields using methods of that object
 
-  Scenario: reading attibutes
+  Scenario: some fields need to be converted to ints and floats
+    Given I have an example file
+    When I open it
+    And retrieve a record with all fields defined
+    When I call the "seqname" method on it
+    Then I should receive a string value
+    When I call the "source" method on it
+    Then I should receive a string value
+    When I call the "feature" method on it
+    Then I should receive a string value
+    When I call the "start" method on it
+    Then I should receive an integer value
+    When I call the "end" method on it
+    Then I should receive an integer value
+    When I call the "score" method on it
+    Then I should receive a float value
+    When I call the "strand" method on it
+    Then I should receive an integer value
+    When I call the "phase" method on it
+    Then I should receive an integer value
+    When I call the "is_circular" method on it
+    Then I should receive a boolean value
+    When I call the "id" method on it
+    Then I should receive a string value
+
+  Scenario: reading attributes
     Given I have an example file
     When I open it
     And call next_record on it
     When I call the attributes method on the record object
     Then I should receive a dictionary of all the attributes of the first line
 
-  Scenario: some fields need to be converted to ints and floats
-    Given I have an example file
-    When I open it
-    And call next_record on it
-    When I call the start and end methods on it
-    Then I should receive integer values for those fields
-    When I call the score method on it
-    Then I should receive a float value
-    When I call the phase method on it
-    Then I should receive an integer value
-    When I call the strand method on it
-    Then I should receive an integer value
-    When I call the is_circular method on it
-    Then I should receive a boolean value
-
-  Scenario: null for fields that are undefined
+  Scenario: nil for fields that are undefined
     Given I have an example file
     When I open it
     And call next_record on it
