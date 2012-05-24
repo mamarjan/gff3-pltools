@@ -1,4 +1,4 @@
-import std.conv, std.stdio;
+import std.conv, std.stdio, std.algorithm;
 
 GFF3File[int] openFiles;
 
@@ -29,8 +29,12 @@ extern (C) ulong biohpc_gff3_lines_count(FileID fileID) {
 
 extern (C) char * biohpc_gff3_get_line(FileID fileID) {
   auto file = openFiles[fileID];
-  auto line = file.get_line();
-  return line;
+  return file.get_line();
+}
+
+extern (C) GFF3Record * biohpc_gff3_get_record(FileID fileID) {
+  auto file = openFiles[fileID];
+  return file.get_record();
 }
 
 class GFF3File {
@@ -42,6 +46,8 @@ class GFF3File {
   string filename;
   File file;
   char * last_line;
+  GFF3Record last_record;
+
   this(string fn) {
     filename = fn;
     file.open(filename, "r");
@@ -75,8 +81,97 @@ class GFF3File {
     }
   }
 
+  GFF3Record * get_record() {
+    char[] buf = [];
+    char delim = '\t';
+    if (file.readln(buf) > 0) {
+      if (buf[$-1] == '\n')
+        buf = buf[0..$-1];
+      auto parts = splitter(buf, delim);
+      last_record = GFF3Record();
+      last_record.seqname = (parts.front ~ '\0').ptr;
+      parts.popFront();
+      last_record.source = (parts.front ~ '\0').ptr;
+      parts.popFront();
+      last_record.feature = (parts.front ~ '\0').ptr;
+      parts.popFront();
+      last_record.start = to!ulong(parts.front);
+      parts.popFront();
+      last_record.end = to!ulong(parts.front);
+      parts.popFront();
+      if (parts.front[0] == '.')
+        last_record.score = 0;
+      else
+        last_record.score = to!double(parts.front);
+      parts.popFront();
+      switch (parts.front[0]) {
+        default:
+          throw new Exception("invalid strand value");
+        case '.':
+          last_record.strand = 0;
+          break;
+        case '+':
+          last_record.strand = 1;
+          break;
+        case '-':
+          last_record.strand = 2;
+          break;
+        case '?':
+          last_record.strand = 3;
+          break;
+      }
+      parts.popFront();
+      if (parts.front[0] == '.')
+        last_record.phase = -1;
+      else
+        last_record.phase = to!int(parts.front);
+      parts.popFront;
+      last_record.attributes = GFF3Record.parseAttributes(parts.front.idup);
+      if ("Is_circular" in last_record.attributes) {
+        if (last_record.attributes["Is_circular"] == "true")
+          last_record.is_circular = true;
+        else
+          last_record.is_circular = false;
+      } else
+        last_record.is_circular = false;
+      if ("ID" in last_record.attributes)
+        last_record.id = (last_record.attributes["ID"] ~ '\0').ptr;
+      else
+        last_record.id = "\0";
+      return &last_record;
+    } else {
+      return null;
+    }
+  }
+
   void close() {
     file.close();
   }
+}
+
+struct GFF3Record {
+  static string[string] parseAttributes(string attributes_field) {
+    string[string] result;
+    auto attributes = splitter(attributes_field, ';');
+    foreach(attribute; attributes) {
+      auto attribute_parts = splitter(attribute, '=');
+      auto attribute_name = attribute_parts.front;
+      attribute_parts.popFront();
+      auto attribute_value = attribute_parts.front;
+      result[attribute_name] = attribute_value;
+    }
+    return result;
+  }
+  char * seqname;
+  char * source;
+  char * feature;
+  ulong  start;
+  ulong  end;
+  double score;
+  int    strand;
+  int    phase;
+  int    is_circular;
+  immutable(char) * id;
+  string[string] attributes;
 }
 
