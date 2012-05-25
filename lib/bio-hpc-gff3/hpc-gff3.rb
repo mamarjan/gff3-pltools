@@ -36,6 +36,7 @@ module BioHPC
     attach_function :biohpc_gff3_rewind, [:int32], :void
     attach_function :biohpc_gff3_lines_count, [:int32], :uint64
     attach_function :biohpc_gff3_get_line, [:int32], :string
+    attach_function :biohpc_gff3_records_count, [:int32], :uint64
     attach_function :biohpc_gff3_get_record, [:int32], :pointer
     lib_init
   end
@@ -101,6 +102,10 @@ module BioHPC
           while(!(record_pointer = Backend::biohpc_gff3_get_record(@file_pointer)).null?)
             yield Record.new(record_pointer)
           end
+        end
+
+        def count
+          Backend::biohpc_gff3_records_count @file_pointer
         end
       end
     end

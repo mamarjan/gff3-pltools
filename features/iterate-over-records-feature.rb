@@ -167,3 +167,7 @@ Then /^the rows starting with \# and empty rows should be skipped$/ do
   @count.should == 3
 end
 
+Then /^I should be able to call records\.count to get the number of records in that file$/ do
+  @gff3_file.records.count.should == 3
+end
+

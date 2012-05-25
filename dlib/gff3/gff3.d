@@ -32,6 +32,11 @@ extern (C) char * biohpc_gff3_get_line(FileID fileID) {
   return file.get_line();
 }
 
+extern (C) ulong biohpc_gff3_records_count(FileID fileID) {
+  auto file = openFiles[fileID];
+  return file.records_count();
+}
+
 extern (C) GFF3Record * biohpc_gff3_get_record(FileID fileID) {
   auto file = openFiles[fileID];
   return file.get_record();
@@ -79,6 +84,15 @@ class GFF3File {
     } else {
       return null;
     }
+  }
+
+  ulong records_count() {
+    rewind();
+    ulong count = 0;
+    while(get_record() != null) {
+      count++;
+    }
+    return count;
   }
 
   GFF3Record * get_record() {
