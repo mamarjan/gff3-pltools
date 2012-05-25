@@ -58,7 +58,7 @@ Feature: Iteration over records
     Then I should receive default values for every field
 
   Scenario: escaped characters
-    Given I have and example file with escaped chars
+    Given I have an example file
     When I open it
     And call next_record on it
     When I call the method for a field that has %XX in it
@@ -73,5 +73,5 @@ Feature: Iteration over records
   Scenario: counting records in a file
     Given I have an example file
     When I open it
-    Then I should be able to call records.count to get the number of records
+    Then I should be able to call records.count to get the number of records in that file
 

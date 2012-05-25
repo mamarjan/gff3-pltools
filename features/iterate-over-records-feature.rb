@@ -1,5 +1,20 @@
 TEST_FILENAME = "features/data/iterate-over-records.gff3"
 
+# Gets the nth record from gff3_file.
+# The parameter n starts at 1, for the first record
+def get_nth_record(gff3_file, n)
+  record = nil
+  counter = 1
+  gff3_file.records.each do |rec|
+    if counter == n
+      record = rec
+      break
+    end
+    counter += 1
+  end
+  record
+end
+
 Given /^I have an example file$/ do
   @test_filename = TEST_FILENAME
   File.exists?(@test_filename).should be_true
@@ -29,11 +44,7 @@ Then /^I should be able to use each to iterate over records$/ do
 end
 
 When /^retrieve a record with all fields defined$/ do
-  @record = nil
-  @gff3_file.records.each do |rec|
-    @record = rec
-    break
-  end
+  @record = get_nth_record(@gff3_file, 1)
   @record.should_not be_nil
   @record.should be_an_instance_of(BioHPC::GFF3::Record)
 end
@@ -80,11 +91,7 @@ Then /^I should receive a boolean value$/ do
 end
 
 When /^retrieve a record with a few attributes defined$/ do
-  @record = nil
-  @gff3_file.records.each do |rec|
-    @record = rec
-    break
-  end
+  @record = get_nth_record(@gff3_file, 1)
   @record.should_not be_nil
   @record.should be_an_instance_of(BioHPC::GFF3::Record)
 end
@@ -107,31 +114,43 @@ Then /^I should receive a dictionary of all the attributes in that record$/ do
 end
 
 When /^retrieve a record with all fields as dots$/ do
-  @record1 = nil
-  @record2 = nil
-  @gff3_file.records.each do |rec|
-    if @record1
-      @record2 = rec
-      break
-    end
-    if !@record1
-      @record1 = rec
-    end
-  end
-  @record2.should_not be_nil
-  @record2.should be_an_instance_of(BioHPC::GFF3::Record)
+  @record = get_nth_record(@gff3_file, 2)
+  @record.should_not be_nil
+  @record.should be_an_instance_of(BioHPC::GFF3::Record)
 end
 
 Then /^I should receive default values for every field$/ do
-  @record2.seqname.should be_nil
-  @record2.source.should be_nil
-  @record2.feature.should be_nil
-  @record2.start.should == 0 
-  @record2.end.should == 0
-  @record2.score.should == 0.0
-  @record2.strand.should == BioHPC::GFF3::Record::STRAND_NO
-  @record2.phase.should == -1
-  @record2.is_circular.should be_false
-  @record2.id.should be_nil
+  @record.seqname.should be_nil
+  @record.source.should be_nil
+  @record.feature.should be_nil
+  @record.start.should == 0 
+  @record.end.should == 0
+  @record.score.should == 0.0
+  @record.strand.should == BioHPC::GFF3::Record::STRAND_NO
+  @record.phase.should == -1
+  @record.is_circular.should be_false
+  @record.id.should be_nil
+end
+
+When /^call next_record on it$/ do
+  @record = get_nth_record(@gff3_file, 3)
+  @record.should_not be_nil
+  @record.should be_an_instance_of(BioHPC::GFF3::Record)
+end
+
+When /^I call the method for a field that has %XX in it$/ do
+  @seqname = @record.seqname
+  @source = @record.source
+  @feature = @record.feature
+  @id = @record.id
+  @parent = @record.attributes["Parent"]
+end
+
+Then /^the result should be without %XX and with the equivalent char instead$/ do
+  @seqname.should == "EXON=00000131935"
+  @source.should == "ASTD%"
+  @feature.should == "exon&"
+  @id.should == "EXON=00000131935"
+  @parent.should == "TRAN;00000017239"
 end
 

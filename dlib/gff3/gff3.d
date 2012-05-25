@@ -92,17 +92,17 @@ class GFF3File {
       if (parts.front[0] == '.')
         last_record.seqname = "\0".ptr;
       else
-        last_record.seqname = cast(immutable(char)*)(parts.front ~ '\0').ptr;
+        last_record.seqname = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
       parts.popFront();
       if (parts.front[0] == '.')
         last_record.source = "\0".ptr;
       else
-        last_record.source = cast(immutable(char)*)(parts.front ~ '\0').ptr;
+        last_record.source = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
       parts.popFront();
       if (parts.front[0] == '.')
         last_record.feature = "\0".ptr;
       else
-        last_record.feature = cast(immutable(char)*)(parts.front ~ '\0').ptr;
+        last_record.feature = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
       parts.popFront();
       if (parts.front[0] == '.')
         last_record.start = 0;
@@ -171,9 +171,9 @@ struct GFF3Record {
       auto raw_attributes = splitter(attributes_field, ';');
       foreach(attribute; raw_attributes) {
         auto attribute_parts = splitter(attribute, '=');
-        auto attribute_name = attribute_parts.front;
+        auto attribute_name = replaceEscapedChars(attribute_parts.front);
         attribute_parts.popFront();
-        auto attribute_value = attribute_parts.front;
+        auto attribute_value = replaceEscapedChars(attribute_parts.front);
         attributes[attribute_name] = attribute_value;
         local_cattributes ~= (attribute_name ~ '\0').ptr;
         local_cattributes ~= (attribute_value ~ '\0').ptr;
@@ -194,5 +194,26 @@ struct GFF3Record {
   immutable(char) * id;
   immutable(char)** cattributes;
   string[string] attributes;
+}
+
+string replaceEscapedChars(string original) {
+  auto index = indexOf(original, '%');
+  if (index < 0) {
+    return original;
+  } else {
+    if (original[index+1..index+3] != "00") {
+      return original[0..index] ~
+             convertEscapedChar(original[index+1..index+3]) ~
+             replaceEscapedChars(original[index+3..$]);
+    } else {
+      return original[0..index+3] ~
+             replaceEscapedChars(original[index+3..$]);
+    }
+  }
+}
+
+char convertEscapedChar(string code) {
+  uint numeric = to!int(code, 16);
+  return cast(char) numeric;
 }
 
