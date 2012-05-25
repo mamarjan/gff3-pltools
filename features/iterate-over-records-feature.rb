@@ -1,4 +1,4 @@
-TEST_FILENAME = "features/data/iterate-over-records.gff3"
+TEST_FILENAME_RECORDS = "features/data/iterate-over-records.gff3"
 
 # Gets the nth record from gff3_file.
 # The parameter n starts at 1, for the first record
@@ -15,13 +15,13 @@ def get_nth_record(gff3_file, n)
   record
 end
 
-Given /^I have an example file$/ do
-  @test_filename = TEST_FILENAME
+Given /^I have an example file for iterating over records$/ do
+  @test_filename = TEST_FILENAME_RECORDS
   File.exists?(@test_filename).should be_true
 end
 
 When /^I open it$/ do
-  @gff3_file = BioHPC::GFF3::open(TEST_FILENAME)
+  @gff3_file = BioHPC::GFF3::open(@test_filename)
   @gff3_file.should_not be_nil
 end
 
@@ -152,5 +152,18 @@ Then /^the result should be without %XX and with the equivalent char instead$/ d
   @feature.should == "exon&"
   @id.should == "EXON=00000131935"
   @parent.should == "TRAN;00000017239"
+end
+
+When /^iterate over records using records\.each$/ do
+  @count = 0
+  lambda {
+    @gff3_file.records.each do |rec|
+      @count += 1
+    end
+  }.should_not raise_error
+end
+
+Then /^the rows starting with \# and empty rows should be skipped$/ do
+  @count.should == 3
 end
 

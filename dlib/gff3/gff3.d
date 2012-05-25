@@ -84,7 +84,18 @@ class GFF3File {
   GFF3Record * get_record() {
     char[] buf = [];
     char delim = '\t';
-    if (file.readln(buf) > 0) {
+    size_t chars_read = 0;
+    while (true) {
+      chars_read = file.readln(buf);
+      if (chars_read > 0) {
+        if ((buf[0] == '#') ||
+            (buf[0] == '\n')) {
+          continue;
+        }
+      }
+      break;
+    }
+    if (chars_read > 0) {
       if (buf[$-1] == '\n')
         buf = buf[0..$-1];
       auto parts = splitter(buf, delim);

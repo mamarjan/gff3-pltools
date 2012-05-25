@@ -1,11 +1,13 @@
-TEST_FILENAME="features/data/iterate-over-lines.gff3"
+TEST_FILENAME_LINES = "features/data/iterate-over-lines.gff3"
 
-Given /^I have a GFF3 file on the disk$/ do
-  File.exists?(TEST_FILENAME).should be_true
+Given /^I have an example file for iterating over lines$/ do
+  @test_filename = TEST_FILENAME_LINES
+  File.exists?(@test_filename).should be_true
 end
 
 When /^I open the file for reading$/ do
-  @test_file = BioHPC::GFF3::open(TEST_FILENAME)
+  @test_file = BioHPC::GFF3::open(@test_filename)
+  @test_file.should_not be_nil
 end
 
 Then /^I should be able to use lines\.each to iterate over lines$/ do
@@ -13,7 +15,7 @@ Then /^I should be able to use lines\.each to iterate over lines$/ do
   @test_file.lines.each do |line|
     tmp_list.push line
   end
-  File.open(TEST_FILENAME).readlines.map { |line| line.chomp }.should == tmp_list
+  File.open(@test_filename).readlines.map { |line| line.chomp }.should == tmp_list
   @test_file.close
 end
 
