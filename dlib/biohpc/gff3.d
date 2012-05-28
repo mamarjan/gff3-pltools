@@ -1,57 +1,9 @@
-import std.conv, std.stdio, std.algorithm;
+import std.conv, std.stdio, std.array, std.string;
 
-GFF3File[int] openFiles;
-
-alias int FileID;
-
-extern (C) FileID biohpc_gff3_open(char * c_filename) {
-  auto file = new GFF3File(to!string(c_filename));
-  auto fileID = GFF3File.getNewID();
-  openFiles[fileID] = file;
-  return fileID;
-}
-
-extern (C) void biohpc_gff3_close(FileID fileID) {
-  auto file = openFiles[fileID];
-  if (file !is null)
-    file.close();
-}
-
-extern (C) void biohpc_gff3_rewind(FileID fileID) {
-  auto file = openFiles[fileID];
-  file.rewind();
-}
-
-extern (C) ulong biohpc_gff3_lines_count(FileID fileID) {
-  auto file = openFiles[fileID];
-  return file.lines_count();
-}
-
-extern (C) char * biohpc_gff3_get_line(FileID fileID) {
-  auto file = openFiles[fileID];
-  return file.get_line();
-}
-
-extern (C) ulong biohpc_gff3_records_count(FileID fileID) {
-  auto file = openFiles[fileID];
-  return file.records_count();
-}
-
-extern (C) GFF3Record * biohpc_gff3_get_record(FileID fileID) {
-  auto file = openFiles[fileID];
-  return file.get_record();
-}
-
+/*
 class GFF3File {
-  static int lastFileID;
-  static int getNewID() {
-    return lastFileID++;
-  }
-
   string filename;
   File file;
-  char * last_line;
-  GFF3Record last_record;
 
   this(string fn) {
     filename = fn;
@@ -95,90 +47,20 @@ class GFF3File {
     return count;
   }
 
-  GFF3Record * get_record() {
-    char[] buf = [];
-    char delim = '\t';
+  GFF3Record get_record() {
+    string line;
     size_t chars_read = 0;
     while (true) {
-      chars_read = file.readln(buf);
-      if (chars_read > 0) {
-        if ((buf[0] == '#') ||
-            (buf[0] == '\n')) {
+      line = file.readln(buf).chomp();
+      if (line.length > 0) {
+        if (isEmptyLine(line) || isComment(line)) {
           continue;
         }
       }
       break;
     }
-    if (chars_read > 0) {
-      if (buf[$-1] == '\n')
-        buf = buf[0..$-1];
-      auto parts = splitter(buf, delim);
-      last_record = GFF3Record();
-      if (parts.front[0] == '.')
-        last_record.seqname = "\0".ptr;
-      else
-        last_record.seqname = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.source = "\0".ptr;
-      else
-        last_record.source = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.feature = "\0".ptr;
-      else
-        last_record.feature = (replaceEscapedChars(cast(string)(parts.front ~ '\0'))).ptr;
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.start = 0;
-      else
-        last_record.start = to!ulong(parts.front);
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.end = 0;
-      else
-        last_record.end = to!ulong(parts.front);
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.score = 0;
-      else
-        last_record.score = to!double(parts.front);
-      parts.popFront();
-      switch (parts.front[0]) {
-        default:
-          throw new Exception("invalid strand value");
-        case '.':
-          last_record.strand = 0;
-          break;
-        case '+':
-          last_record.strand = 1;
-          break;
-        case '-':
-          last_record.strand = 2;
-          break;
-        case '?':
-          last_record.strand = 3;
-          break;
-      }
-      parts.popFront();
-      if (parts.front[0] == '.')
-        last_record.phase = -1;
-      else
-        last_record.phase = to!int(parts.front);
-      parts.popFront;
-      last_record.parseAttributes(parts.front.idup);
-      if ("Is_circular" in last_record.attributes) {
-        if (last_record.attributes["Is_circular"] == "true")
-          last_record.is_circular = true;
-        else
-          last_record.is_circular = false;
-      } else
-        last_record.is_circular = false;
-      if ("ID" in last_record.attributes)
-        last_record.id = (last_record.attributes["ID"] ~ '\0').ptr;
-      else
-        last_record.id = "\0";
-      return &last_record;
+    if (line.length > 0) {
+      return Record(line);
     } else {
       return null;
     }
@@ -188,57 +70,150 @@ class GFF3File {
     file.close();
   }
 }
+*/
 
-struct GFF3Record {
-  void parseAttributes(string attributes_field) {
-    immutable(char)*[] local_cattributes;
-    if (attributes_field[0] != '.') {
-      auto raw_attributes = splitter(attributes_field, ';');
-      foreach(attribute; raw_attributes) {
-        auto attribute_parts = splitter(attribute, '=');
-        auto attribute_name = replaceEscapedChars(attribute_parts.front);
-        attribute_parts.popFront();
-        auto attribute_value = replaceEscapedChars(attribute_parts.front);
-        attributes[attribute_name] = attribute_value;
-        local_cattributes ~= (attribute_name ~ '\0').ptr;
-        local_cattributes ~= (attribute_value ~ '\0').ptr;
+/**
+ * Represents a parsed line in a GFF3 file.
+ */
+struct Record {
+  this(string line) {
+    parseLine(line);
+  }
+
+  /**
+   * Parse a line from a GFF3 file and set object values.
+   * The line is first split into its parts and then escaped
+   * characters are replaced in those fields.
+   */
+  void parseLine(string line) {
+    auto parts = split(line, "\t");
+    seqname = replaceEscapedChars(parts[0]);
+    source  = replaceEscapedChars(parts[1]);
+    feature = replaceEscapedChars(parts[2]);
+    start   = parts[3];
+    end     = parts[4];
+    score   = parts[5];
+    strand  = parts[6];
+    phase   = parts[7];
+    parseAttributes(parts[8]);
+  }
+
+  string seqname;
+  string source;
+  string feature;
+  string start;
+  string end;
+  string score;
+  string strand;
+  string phase;
+  string[string] attributes;
+
+  @property string id() {
+    return attributes["ID"];
+  }
+
+  @property bool isCircular() {
+    return attributes["Is_circular"] == "true";
+  }
+
+  private {
+
+    void parseAttributes(string attributes_field) {
+      if (attributes_field[0] != '.') {
+        auto raw_attributes = split(attributes_field, ";");
+        foreach(attribute; raw_attributes) {
+          auto attribute_parts = split(attribute, "=");
+          auto attribute_name = replaceEscapedChars(attribute_parts[0]);
+          auto attribute_value = replaceEscapedChars(attribute_parts[1]);
+          attributes[attribute_name] = attribute_value;
+        }
       }
     }
-    local_cattributes ~= null;
-    cattributes = local_cattributes.ptr;
+
   }
-  immutable(char) * seqname;
-  immutable(char) * source;
-  immutable(char) * feature;
-  ulong  start;
-  ulong  end;
-  double score;
-  int    strand;
-  int    phase;
-  int    is_circular;
-  immutable(char) * id;
-  immutable(char)** cattributes;
-  string[string] attributes;
 }
 
-string replaceEscapedChars(string original) {
-  auto index = indexOf(original, '%');
-  if (index < 0) {
-    return original;
-  } else {
-    if (original[index+1..index+3] != "00") {
+private {
+
+  /**
+   * Converts the characters escaped with the URL escaping convention (%XX)
+   * in a string to their real char values.
+   */
+  string replaceEscapedChars(string original) {
+    auto index = indexOf(original, '%');
+    if (index < 0) {
+      return original;
+    } else {
       return original[0..index] ~
              convertEscapedChar(original[index+1..index+3]) ~
              replaceEscapedChars(original[index+3..$]);
-    } else {
-      return original[0..index+3] ~
-             replaceEscapedChars(original[index+3..$]);
     }
+  }
+
+  /**
+    * Converts characters in hexadecimal format to their real char value.
+    */
+  char convertEscapedChar(string code) {
+    uint numeric = to!int(code, 16);
+    return cast(char) numeric;
+  }
+
+
+  private bool isEmptyLine(string line) {
+    return line.strip() == "";
+  }
+
+  private bool isComment(string line) {
+    return indexOf(line, '#') != -1;
   }
 }
 
-char convertEscapedChar(string code) {
-  uint numeric = to!int(code, 16);
-  return cast(char) numeric;
+
+unittest {
+  writeln("Testing convertEscapedChar...");
+  assert(convertEscapedChar("3D") == '=');
+  assert(convertEscapedChar("00") == '\0');
 }
+
+unittest {
+  assert(replaceEscapedChars("%3D") == "=");
+  assert(replaceEscapedChars("Testing %3D") == "Testing =");
+  assert(replaceEscapedChars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
+  assert(replaceEscapedChars("One after another %3D%3B%25") == "One after another =;%");
+}
+
+unittest {
+  writeln("Testing GFF3 Record...");
+  // Test line parsing with a normal line
+  auto record = Record("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
+  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
+         ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+  assert(record.attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+
+  // Test parsing lines with dots - undefined values
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
+         [".", ".", ".", ".", ".", ".", ".", "."]);
+  assert(record.attributes.length == 0);
+
+  // Test parsing lines with escaped characters
+  record = Record("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
+  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
+         ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+  assert(record.attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
+}
+
+unittest {
+  writeln("Testing isComment...");
+  assert(isComment("# test") == true);
+  assert(isComment("     # test") == true);
+  assert(isComment("# test\n") == true);
+
+  writeln("Testing isEmptyLine...");
+  assert(isEmptyLine("") == true);
+  assert(isEmptyLine("    ") == true);
+  assert(isEmptyLine("\n") == true);
+}
+
+void main() {}
 
