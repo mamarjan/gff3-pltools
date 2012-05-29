@@ -1,4 +1,5 @@
-import std.conv, std.stdio, std.array, std.algorithm, std.string, std.range;
+import std.conv, std.stdio, std.array, std.algorithm, std.string, std.range
+       libhpc.util;
 
 /*
 class GFF3File {
@@ -72,23 +73,50 @@ class GFF3File {
 }
 */
 
+/**
+ * Parses a string of GFF3 data. Returns a range of records.
+ */
 RecordRange parse(string data) {
   return new RecordRange(data);
 }
 
-class RecordRange : InputRange!(Record) {
+/**
+ * Represents a lazy range of GFF3 records from a string.
+ * The string which is the source of data is never copied in the process of
+ * parsing. All operations are done using slicing.
+ */
+class RecordRange {
   this(string data) {
-    this.data = splitter(data, "\n");
+    this.data = new LazySplitLines(data);
   }
-  Record front() { return new Record; }
-  Record moveFront() { return new Record; }
-  void popFront() { }
-  bool empty() { return false; }
-  int opApply(int delegate(Record)) { return 0; }
-  int opApply(int delegate(size_t, Record)) { return 0; }
+
+  /**
+   * Return the next record in range.
+   * Ignores comments, pragmas and empty lines in the data source
+   */
+  Record front() {
+    // TODO: Think about adding a record cache instead of recreating the front
+    //       record every time
+    auto next_line = data.front;
+    while ((isComment(next_line) || isEmptyLine(next_line)) && !data.empty) {
+      data.popFront();
+      next_line = data.front;
+    }
+    return new Record(next_line);
+  }
+
+  /**
+   * Pops the next record in range.
+   */
+  void popFront() { data.popFront(); }
+
+  /**
+   * Return true if no more records left in the range.
+   */
+  bool empty() { return data.empty; }
   
   private {
-    InputRange!(string) data;
+    LazySplitLines data;
   }
 }
 
