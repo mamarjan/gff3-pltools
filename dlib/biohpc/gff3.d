@@ -6,7 +6,11 @@ import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
  * Parses a string of GFF3 data. Returns a range of records.
  */
 RecordRange parse(string data) {
-  return new RecordRange(data);
+  return new RecordRange!(LazySplitLines)(new LazySplitLines(data));
+}
+
+RecordRange open(string filename) {
+  return new RecordRange!(ByLine)(File(filename, "r").byLine());
 }
 
 /**
@@ -14,9 +18,9 @@ RecordRange parse(string data) {
  * The string which is the source of data is never copied in the process of
  * parsing. All operations are done using slicing.
  */
-class RecordRange {
-  this(string data) {
-    this.data = new LazySplitLines(data);
+class RecordRange(Source) {
+  this(Source data) {
+    this.data = data;
   }
 
   /**
@@ -42,7 +46,7 @@ class RecordRange {
   }
   
   private {
-    LazySplitLines data;
+    Source data;
 
     string nextLine() {
       auto line = data.front;
