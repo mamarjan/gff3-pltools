@@ -163,21 +163,27 @@ unittest {
   writeln("Testing GFF3 Record...");
   // Test line parsing with a normal line
   auto record = Record("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
-  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
-         ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
-  assert(record.attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+  with (record) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+    assert(attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+  }
 
   // Test parsing lines with dots - undefined values
   record = Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
-         [".", ".", ".", ".", ".", ".", ".", "."]);
-  assert(record.attributes.length == 0);
+  with (record) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           [".", ".", ".", ".", ".", ".", ".", "."]);
+    assert(attributes.length == 0);
+  }
 
   // Test parsing lines with escaped characters
   record = Record("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
-  assert([record.seqname, record.source, record.feature, record.start, record.end, record.score, record.strand, record.phase] ==
-         ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
-  assert(record.attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
+  with (record) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+    assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
+  }
 }
 
 unittest {
@@ -193,10 +199,16 @@ unittest {
 }
 
 unittest {
-  writeln("Testing RecordRange...");
-  File file;
-  file.open("./test/data/records.gff3", "r");
-  writeln(file.size);
-  char[] buf = new char[cast(uint)(file.size)];
+  writeln("Testing parsing string with RecordRange...");
+  File gff3File;
+  gff3File.open("./test/data/records.gff3", "r");
+  char[] buf = new char[cast(uint)(gff3File.size)];
+  auto records = parse(to!string(gff3File.rawRead(buf)));
+  auto record1 = records.front; records.popFront();
+  auto record2 = records.front; records.popFront();
+  auto record3 = records.front; records.popFront();
+  with(record1) {
+  //  assert([seqname, source, feature, start, end, score, strand, phase] ==
+  }
 }
 
