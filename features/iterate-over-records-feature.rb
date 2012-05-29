@@ -1,4 +1,4 @@
-TEST_FILENAME_RECORDS = "features/data/iterate-over-records.gff3"
+TEST_FILENAME_RECORDS = "test/data/records.gff3"
 
 # Gets the nth record from gff3_file.
 # The parameter n starts at 1, for the first record
