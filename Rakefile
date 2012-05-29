@@ -30,6 +30,17 @@ end
 
 CLEAN.include("lib/*.so")
 
+DFILES = ["dlib/biohpc/gff3.d",
+          "dlib/biohpc/util.d"].join(" ")
+
+task :unittests => ["builddir"] do
+  sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
+  sh "./unittests"
+end
+
+CLEAN.include("unittests")
+CLEAN.include("unittests.o")
+
 require 'rubygems'
 require 'bundler'
 begin

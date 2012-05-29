@@ -195,7 +195,7 @@ unittest {
 unittest {
   writeln("Testing RecordRange...");
   File file;
-  file.open("../test/data/records.gff3", "r");
+  file.open("./test/data/records.gff3", "r");
   writeln(file.size);
   char[] buf = new char[cast(uint)(file.size)];
 }
