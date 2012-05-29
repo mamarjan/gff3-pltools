@@ -6,6 +6,28 @@ import std.stdio, std.conv, std.range, std.string;
  * General utilities useful for more then one project
  */
 
+/**
+ * Converts the characters escaped with the URL escaping convention (%XX)
+ * in a string to their real char values.
+ */
+string replaceURLEscapedChars(string original) {
+  auto index = indexOf(original, '%');
+  if (index < 0) {
+    return original;
+  } else {
+    return original[0..index] ~
+           convertURLEscapedChar(original[index+1..index+3]) ~
+           replaceURLEscapedChars(original[index+3..$]);
+  }
+}
+
+/**
+  * Converts characters in hexadecimal format to their real char value.
+  */
+char convertURLEscapedChar(string code) {
+  uint numeric = to!int(code, 16);
+  return cast(char) numeric;
+}
 
 /**
  * A lazy string splitter. The constructor takes a string,
@@ -70,6 +92,19 @@ string detectNewLineDelim(string data) {
   return "\n";
 }
 
+unittest {
+  writeln("Testing convertEscapedChar...");
+  assert(convertURLEscapedChar("3D") == '=');
+  assert(convertURLEscapedChar("00") == '\0');
+}
+
+unittest {
+  writeln("Testing replaceURLEscapedChars...");
+  assert(replaceURLEscapedChars("%3D") == "=");
+  assert(replaceURLEscapedChars("Testing %3D") == "Testing =");
+  assert(replaceURLEscapedChars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
+  assert(replaceURLEscapedChars("One after another %3D%3B%25") == "One after another =;%");
+}
 
 unittest {
   writeln("Testing LazySplitLines...");

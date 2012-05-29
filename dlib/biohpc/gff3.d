@@ -3,23 +3,26 @@ module biohpc.gff3;
 import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
 
 /**
- * Parses a string of GFF3 data. Returns a range of records.
+ * Parses a string of GFF3 data.
+ * Returns: a range of records.
  */
 auto parse(string data) {
-  return new RecordRange!(immutable(char),LazySplitLines)(new LazySplitLines(data));
-}
-
-auto open(string filename) {
-  return new RecordRange!(char, typeof(File("", "r").byLine()))(File(filename, "r").byLine());
+  return new RecordRange!(LazySplitLines)(new LazySplitLines(data));
 }
 
 /**
- * Represents a lazy range of GFF3 records from a string.
- * The string which is the source of data is never copied in the process of
- * parsing. All operations are done using slicing.
+ * Parses a file with GFF3 data.
+ * Returns: a range of records.
  */
-class RecordRange(Char, SourceRange) {
-  this(SourceRange data) {
+auto open(string filename) {
+  return new RecordRange!(typeof(File("", "r").byLine()))(File(filename, "r").byLine());
+}
+
+/**
+ * Represents a lazy range of GFF3 records from a range of lines.
+ */
+class RecordRange(SourceRangeType) {
+  this(SourceRangeType data) {
     this.data = data;
   }
 
@@ -50,9 +53,12 @@ class RecordRange(Char, SourceRange) {
   }
   
   private {
-    SourceRange data;
+    // This is required to support string and char[] sources
+    alias typeof(SourceRangeType.front()) Char;
 
-    Char[] nextLine() {
+    SourceRangeType data;
+
+    Char nextLine() {
       auto line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
         data.popFront();
@@ -82,9 +88,9 @@ struct Record {
    */
   void parseLine(string line) {
     auto parts = split(line, "\t");
-    seqname = replaceEscapedChars(parts[0]);
-    source  = replaceEscapedChars(parts[1]);
-    feature = replaceEscapedChars(parts[2]);
+    seqname = replaceURLEscapedChars(parts[0]);
+    source  = replaceURLEscapedChars(parts[1]);
+    feature = replaceURLEscapedChars(parts[2]);
     start   = parts[3];
     end     = parts[4];
     score   = parts[5];
@@ -118,8 +124,8 @@ struct Record {
         auto raw_attributes = split(attributes_field, ";");
         foreach(attribute; raw_attributes) {
           auto attribute_parts = split(attribute, "=");
-          auto attribute_name = replaceEscapedChars(attribute_parts[0]);
-          auto attribute_value = replaceEscapedChars(attribute_parts[1]);
+          auto attribute_name = replaceURLEscapedChars(attribute_parts[0]);
+          auto attribute_value = replaceURLEscapedChars(attribute_parts[1]);
           attributes[attribute_name] = attribute_value;
         }
       }
@@ -130,51 +136,13 @@ struct Record {
 
 private {
 
-  /**
-   * Converts the characters escaped with the URL escaping convention (%XX)
-   * in a string to their real char values.
-   */
-  string replaceEscapedChars(string original) {
-    auto index = indexOf(original, '%');
-    if (index < 0) {
-      return original;
-    } else {
-      return original[0..index] ~
-             convertEscapedChar(original[index+1..index+3]) ~
-             replaceEscapedChars(original[index+3..$]);
-    }
-  }
-
-  /**
-    * Converts characters in hexadecimal format to their real char value.
-    */
-  char convertEscapedChar(string code) {
-    uint numeric = to!int(code, 16);
-    return cast(char) numeric;
-  }
-
-
-  private bool isEmptyLine(T)(T[] line) {
+  bool isEmptyLine(T)(T[] line) {
     return line.strip() == "";
   }
 
-  private bool isComment(T)(T[] line) {
+  bool isComment(T)(T[] line) {
     return indexOf(line, '#') != -1;
   }
-}
-
-
-unittest {
-  writeln("Testing convertEscapedChar...");
-  assert(convertEscapedChar("3D") == '=');
-  assert(convertEscapedChar("00") == '\0');
-}
-
-unittest {
-  assert(replaceEscapedChars("%3D") == "=");
-  assert(replaceEscapedChars("Testing %3D") == "Testing =");
-  assert(replaceEscapedChars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
-  assert(replaceEscapedChars("One after another %3D%3B%25") == "One after another =;%");
 }
 
 unittest {
