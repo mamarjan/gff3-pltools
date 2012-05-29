@@ -1,3 +1,5 @@
+module biohpc.util;
+
 import std.stdio, std.conv, std.range, std.string;
 
 /**
@@ -98,6 +100,4 @@ unittest {
     i++;
   }
 }
-
-void main() {}
 

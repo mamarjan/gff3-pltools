@@ -1,3 +1,5 @@
+module biohpc.gff3;
+
 import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
 
 /**
@@ -193,10 +195,8 @@ unittest {
 unittest {
   writeln("Testing RecordRange...");
   File file;
-  file.open("../../test/data/records.gff3", "r");
+  file.open("../test/data/records.gff3", "r");
   writeln(file.size);
   char[] buf = new char[cast(uint)(file.size)];
 }
-
-void main() {}
 
