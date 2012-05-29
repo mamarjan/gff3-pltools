@@ -5,12 +5,12 @@ import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
 /**
  * Parses a string of GFF3 data. Returns a range of records.
  */
-RecordRange parse(string data) {
-  return new RecordRange!(LazySplitLines)(new LazySplitLines(data));
+auto parse(string data) {
+  return new RecordRange!(immutable(char),LazySplitLines)(new LazySplitLines(data));
 }
 
-RecordRange open(string filename) {
-  return new RecordRange!(ByLine)(File(filename, "r").byLine());
+auto open(string filename) {
+  return new RecordRange!(char, typeof(File("", "r").byLine()))(File(filename, "r").byLine());
 }
 
 /**
@@ -18,8 +18,8 @@ RecordRange open(string filename) {
  * The string which is the source of data is never copied in the process of
  * parsing. All operations are done using slicing.
  */
-class RecordRange(Source) {
-  this(Source data) {
+class RecordRange(Char, SourceRange) {
+  this(SourceRange data) {
     this.data = data;
   }
 
@@ -30,7 +30,11 @@ class RecordRange(Source) {
   Record front() {
     // TODO: Think about adding a record cache instead of recreating the front
     //       record every time
-    return Record(nextLine());
+    static if (is(typeof(data) == LazySplitLines)) {
+      return Record(nextLine());
+    } else {
+      return Record(to!string(nextLine()));
+    }
   }
 
   /**
@@ -46,13 +50,14 @@ class RecordRange(Source) {
   }
   
   private {
-    Source data;
+    SourceRange data;
 
-    string nextLine() {
+    Char[] nextLine() {
       auto line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
         data.popFront();
-        line = data.front;
+        if (!data.empty)
+          line = data.front;
       }
       if (data.empty)
         return null;
@@ -149,11 +154,11 @@ private {
   }
 
 
-  private bool isEmptyLine(string line) {
+  private bool isEmptyLine(T)(T[] line) {
     return line.strip() == "";
   }
 
-  private bool isComment(string line) {
+  private bool isComment(T)(T[] line) {
     return indexOf(line, '#') != -1;
   }
 }
@@ -222,6 +227,34 @@ unittest {
 
   // Parse data
   auto records = parse(data);
+  auto record1 = records.front; records.popFront();
+  auto record2 = records.front; records.popFront();
+  auto record3 = records.front; records.popFront();
+  assert(records.empty == true);
+
+  // Check the results
+  with(record1) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+    assert(attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+  }
+  with(record2) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           [".", ".", ".", ".", ".", ".", ".", "."]);
+    assert(attributes.length == 0);
+  }
+  with(record3) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+    assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;00000017239"]);
+  }
+}
+
+unittest {
+  writeln("Testing parsing strings with open function and RecordRange...");
+
+  // Parse file
+  auto records = open("./test/data/records.gff3");
   auto record1 = records.front; records.popFront();
   auto record2 = records.front; records.popFront();
   auto record3 = records.front; records.popFront();
