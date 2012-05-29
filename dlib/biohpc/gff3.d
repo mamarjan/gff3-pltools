@@ -1,5 +1,4 @@
-import std.conv, std.stdio, std.array, std.algorithm, std.string, std.range
-       libhpc.util;
+import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
 
 /**
  * Parses a string of GFF3 data. Returns a range of records.
@@ -30,7 +29,7 @@ class RecordRange {
       data.popFront();
       next_line = data.front;
     }
-    return new Record(next_line);
+    return Record(next_line);
   }
 
   /**
@@ -189,6 +188,14 @@ unittest {
   assert(isEmptyLine("") == true);
   assert(isEmptyLine("    ") == true);
   assert(isEmptyLine("\n") == true);
+}
+
+unittest {
+  writeln("Testing RecordRange...");
+  File file;
+  file.open("../../test/data/records.gff3", "r");
+  writeln(file.size);
+  char[] buf = new char[cast(uint)(file.size)];
 }
 
 void main() {}
