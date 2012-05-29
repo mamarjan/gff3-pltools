@@ -26,12 +26,7 @@ class RecordRange {
   Record front() {
     // TODO: Think about adding a record cache instead of recreating the front
     //       record every time
-    auto next_line = data.front;
-    while ((isComment(next_line) || isEmptyLine(next_line)) && !data.empty) {
-      data.popFront();
-      next_line = data.front;
-    }
-    return Record(next_line);
+    return Record(nextLine());
   }
 
   /**
@@ -42,10 +37,24 @@ class RecordRange {
   /**
    * Return true if no more records left in the range.
    */
-  bool empty() { return data.empty; }
+  bool empty() { 
+    return nextLine() is null;
+  }
   
   private {
     LazySplitLines data;
+
+    string nextLine() {
+      auto line = data.front;
+      while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
+        data.popFront();
+        line = data.front;
+      }
+      if (data.empty)
+        return null;
+      else
+        return line;
+    }
   }
 }
 
@@ -199,16 +208,36 @@ unittest {
 }
 
 unittest {
-  writeln("Testing parsing string with RecordRange...");
+  writeln("Testing parsing strings with parse function and RecordRange...");
+
+  // Retrieve test file into a string
   File gff3File;
   gff3File.open("./test/data/records.gff3", "r");
   char[] buf = new char[cast(uint)(gff3File.size)];
-  auto records = parse(to!string(gff3File.rawRead(buf)));
+  auto data = to!string(gff3File.rawRead(buf));
+
+  // Parse data
+  auto records = parse(data);
   auto record1 = records.front; records.popFront();
   auto record2 = records.front; records.popFront();
   auto record3 = records.front; records.popFront();
+  assert(records.empty == true);
+
+  // Check the results
   with(record1) {
-  //  assert([seqname, source, feature, start, end, score, strand, phase] ==
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+    assert(attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+  }
+  with(record2) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           [".", ".", ".", ".", ".", ".", ".", "."]);
+    assert(attributes.length == 0);
+  }
+  with(record3) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+    assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;00000017239"]);
   }
 }
 
