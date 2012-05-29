@@ -1,4 +1,5 @@
-import std.range, std.string;
+import std.stdio, std.conv, std.range, std.string;
+
 /**
  * General utilities useful for more then one project
  */
@@ -9,30 +10,50 @@ import std.range, std.string;
  * detects what the line terminator is and then returs lines
  * one by one. There is no copying involved, only slicing.
  */
-class LazySplitLines : InputRange!(string) {
+class LazySplitLines {
   this(string data) {
     this.data = data;
     this.data_left = data;
-    this.delim = detectNewLineDelim(data);
+    this.newline = detectNewLineDelim(data);
   }
+
+  /**
+   * Returns the next line in range.
+   */
   string front() {
     string result = null;
-    auto nl_index = indexOf(data_left, delim);
+    auto nl_index = indexOf(data_left, newline);
     if (nl_index == -1) {
+      // last line
       result = data_left;
     } else {
       result = data_left[0..nl_index];
     }
     return result;
   }
-  string moveFront() { return ""; }
-  void popFront() { }
-  bool empty() { return data_left.length == 0; }
-  int opApply(int delegate(string)) { return 0; }
-  int opApply(int delegate(size_t, string)) { return 0; }
+
+  /**
+   * Pops the next line of the range.
+   */
+  void popFront() {
+    auto nl_index = indexOf(data_left, newline);
+    if (nl_index == -1) {
+      // last line
+      data_left = null;
+    } else {
+      data_left = data_left[(nl_index+newline.length)..$];
+    }
+  }
+
+  /**
+   * Return true if no more lines left in the range.
+   */
+  bool empty() {
+    return data_left is null;
+  }
   
   private {
-    string delim;
+    string newline;
     string data;
     string data_left;
   }
@@ -45,6 +66,37 @@ class LazySplitLines : InputRange!(string) {
 string detectNewLineDelim(string data) {
   // TODO: Implement a better line termination detection strategy
   return "\n";
+}
+
+
+unittest {
+  writeln("Testing LazySplitLines...");
+  auto lines = new LazySplitLines("Test\n1\n2\n3");
+  assert(lines.empty == false);
+  assert(lines.front == "Test"); lines.popFront();
+  assert(lines.empty == false);
+  assert(lines.front == "1"); lines.popFront();
+  assert(lines.empty == false);
+  assert(lines.front == "2"); lines.popFront();
+  assert(lines.empty == false);
+  assert(lines.front == "3"); lines.popFront();
+  assert(lines.empty == true);
+  
+  // Test for correct behavior when newline at the end of the file
+  lines = new LazySplitLines("Test newline at the end\n");
+  assert(lines.empty == false);
+  assert(lines.front == "Test newline at the end"); lines.popFront();
+  assert(lines.empty == false);
+  assert(lines.front == ""); lines.popFront();
+  assert(lines.empty == true);
+
+  // Test if it's working with foreach
+  lines = new LazySplitLines("1\n2\n3\n4");
+  int i = 1;
+  foreach(value; lines) {
+    assert(value == to!string(i));
+    i++;
+  }
 }
 
 void main() {}
