@@ -1,4 +1,4 @@
-import std.conv, std.stdio, std.array, std.string;
+import std.conv, std.stdio, std.array, std.algorithm, std.string, std.range;
 
 /*
 class GFF3File {
@@ -71,6 +71,26 @@ class GFF3File {
   }
 }
 */
+
+RecordRange parse(string data) {
+  return new RecordRange(data);
+}
+
+class RecordRange : InputRange!(Record) {
+  this(string data) {
+    this.data = splitter(data, "\n");
+  }
+  Record front() { return new Record; }
+  Record moveFront() { return new Record; }
+  void popFront() { }
+  bool empty() { return false; }
+  int opApply(int delegate(Record)) { return 0; }
+  int opApply(int delegate(size_t, Record)) { return 0; }
+  
+  private {
+    InputRange!(string) data;
+  }
+}
 
 /**
  * Represents a parsed line in a GFF3 file.
