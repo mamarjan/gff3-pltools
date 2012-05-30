@@ -41,7 +41,9 @@ class FastaRange(SourceRangeType) {
    * Return true if no more records left in the range.
    */
   @property bool empty() {
-    return getNextRecord() is null;
+    if (cache is null)
+      cache = getNextRecord();
+    return cache is null;
   }
 
   private {
@@ -51,30 +53,38 @@ class FastaRange(SourceRangeType) {
     FastaRecord cache;
 
     FastaRecord getNextRecord() {
-      auto header = nextFastaLine();
-      data.popFront();
-
-      Array[] sequence = [];
-      auto currentFastaLine = nextFastaLine();
-      while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine))) {
-        sequence ~= currentFastaLine;
-        data.popFront();
-        currentFastaLine = nextFastaLine();
-      }
-      auto fastaSequence = join(sequence);
+      auto header = nextFastaLine().idup;
+      if (header is null)
+        return null;
 
       FastaRecord result = new FastaRecord();
       static if (is(typeof(data) == LazySplitLines)) {
         result.header = header;
-        result.sequence = fastaSequence;
       } else {
         result.header = to!string(header);
+      }
+      data.popFront();
+
+      auto sequence = appender!Array();;
+      auto currentFastaLine = nextFastaLine();
+      while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine)) && (!data.empty)) {
+        sequence.put(currentFastaLine);
+        data.popFront();
+        currentFastaLine = nextFastaLine();
+      }
+      auto fastaSequence = sequence.data;
+
+      static if (is(typeof(data) == LazySplitLines)) {
+        result.sequence = fastaSequence;
+      } else {
         result.sequence = to!string(fastaSequence);
       }
       return result;
     }
 
     Array nextFastaLine() {
+      if (data.empty)
+        return null;
       auto line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
         data.popFront();
@@ -100,7 +110,46 @@ private {
   }
 
   bool isComment(T)(T[] line) {
-    return line[0] == ';';
+    if (line.length >= 1)
+      return line[0] == ';';
+    else
+      return false;
+  }
+}
+
+
+unittest {
+  writeln("Testing parsing FASTA data...");
+
+  auto fasta = new FastaRange!(typeof(File.byLine()))(File("./test/data/fasta.fa", "r").byLine());
+  assert(fasta.empty == false);
+  auto seq1 = fasta.front; fasta.popFront();
+  assert(fasta.empty == false);
+  auto seq2 = fasta.front; fasta.popFront();
+  assert(fasta.empty == true);
+  with (seq1) {
+    assert(header == ">ctg123");
+    assert(sequence == (
+           "cttctgggcgtacccgattctcggagaacttgccgcaccattccgccttg" ~
+           "tgttcattgctgcctgcatgttcattgtctacctcggctacgtgtggcta" ~
+           "tctttcctcggtgccctcgtgcacggagtcgagaaaccaaagaacaaaaa" ~
+           "aagaaattaaaatatttattttgctgtggtttttgatgtgtgttttttat" ~
+           "aatgatttttgatgtgaccaattgtacttttcctttaaatgaaatgtaat" ~
+           "cttaaatgtatttccgacgaattcgaggcctgaaaagtgtgacgccattc" ~
+           "gtatttgatttgggtttactatcgaataatgagaattttcaggcttaggc" ~
+           "ttaggcttaggcttaggcttaggcttaggcttaggcttaggcttaggctt" ~
+           "aggcttaggcttaggcttaggcttaggcttaggcttaggcttaggcttag" ~
+           "aatctagctagctatccgaaattcgaggcctgaaaagtgtgacgccattc" ));
+  }
+  with (seq2) {
+    assert(header == ">cnda0123");
+    assert(sequence == (
+           "ttcaagtgctcagtcaatgtgattcacagtatgtcaccaaatattttggc" ~
+           "agctttctcaagggatcaaaattatggatcattatggaatacctcggtgg" ~
+           "aggctcagcgctcgatttaactaaaagtggaaagctggacgaaagtcata" ~
+           "tcgctgtgattcttcgcgaaattttgaaaggtctcgagtatctgcatagt" ~
+           "gaaagaaaaatccacagagatattaaaggagccaacgttttgttggaccg" ~
+           "tcaaacagcggctgtaaaaatttgtgattatggttaaagg"));
   }
 }
 
