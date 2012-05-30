@@ -43,11 +43,7 @@ class RecordRange(SourceRangeType) {
   @property Record front() {
     // TODO: Think about adding a record cache instead of recreating the front
     //       record every time
-    static if (is(typeof(data) == LazySplitLines)) {
-      return Record(nextLine());
-    } else {
-      return Record(to!string(nextLine()));
-    }
+    return Record(nextLine());
   }
 
   /**
@@ -79,13 +75,10 @@ class RecordRange(SourceRangeType) {
   }
 
   private {
-    // This is required to support string and char[] sources
-    alias typeof(SourceRangeType.front()) Array;
-
     SourceRangeType data;
     bool fastaMode = false;
 
-    Array nextLine() {
+    string nextLine() {
       auto line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
         data.popFront();
@@ -100,8 +93,13 @@ class RecordRange(SourceRangeType) {
       }
       if (data.empty || fastaMode)
         return null;
-      else
-        return line;
+      else {
+        static if (is(typeof(SourceRangeType.front()) == string)) {
+          return line;
+        } else {
+          return to!string(line);
+        }
+      }
     }
 
   }
@@ -237,8 +235,7 @@ unittest {
   // Retrieve test file into a string
   File gff3File;
   gff3File.open("./test/data/records.gff3", "r");
-  char[] buf = new char[cast(uint)(gff3File.size)];
-  auto data = to!string(gff3File.rawRead(buf));
+  auto data = gff3File.read();
 
   // Parse data
   auto records = parse(data);
