@@ -43,13 +43,62 @@ class RecordRange(SourceRangeType) {
   /**
    * Pops the next record in range.
    */
-  void popFront() { data.popFront(); }
+  void popFront() {
+    // First get to a line that has a valid record in it
+    nextLine();
+    data.popFront();
+  }
 
   /**
    * Return true if no more records left in the range.
    */
   bool empty() { 
     return nextLine() is null;
+  }
+
+  auto getFastaRange() {
+    if (empty && fastaMode)
+      return new FastaRange!(SourceRangeType)();
+    else
+      return null;
+  }
+
+  /**
+   * Fasta range for sequences contained in a GFF3 file.
+   */
+  class FastaRange(SourceRangeType) {
+    string front() {
+      static if (is(typeof(this.outer.data) == LazySplitLines)) {
+        return nextFastaLine();
+      } else {
+        return to!string(nextFastaLine());
+      }
+    }
+
+    void popFront() {
+      nextFastaLine();
+      this.outer.data.popFront();
+    }
+
+    bool empty() {
+      return nextFastaLine() == null;
+    }
+
+    private {
+      alias typeof(SourceRangeType.front()) Char;
+      Char nextFastaLine() {
+        auto line = this.outer.data.front;
+        while ((isComment(line) || isEmptyLine(line)) && !this.outer.data.empty) {
+          this.outer.data.popFront();
+          if (!this.outer.data.empty)
+            line = this.outer.data.front;
+        }
+        if (this.outer.data.empty)
+          return null;
+        else
+          return line;
+      }
+    }
   }
   
   private {
@@ -66,11 +115,14 @@ class RecordRange(SourceRangeType) {
         if (!data.empty)
           line = data.front;
       }
-      if (data.empty || startOfFASTA(line))
+      if (startOfFASTA(line))
+        fastaMode = true;
+      if (data.empty || fastaMode)
         return null;
       else
         return line;
     }
+
   }
 }
 
