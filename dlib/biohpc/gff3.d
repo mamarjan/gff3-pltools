@@ -57,6 +57,7 @@ class RecordRange(SourceRangeType) {
     alias typeof(SourceRangeType.front()) Char;
 
     SourceRangeType data;
+    bool fastaMode = false;
 
     Char nextLine() {
       auto line = data.front;
