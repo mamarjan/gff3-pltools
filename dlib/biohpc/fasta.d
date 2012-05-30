@@ -65,7 +65,7 @@ class FastaRange(SourceRangeType) {
       }
       data.popFront();
 
-      auto sequence = appender!Array();;
+      auto sequence = appender!Array();
       auto currentFastaLine = nextFastaLine();
       while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine)) && (!data.empty)) {
         sequence.put(currentFastaLine);

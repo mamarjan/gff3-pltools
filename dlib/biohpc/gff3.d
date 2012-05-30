@@ -36,6 +36,8 @@ class RecordRange(SourceRangeType) {
     this.data = data;
   }
 
+  alias typeof(SourceRangeType.front()) Array;
+
   /**
    * Return the next record in range.
    * Ignores comments, pragmas and empty lines in the data source
@@ -71,7 +73,28 @@ class RecordRange(SourceRangeType) {
     if (empty && fastaMode)
       return new FastaRange!(SourceRangeType)(data);
     else
+      // TODO: Throw exception instead of returning null
       return null;
+  }
+
+  /**
+   * Retrieves the FASTA data at the end of file
+   * in a string. Works only when there are no more
+   * records to fetch, e.g. when empty is true.
+   */
+  string getFastaData() {
+    // TODO: Add tests for this method
+    if (empty && fastaMode) {
+      auto fastaData = appender!Array();
+      while (!data.empty) {
+        fastaData.put(data.front);
+        data.popFront();
+      }
+      return cast(immutable)(fastaData.data);
+    } else {
+      // TODO: Throw exception instead of returning null
+      return null;
+    }
   }
 
   private {
