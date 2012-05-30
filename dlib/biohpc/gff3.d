@@ -30,7 +30,7 @@ class RecordRange(SourceRangeType) {
    * Return the next record in range.
    * Ignores comments, pragmas and empty lines in the data source
    */
-  Record front() {
+  @property Record front() {
     // TODO: Think about adding a record cache instead of recreating the front
     //       record every time
     static if (is(typeof(data) == LazySplitLines)) {
@@ -52,7 +52,7 @@ class RecordRange(SourceRangeType) {
   /**
    * Return true if no more records left in the range.
    */
-  bool empty() { 
+  @property bool empty() { 
     return nextLine() is null;
   }
 
@@ -67,25 +67,49 @@ class RecordRange(SourceRangeType) {
    * Fasta range for sequences contained in a GFF3 file.
    */
   class FastaRange(SourceRangeType) {
-    string front() {
-      static if (is(typeof(this.outer.data) == LazySplitLines)) {
-        return nextFastaLine();
-      } else {
-        return to!string(nextFastaLine());
+    @property FastaRecord front() {
+      if (cache is null) {
+        cache = getNextRecord();
       }
+      return cache;
     }
 
     void popFront() {
-      nextFastaLine();
-      this.outer.data.popFront();
+      cache = null;
     }
 
-    bool empty() {
-      return nextFastaLine() == null;
+    @property bool empty() {
+      return getNextRecord() is null;
     }
 
     private {
       alias typeof(SourceRangeType.front()) Char;
+
+      FastaRecord cache;
+
+      FastaRecord getNextRecord() {
+        auto header = nextFastaLine();
+        this.outer.data.popFront();
+        auto sequence = [nextFastaLine()];
+        this.outer.data.popFront();
+        auto currentFastaLine = nextFastaLine();
+        while ((currentFastaLine != null) && (currentFastaLine[0] != '>')) {
+          sequence ~= currentFastaLine;
+          this.outer.data.popFront();
+          currentFastaLine = nextFastaLine();
+        }
+        auto fastaSequence = join(sequence);
+        FastaRecord result = new FastaRecord();
+        static if (is(typeof(this.outer.data) == LazySplitLines)) {
+          result.header = header;
+          result.sequence = fastaSequence;
+        } else {
+          result.header = to!string(header);
+          result.sequence = to!string(fastaSequence);
+        }
+        return result;
+      }
+
       Char nextFastaLine() {
         auto line = this.outer.data.front;
         while ((isComment(line) || isEmptyLine(line)) && !this.outer.data.empty) {
@@ -99,6 +123,11 @@ class RecordRange(SourceRangeType) {
           return line;
       }
     }
+  }
+
+  class FastaRecord {
+    string header;
+    string sequence;
   }
   
   private {
