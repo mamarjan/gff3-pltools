@@ -56,6 +56,11 @@ class RecordRange(SourceRangeType) {
     return nextLine() is null;
   }
 
+  /**
+   * Retrieve a range of FASTA sequences appended to
+   * GFF3 data. Works only when there are no more
+   * records to fetch, e.g. when empty is true.
+   */
   auto getFastaRange() {
     if (empty && fastaMode)
       return new FastaRange!(SourceRangeType)();
