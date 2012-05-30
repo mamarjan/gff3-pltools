@@ -1,6 +1,7 @@
 module biohpc.gff3;
 
-import std.conv, std.stdio, std.array, std.string, std.range, biohpc.util;
+import std.conv, std.stdio, std.array, std.string, std.range;
+import biohpc.util, biohpc.fasta;
 
 /**
  * Parses a string of GFF3 data.
@@ -72,90 +73,9 @@ class RecordRange(SourceRangeType) {
    */
   auto getFastaRange() {
     if (empty && fastaMode)
-      return new FastaRange!(SourceRangeType)();
+      return new FastaRange!(SourceRangeType)(data);
     else
       return null;
-  }
-
-  /**
-   * Fasta range for FASTA sequences appended to the end of GFF3 data.
-   */
-  class FastaRange(SourceRangeType) {
-    /**
-     * Return the next sequence in range.
-     */
-    @property FastaRecord front() {
-      if (cache is null) {
-        cache = getNextRecord();
-      }
-      return cache;
-    }
-
-    /**
-     * Pops the next sequence in range.
-     */
-    void popFront() {
-      cache = null;
-    }
-
-    /**
-     * Return true if no more records left in the range.
-     */
-    @property bool empty() {
-      return getNextRecord() is null;
-    }
-
-    /**
-     * A minimal class for grouping the header and sequence
-     * data of a FASTA sequence.
-     */
-    class FastaRecord {
-      string header;
-      string sequence;
-    }
- 
-    private {
-      alias typeof(SourceRangeType.front()) Array;
-
-      FastaRecord cache;
-
-      FastaRecord getNextRecord() {
-        auto header = nextFastaLine();
-        this.outer.data.popFront();
-
-        Array[] sequence = [];
-        auto currentFastaLine = nextFastaLine();
-        while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine))) {
-          sequence ~= currentFastaLine;
-          this.outer.data.popFront();
-          currentFastaLine = nextFastaLine();
-        }
-        auto fastaSequence = join(sequence);
-
-        FastaRecord result = new FastaRecord();
-        static if (is(typeof(this.outer.data) == LazySplitLines)) {
-          result.header = header;
-          result.sequence = fastaSequence;
-        } else {
-          result.header = to!string(header);
-          result.sequence = to!string(fastaSequence);
-        }
-        return result;
-      }
-
-      Array nextFastaLine() {
-        auto line = this.outer.data.front;
-        while ((isComment(line) || isEmptyLine(line)) && !this.outer.data.empty) {
-          this.outer.data.popFront();
-          if (!this.outer.data.empty)
-            line = this.outer.data.front;
-        }
-        if (this.outer.data.empty)
-          return null;
-        else
-          return line;
-      }
-    }
   }
 
   private {

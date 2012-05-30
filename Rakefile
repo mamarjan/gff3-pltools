@@ -31,6 +31,7 @@ end
 CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/biohpc/gff3.d",
+          "dlib/biohpc/fasta.d",
           "dlib/biohpc/util.d"].join(" ")
 
 task :unittests => ["builddir"] do
