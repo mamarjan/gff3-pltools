@@ -15,13 +15,22 @@ auto parse(string data) {
  * Returns: a range of records.
  */
 auto open(string filename) {
-  return new RecordRange!(typeof(File("", "r").byLine()))(File(filename, "r").byLine());
+  return new RecordRange!(typeof(File.byLine()))(File(filename, "r").byLine());
 }
 
 /**
  * Represents a lazy range of GFF3 records from a range of lines.
+ * The class takes a type parameter, which is the class or the struct
+ * which is used as a data source. It's enough for the data source to
+ * support front, popFront() and empty methods to be used by this
+ * class.
  */
 class RecordRange(SourceRangeType) {
+  /**
+   * Creates a record range with data as the _data source. data can
+   * be any range of lines without newlines and with front, popFront()
+   * and empty defined.
+   */
   this(SourceRangeType data) {
     this.data = data;
   }
@@ -69,9 +78,12 @@ class RecordRange(SourceRangeType) {
   }
 
   /**
-   * Fasta range for sequences contained in a GFF3 file.
+   * Fasta range for FASTA sequences appended to the end of GFF3 data.
    */
   class FastaRange(SourceRangeType) {
+    /**
+     * Return the next sequence in range.
+     */
     @property FastaRecord front() {
       if (cache is null) {
         cache = getNextRecord();
@@ -79,31 +91,47 @@ class RecordRange(SourceRangeType) {
       return cache;
     }
 
+    /**
+     * Pops the next sequence in range.
+     */
     void popFront() {
       cache = null;
     }
 
+    /**
+     * Return true if no more records left in the range.
+     */
     @property bool empty() {
       return getNextRecord() is null;
     }
 
+    /**
+     * A minimal class for grouping the header and sequence
+     * data of a FASTA sequence.
+     */
+    class FastaRecord {
+      string header;
+      string sequence;
+    }
+ 
     private {
-      alias typeof(SourceRangeType.front()) Char;
+      alias typeof(SourceRangeType.front()) Array;
 
       FastaRecord cache;
 
       FastaRecord getNextRecord() {
         auto header = nextFastaLine();
         this.outer.data.popFront();
-        auto sequence = [nextFastaLine()];
-        this.outer.data.popFront();
+
+        Array[] sequence = [];
         auto currentFastaLine = nextFastaLine();
-        while ((currentFastaLine != null) && (currentFastaLine[0] != '>')) {
+        while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine))) {
           sequence ~= currentFastaLine;
           this.outer.data.popFront();
           currentFastaLine = nextFastaLine();
         }
         auto fastaSequence = join(sequence);
+
         FastaRecord result = new FastaRecord();
         static if (is(typeof(this.outer.data) == LazySplitLines)) {
           result.header = header;
@@ -115,7 +143,7 @@ class RecordRange(SourceRangeType) {
         return result;
       }
 
-      Char nextFastaLine() {
+      Array nextFastaLine() {
         auto line = this.outer.data.front;
         while ((isComment(line) || isEmptyLine(line)) && !this.outer.data.empty) {
           this.outer.data.popFront();
@@ -130,27 +158,26 @@ class RecordRange(SourceRangeType) {
     }
   }
 
-  class FastaRecord {
-    string header;
-    string sequence;
-  }
-  
   private {
     // This is required to support string and char[] sources
-    alias typeof(SourceRangeType.front()) Char;
+    alias typeof(SourceRangeType.front()) Array;
 
     SourceRangeType data;
     bool fastaMode = false;
 
-    Char nextLine() {
+    Array nextLine() {
       auto line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
         data.popFront();
         if (!data.empty)
           line = data.front;
       }
-      if (startOfFASTA(line))
+      if (startOfFASTA(line)) {
         fastaMode = true;
+        if (!isFastaHeader(line))
+          //Remove ##FASTA line from data source
+          data.popFront();
+      }
       if (data.empty || fastaMode)
         return null;
       else
@@ -233,6 +260,10 @@ private {
 
   bool startOfFASTA(T)(T[] line) {
     return (line.length >= 1) ? (line.startsWith("##FASTA") || (line[0] == '>')) : false;
+  }
+
+  bool isFastaHeader(T)(T[] line) {
+    return line[0] == '>';
   }
 }
 
