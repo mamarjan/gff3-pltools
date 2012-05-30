@@ -61,12 +61,12 @@ class RecordRange(SourceRangeType) {
 
     Char nextLine() {
       auto line = data.front;
-      while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
+      while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
         data.popFront();
         if (!data.empty)
           line = data.front;
       }
-      if (data.empty)
+      if (data.empty || startOfFASTA(line))
         return null;
       else
         return line;
@@ -144,6 +144,10 @@ private {
   bool isComment(T)(T[] line) {
     return indexOf(line, '#') != -1;
   }
+
+  bool startOfFASTA(T)(T[] line) {
+    return (line.length >= 1) ? (line.startsWith("##FASTA") || (line[0] == '>')) : false;
+  }
 }
 
 unittest {
@@ -183,6 +187,11 @@ unittest {
   assert(isEmptyLine("") == true);
   assert(isEmptyLine("    ") == true);
   assert(isEmptyLine("\n") == true);
+
+  writeln("Testing startOfFASTA...");
+  assert(startOfFASTA("##FASTA") == true);
+  assert(startOfFASTA(">ctg123") == true);
+  assert(startOfFASTA("Test 123") == false);
 }
 
 unittest {
