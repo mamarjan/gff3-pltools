@@ -236,12 +236,18 @@ private {
 unittest {
   writeln("Testing parseAttributes...");
 
+  // Minimal test
   auto record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1");
   assert(record.attributes == [ "ID" : "1" ]);
+  // Test splitting multiple attributes
   record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45");
   assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
+  // Test if first splitting and then replacing escaped chars
   record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID%3D=1");
   assert(record.attributes == [ "ID=" : "1"]);
+  // Test if parser survives trailing semicolon
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45;");
+  assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
 }
 
 unittest {
