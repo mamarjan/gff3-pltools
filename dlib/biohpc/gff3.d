@@ -70,10 +70,10 @@ class RecordRange(SourceRangeType) {
    * records to fetch, e.g. when empty is true.
    */
   auto getFastaRange() {
+    scrollUntilFasta();
     if (empty && fastaMode)
       return new FastaRange!(SourceRangeType)(data);
     else
-      // TODO: Throw exception instead of returning null
       return null;
   }
 
@@ -84,15 +84,16 @@ class RecordRange(SourceRangeType) {
    */
   string getFastaData() {
     // TODO: Add tests for this method
+    scrollUntilFasta();
     if (empty && fastaMode) {
       auto fastaData = appender!Array();
       while (!data.empty) {
         fastaData.put(data.front);
+        fastaData.put("\n");
         data.popFront();
       }
       return cast(immutable)(fastaData.data);
     } else {
-      // TODO: Throw exception instead of returning null
       return null;
     }
   }
@@ -122,6 +123,26 @@ class RecordRange(SourceRangeType) {
         } else {
           return to!string(line);
         }
+      }
+    }
+
+    /**
+     * Skips all the GFF3 records until it gets to the start of
+     * the FASTA section or end of file
+     */
+    void scrollUntilFasta() {
+      auto line = data.front;
+      while ((!data.empty) && (!startOfFASTA(line))) {
+        data.popFront();
+        if (!data.empty)
+          line = data.front;
+      }
+
+      if (startOfFASTA(line)) {
+        fastaMode = true;
+        if (!isFastaHeader(line))
+          //Remove ##FASTA line from data source
+          data.popFront();
       }
     }
 
@@ -283,6 +304,28 @@ unittest {
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
     assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;00000017239"]);
   }
+
+  // Test scrolling to FASTA data
+  records = parse(data);
+  assert(records.getFastaData() ==
+      ">ctg123\n" ~
+      "cttctgggcgtacccgattctcggagaacttgccgcaccattccgccttg\n" ~
+      "tgttcattgctgcctgcatgttcattgtctacctcggctacgtgtggcta\n" ~
+      "tctttcctcggtgccctcgtgcacggagtcgagaaaccaaagaacaaaaa\n" ~
+      "aagaaattaaaatatttattttgctgtggtttttgatgtgtgttttttat\n" ~
+      "aatgatttttgatgtgaccaattgtacttttcctttaaatgaaatgtaat\n" ~
+      "cttaaatgtatttccgacgaattcgaggcctgaaaagtgtgacgccattc\n" ~
+      "gtatttgatttgggtttactatcgaataatgagaattttcaggcttaggc\n" ~
+      "ttaggcttaggcttaggcttaggcttaggcttaggcttaggcttaggctt\n" ~
+      "aggcttaggcttaggcttaggcttaggcttaggcttaggcttaggcttag\n" ~
+      "aatctagctagctatccgaaattcgaggcctgaaaagtgtgacgccattc\n" ~
+      ">cnda0123\n" ~
+      "ttcaagtgctcagtcaatgtgattcacagtatgtcaccaaatattttggc\n" ~
+      "agctttctcaagggatcaaaattatggatcattatggaatacctcggtgg\n" ~
+      "aggctcagcgctcgatttaactaaaagtggaaagctggacgaaagtcata\n" ~
+      "tcgctgtgattcttcgcgaaattttgaaaggtctcgagtatctgcatagt\n" ~
+      "gaaagaaaaatccacagagatattaaaggagccaacgttttgttggaccg\n" ~
+      "tcaaacagcggctgtaaaaatttgtgattatggttaaagg\n\n\n");
 }
 
 unittest {
