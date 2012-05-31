@@ -1,4 +1,4 @@
-import biohpc.gff3, std.conv;
+import bio.gff3, std.conv;
 
 GFF3File[int] openFiles;
 

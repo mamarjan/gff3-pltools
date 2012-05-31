@@ -1,7 +1,7 @@
-module biohpc.fasta;
+module bio.fasta;
 
 import std.conv, std.array, std.stdio, std.algorithm, std.string;
-import biohpc.util;
+import bio.util;
 
 /**
  * A minimal class for grouping the header and sequence

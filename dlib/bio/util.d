@@ -1,4 +1,4 @@
-module biohpc.util;
+module bio.util;
 
 import std.stdio, std.conv, std.range, std.string;
 

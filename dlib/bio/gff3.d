@@ -1,7 +1,7 @@
-module biohpc.gff3;
+module bio.gff3;
 
 import std.conv, std.stdio, std.array, std.string, std.range;
-import biohpc.util, biohpc.fasta;
+import bio.util, bio.fasta;
 
 /**
  * Parses a string of GFF3 data.

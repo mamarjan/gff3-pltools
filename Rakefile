@@ -16,23 +16,23 @@ CLEAN.include("builddir")
 
 task :compiledebug => ["builddir"] do
   sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuilddir/gff3.o -fPIC"
+  sh "dmd -c -m32 -g dlib/bio/gff3.d -ofbuilddir/gff3.o -fPIC"
   sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
   sh "mv bio-hpc-dlib.so lib/"
 end
 
 task :compile => ["builddir"] do
   sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/gff3/gff3.d -ofbuilddir/gff3.o -fPIC"
+  sh "dmd -c -m32 -g dlib/bio/gff3.d -ofbuilddir/gff3.o -fPIC"
   sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
   sh "mv bio-hpc-dlib.so lib/"
 end
 
 CLEAN.include("lib/*.so")
 
-DFILES = ["dlib/biohpc/gff3.d",
-          "dlib/biohpc/fasta.d",
-          "dlib/biohpc/util.d"].join(" ")
+DFILES = ["dlib/bio/gff3.d",
+          "dlib/bio/fasta.d",
+          "dlib/bio/util.d"].join(" ")
 
 task :unittests => ["builddir"] do
   sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
