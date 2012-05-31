@@ -103,7 +103,9 @@ class RecordRange(SourceRangeType) {
     bool fastaMode = false;
 
     string nextLine() {
-      auto line = data.front;
+      Array line = null;
+      if (!data.empty)
+        line = data.front;
       while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
         data.popFront();
         if (!data.empty)
@@ -199,6 +201,8 @@ struct Record {
       if (attributes_field[0] != '.') {
         auto raw_attributes = split(attributes_field, ";");
         foreach(attribute; raw_attributes) {
+          if (attribute == "")
+            continue;
           auto attribute_parts = split(attribute, "=");
           auto attribute_name = replaceURLEscapedChars(attribute_parts[0]);
           auto attribute_value = replaceURLEscapedChars(attribute_parts[1]);
@@ -227,6 +231,17 @@ private {
   bool isFastaHeader(T)(T[] line) {
     return line[0] == '>';
   }
+}
+
+unittest {
+  writeln("Testing parseAttributes...");
+
+  auto record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1");
+  assert(record.attributes == [ "ID" : "1" ]);
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45");
+  assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID%3D=1");
+  assert(record.attributes == [ "ID=" : "1"]);
 }
 
 unittest {
@@ -353,6 +368,29 @@ unittest {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
     assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;00000017239"]);
+  }
+
+  // Testing with various files
+  uint[string] fileRecordsN = [
+      "messy_protein_domains.gff3" : 1009,
+      "gff3_with_syncs.gff3" : 19,
+      "au9_scaffold_subset.gff3" : 1005,
+      "tomato_chr4_head.gff3" : 87,
+      "directives.gff3" : 0,
+      "hybrid1.gff3" : 6,
+      "hybrid2.gff3" : 6,
+      "knownGene.gff3" : 15,
+      "knownGene2.gff3" : 15,
+      "mm9_sample_ensembl.gff3" : 190,
+      "tomato_test.gff3" : 249,
+      "spec_eden.gff3" : 23,
+      "spec_match.gff3" : 3 ];
+  foreach(filename, recordsN; fileRecordsN) {
+    writeln("  Parsing file ./test/data/" ~ filename ~ "...");
+    uint counter = 0;
+    foreach(rec; open("./test/data/" ~ filename))
+      counter++;
+    assert(counter == recordsN);
   }
 }
 
