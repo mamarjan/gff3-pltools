@@ -1,7 +1,7 @@
 module bio.gff3;
 
-import std.conv, std.stdio, std.array, std.string, std.range;
-import bio.util, bio.fasta;
+import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
+import bio.util, bio.fasta, bio.exceptions;
 
 /**
  * Parses a string of GFF3 data.
@@ -206,6 +206,9 @@ struct Record {
           auto attribute_parts = split(attribute, "=");
           auto attribute_name = replaceURLEscapedChars(attribute_parts[0]);
           auto attribute_value = replaceURLEscapedChars(attribute_parts[1]);
+          if (attribute_name == "") {
+            throw new AttributeException("An attribute value withou an attribute name");
+          }
           attributes[attribute_name] = attribute_value;
         }
       }
@@ -234,6 +237,23 @@ private {
 }
 
 unittest {
+  writeln("Testing isComment...");
+  assert(isComment("# test") == true);
+  assert(isComment("     # test") == true);
+  assert(isComment("# test\n") == true);
+
+  writeln("Testing isEmptyLine...");
+  assert(isEmptyLine("") == true);
+  assert(isEmptyLine("    ") == true);
+  assert(isEmptyLine("\n") == true);
+
+  writeln("Testing startOfFASTA...");
+  assert(startOfFASTA("##FASTA") == true);
+  assert(startOfFASTA(">ctg123") == true);
+  assert(startOfFASTA("Test 123") == false);
+}
+
+unittest {
   writeln("Testing parseAttributes...");
 
   // Minimal test
@@ -248,6 +268,14 @@ unittest {
   // Test if parser survives trailing semicolon
   record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45;");
   assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
+  // Test for an attribute with the value of a single space
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID= ;");
+  assert(record.attributes == [ "ID" : " " ]);
+  // Test for an attribute with no value
+  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
+  assert(record.attributes == [ "ID" : "" ]);
+  // Test for an attribute without a name; should raise an error
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t=123"));
 }
 
 unittest {
@@ -275,23 +303,6 @@ unittest {
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
     assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
   }
-}
-
-unittest {
-  writeln("Testing isComment...");
-  assert(isComment("# test") == true);
-  assert(isComment("     # test") == true);
-  assert(isComment("# test\n") == true);
-
-  writeln("Testing isEmptyLine...");
-  assert(isEmptyLine("") == true);
-  assert(isEmptyLine("    ") == true);
-  assert(isEmptyLine("\n") == true);
-
-  writeln("Testing startOfFASTA...");
-  assert(startOfFASTA("##FASTA") == true);
-  assert(startOfFASTA(">ctg123") == true);
-  assert(startOfFASTA("Test 123") == false);
 }
 
 unittest {

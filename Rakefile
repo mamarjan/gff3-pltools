@@ -32,7 +32,8 @@ CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/bio/gff3.d",
           "dlib/bio/fasta.d",
-          "dlib/bio/util.d"].join(" ")
+          "dlib/bio/util.d",
+          "dlib/bio/exceptions.d"].join(" ")
 
 task :unittests => ["builddir"] do
   sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
