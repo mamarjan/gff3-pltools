@@ -10,3 +10,9 @@ class AttributeException : ParsingException {
   }
 }
 
+class RecordException : ParsingException {
+  this(string message, string record) {
+    super(message ~ ": " ~ record);
+  }
+}
+

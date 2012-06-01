@@ -165,6 +165,7 @@ struct Record {
    * characters are replaced in those fields.
    */
   void parseLine(string line) {
+    checkIfNineColumnsPresent(line);
     auto parts = split(line, "\t");
     seqname = replaceURLEscapedChars(parts[0]);
     source  = replaceURLEscapedChars(parts[1]);
@@ -212,25 +213,29 @@ struct Record {
       }
     }
 
+    static void checkIfFieldNotEmptyString(string field, string fieldValue) {
+      if (fieldValue.length == 0)
+        throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", fieldValue);
+    }
+
+    static void checkIfAttributeHasTwoParts(string attribute) {
+      if (attribute.count('=') != 1)
+        throw new AttributeException("Invalid attribute format", attribute);
+    }
+
+    static void checkIfAttributeNameValid(string attribute) {
+      if (attribute.indexOf("=") == 0) // attribute name missing
+        throw new AttributeException("An attribute value without an attribute name", attribute);
+    }
+
+    static void checkIfNineColumnsPresent(string line) {
+      if (line.count("\t") < 8)
+        throw new RecordException("A record with invalid number of columns", line);
+    }
   }
 }
 
 private {
-
-  void checkIfFieldNotEmptyString(string field, string fieldValue) {
-    if (fieldValue.length == 0)
-      throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", fieldValue);
-  }
-
-  void checkIfAttributeHasTwoParts(string attribute) {
-    if (attribute.count('=') != 1)
-      throw new AttributeException("Invalid attribute format", attribute);
-  }
-
-  void checkIfAttributeNameValid(string attribute) {
-    if (attribute.indexOf("=") == 0) // attribute name missing
-      throw new AttributeException("An attribute value without an attribute name", attribute);
-  }
 
   bool isEmptyLine(T)(T[] line) {
     return line.strip() == "";
@@ -324,6 +329,10 @@ unittest {
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
     assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
   }
+
+  // Testing for invalid values
+  // Test for one column missing
+  assertThrown!RecordException(Record(".\t..\t.\t.\t.\t.\t.\t."));
 }
 
 unittest {
