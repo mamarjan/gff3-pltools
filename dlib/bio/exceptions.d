@@ -5,6 +5,8 @@ class ParsingException : Exception {
 }
 
 class AttributeException : ParsingException {
-  this(string message) { super(message); }
+  this(string message, string attributesField) {
+    super(message ~ ": " ~ attributesField);
+  }
 }
 

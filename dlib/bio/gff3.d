@@ -197,19 +197,22 @@ struct Record {
 
   private {
 
-    void parseAttributes(string attributes_field) {
-      if (attributes_field[0] != '.') {
-        auto raw_attributes = split(attributes_field, ";");
-        foreach(attribute; raw_attributes) {
+    void parseAttributes(string attributesField) {
+      if (attributesField.length == 0)
+        throw new AttributeException("Empty attributes field. Use dot for no attributes.", "");
+      if (attributesField[0] != '.') {
+        auto rawAttributes = split(attributesField, ";");
+        foreach(attribute; rawAttributes) {
           if (attribute == "")
             continue;
-          auto attribute_parts = split(attribute, "=");
-          auto attribute_name = replaceURLEscapedChars(attribute_parts[0]);
-          auto attribute_value = replaceURLEscapedChars(attribute_parts[1]);
-          if (attribute_name == "") {
-            throw new AttributeException("An attribute value withou an attribute name");
-          }
-          attributes[attribute_name] = attribute_value;
+          auto attributeParts = split(attribute, "=");
+          if (attributeParts.length != 2)
+            throw new AttributeException("Invalid attribute format", attributesField);
+          auto attributeName = replaceURLEscapedChars(attributeParts[0]);
+          auto attributeValue = replaceURLEscapedChars(attributeParts[1]);
+          if (attributeName == "")
+            throw new AttributeException("An attribute value without an attribute name", attributesField);
+          attributes[attributeName] = attributeValue;
         }
       }
     }
@@ -276,6 +279,14 @@ unittest {
   assert(record.attributes == [ "ID" : "" ]);
   // Test for an attribute without a name; should raise an error
   assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t=123"));
+  // Test for invalid attribute field
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t123"));
+  // Test when one attribute ok and a second is invalid
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;123"));
+  // Test if two = characters in one attribute
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;1=2=3"));
+  // Test with empty string instead of attributes field
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
 }
 
 unittest {
