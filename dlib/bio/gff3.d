@@ -198,20 +198,15 @@ struct Record {
   private {
 
     void parseAttributes(string attributesField) {
-      if (attributesField.length == 0)
-        throw new AttributeException("Empty attributes field. Use dot for no attributes.", "");
+      checkIfFieldNotEmptyString("attributes", attributesField);
       if (attributesField[0] != '.') {
-        auto rawAttributes = split(attributesField, ";");
-        foreach(attribute; rawAttributes) {
-          if (attribute == "")
-            continue;
+        foreach(attribute; split(attributesField, ";")) {
+          if (attribute == "") continue;
+          checkIfAttributeHasTwoParts(attribute);
+          checkIfAttributeNameValid(attribute);
           auto attributeParts = split(attribute, "=");
-          if (attributeParts.length != 2)
-            throw new AttributeException("Invalid attribute format", attributesField);
           auto attributeName = replaceURLEscapedChars(attributeParts[0]);
           auto attributeValue = replaceURLEscapedChars(attributeParts[1]);
-          if (attributeName == "")
-            throw new AttributeException("An attribute value without an attribute name", attributesField);
           attributes[attributeName] = attributeValue;
         }
       }
@@ -221,6 +216,21 @@ struct Record {
 }
 
 private {
+
+  void checkIfFieldNotEmptyString(string field, string fieldValue) {
+    if (fieldValue.length == 0)
+      throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", fieldValue);
+  }
+
+  void checkIfAttributeHasTwoParts(string attribute) {
+    if (attribute.count('=') != 1)
+      throw new AttributeException("Invalid attribute format", attribute);
+  }
+
+  void checkIfAttributeNameValid(string attribute) {
+    if (attribute.indexOf("=") == 0) // attribute name missing
+      throw new AttributeException("An attribute value without an attribute name", attribute);
+  }
 
   bool isEmptyLine(T)(T[] line) {
     return line.strip() == "";
