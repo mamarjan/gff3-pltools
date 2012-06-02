@@ -71,8 +71,7 @@ class RecordRange(SourceRangeType) {
 
   /**
    * Retrieve a range of FASTA sequences appended to
-   * GFF3 data. Works only when there are no more
-   * records to fetch, e.g. when empty is true.
+   * GFF3 data.
    */
   auto getFastaRange() {
     scrollUntilFasta();
@@ -84,20 +83,12 @@ class RecordRange(SourceRangeType) {
 
   /**
    * Retrieves the FASTA data at the end of file
-   * in a string. Works only when there are no more
-   * records to fetch, e.g. when empty is true.
+   * in a string.
    */
   string getFastaData() {
-    // TODO: Add tests for this method
     scrollUntilFasta();
     if (empty && fastaMode) {
-      auto fastaData = appender!Array();
-      while (!data.empty) {
-        fastaData.put(data.front);
-        fastaData.put("\n");
-        data.popFront();
-      }
-      return cast(immutable)(fastaData.data);
+      return joinLines(data);
     } else {
       return null;
     }

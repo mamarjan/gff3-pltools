@@ -1,6 +1,6 @@
 module bio.util;
 
-import std.stdio, std.conv, std.range, std.string;
+import std.stdio, std.conv, std.range, std.string, std.array;
 
 /**
  * General utilities useful for more then one project
@@ -100,6 +100,21 @@ string read(File file) {
   // TODO: Throw error if file too big for a D string
   char[] buf = new char[cast(uint)(file.size)];
   return cast(immutable)(file.rawRead(buf));
+}
+
+/**
+ * Joins a range of strings or char arrays into lines.
+ */
+string joinLines(T)(T range) {
+  alias typeof(range.front()) ArrayType;
+
+  auto result = appender!(ArrayType)();
+  while (!range.empty) {
+    result.put(range.front);
+    result.put("\n");
+    range.popFront();
+  }
+  return cast(immutable)(result.data);
 }
 
 unittest {
