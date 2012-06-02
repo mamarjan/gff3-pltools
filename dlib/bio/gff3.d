@@ -46,7 +46,10 @@ class RecordRange(SourceRangeType) {
   @property Record front() {
     // TODO: Think about adding a record cache instead of recreating the front
     //       record every time
-    return Record(nextLine());
+    if (cache == Record.init)
+      return cache = Record(nextLine());
+    else
+      return cache;
   }
 
   /**
@@ -56,6 +59,7 @@ class RecordRange(SourceRangeType) {
     // First get to a line that has a valid record in it
     nextLine();
     data.popFront();
+    cache = Record.init;
   }
 
   /**
@@ -102,6 +106,8 @@ class RecordRange(SourceRangeType) {
   private {
     SourceRangeType data;
     bool fastaMode = false;
+
+    Record cache;
 
     string nextLine() {
       Array line = null;
