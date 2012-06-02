@@ -1,6 +1,7 @@
 module bio.gff3;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
+import std.ascii;
 import bio.util, bio.fasta, bio.exceptions;
 
 /**
@@ -167,6 +168,8 @@ struct Record {
   void parseLine(string line) {
     checkIfNineColumnsPresent(line);
     auto parts = split(line, "\t");
+    checkRecordForEmptyFields(parts);
+    checkIfValidSeqname(parts[0]);
     seqname = replaceURLEscapedChars(parts[0]);
     source  = replaceURLEscapedChars(parts[1]);
     feature = replaceURLEscapedChars(parts[2]);
@@ -231,6 +234,20 @@ struct Record {
     static void checkIfNineColumnsPresent(string line) {
       if (line.count("\t") < 8)
         throw new RecordException("A record with invalid number of columns", line);
+    }
+
+    static void checkRecordForEmptyFields(string[] fields) {
+      foreach(i; 0..8) {
+        if (fields[i].length < 1)
+          throw new RecordException("Found an empty field in record", fields.join("\t"));
+      }
+    }
+    static void checkIfValidSeqname(string seqname) {
+      string validSeqnameChars = cast(immutable(char)[])(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
+      foreach(character; seqname) {
+        if (validSeqnameChars.indexOf(character) < 0)
+          throw new RecordException("Invalid characters in seqname field", seqname);
+      }
     }
   }
 }
@@ -333,6 +350,17 @@ unittest {
   // Testing for invalid values
   // Test for one column missing
   assertThrown!RecordException(Record(".\t..\t.\t.\t.\t.\t.\t."));
+  // Test for random text
+  assertThrown!RecordException(Record("Test123"));
+  // Test for empty columns
+  assertThrown!RecordException(Record("\t.\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t\t."));
 }
 
 unittest {
