@@ -199,12 +199,35 @@ struct Record {
   string phase;
   string[string] attributes;
 
+  /**
+   * Returns the ID attribute from record attributes.
+   */
   @property string id() {
-    return attributes["ID"];
+    if ("ID" in attributes)
+      return attributes["ID"];
+    else
+      return null;
   }
 
+  /**
+   * Returns the Parent attribute from record attributes
+   */
+  @property string parent() {
+    if ("Parent" in attributes)
+      return attributes["Parent"];
+    else
+      return null;
+  }
+
+  /**
+   * Returns true if the attribute Is_circular is true for
+   * this record.
+   */
   @property bool isCircular() {
-    return attributes["Is_circular"] == "true";
+    if ("Is_circular" in attributes)
+      return attributes["Is_circular"] == "true";
+    else
+      return false;
   }
 
   private {
@@ -221,6 +244,7 @@ struct Record {
           auto attributeValue = replaceURLEscapedChars(attributeParts[1]);
           attributes[attributeName] = attributeValue;
         }
+        checkForInvalidIsCircularValues();
       }
     }
 
@@ -237,6 +261,17 @@ struct Record {
     static void checkIfAttributeNameValid(string attribute) {
       if (attribute.indexOf("=") == 0) // attribute name missing
         throw new AttributeException("An attribute value without an attribute name", attribute);
+    }
+
+    void checkForInvalidIsCircularValues() {
+      if ("Is_circular" in attributes) {
+        switch (attributes["Is_circular"]) {
+          case "true", "false":
+            break; // Value valid
+          default:
+            throw new AttributeException("Ivalid value for Is_circular attribute", attributes["Is_circular"]);
+        }
+      }
     }
 
     static void checkIfNineColumnsPresent(string line) {
@@ -311,6 +346,7 @@ struct Record {
           break;
       }
     }
+
     static void checkIfPhaseValid(string phase) {
       switch(phase) {
         case "0", "1", "2", ".":
@@ -418,6 +454,21 @@ unittest {
     assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;000000=17239"]);
   }
 
+  // Test id() method/property
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1").id == "1");
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=").id == "");
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").id is null);
+
+  // Test isCircular() method/property
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").isCircular == false);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false").isCircular == false);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true").isCircular == true);
+
+  // Test the Parent() method/property
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").parent is null);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test").parent == "test");
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;").parent == "test");
+
   // Testing for invalid values
   // Test for one column missing
   assertThrown!RecordException(Record(".\t..\t.\t.\t.\t.\t.\t."));
@@ -462,6 +513,8 @@ unittest {
   // Test for phase field with invalid values
   assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\ta\t."));
   assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t12\t."));
+  // Test for invalid values in Is_circular
+  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=invalid"));
 }
 
 unittest {
