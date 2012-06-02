@@ -168,8 +168,16 @@ struct Record {
   void parseLine(string line) {
     checkIfNineColumnsPresent(line);
     auto parts = split(line, "\t");
+
     checkRecordForEmptyFields(parts);
     checkIfValidSeqname(parts[0]);
+    checkForCharactersInvalidInAnyField("source", parts[1]);
+    checkForCharactersInvalidInAnyField("feature", parts[2]);
+    checkIfCoordinatesValid(parts[3], parts[4]);
+    checkIfScoreValid(parts[5]);
+    checkIfStrandValid(parts[6]);
+    checkIfPhaseValid(parts[7]);
+
     seqname = replaceURLEscapedChars(parts[0]);
     source  = replaceURLEscapedChars(parts[1]);
     feature = replaceURLEscapedChars(parts[2]);
@@ -242,11 +250,74 @@ struct Record {
           throw new RecordException("Found an empty field in record", fields.join("\t"));
       }
     }
+
     static void checkIfValidSeqname(string seqname) {
       string validSeqnameChars = cast(immutable(char)[])(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
       foreach(character; seqname) {
         if (validSeqnameChars.indexOf(character) < 0)
           throw new RecordException("Invalid characters in seqname field", seqname);
+      }
+    }
+
+    static void checkForCharactersInvalidInAnyField(string fieldName, string field) {
+      foreach(character; field) {
+        if (std.ascii.isControl(character))
+          throw new RecordException("Control characters not allowed in field " ~ fieldName, field);
+      }
+    }
+
+    static void checkIfCoordinatesValid(string start, string end) {
+      if (start != ".") {
+        foreach(character; start) {
+          if (!(character.isDigit()))
+            throw new RecordException("Only a dot or digits are allowed in field start", start);
+        }
+        if (to!long(start) < 1)
+          throw new RecordException("Start field can't be a number less then 1", start);
+      }
+      if (end != ".") {
+        foreach(character; start) {
+          if (!(character.isDigit()))
+            throw new RecordException("Only a dot or digits are allowed in field end", end);
+        }
+        if (to!long(end) < 1)
+          throw new RecordException("End field can't be a number less then 1", start);
+      }
+      if ((start != ".") && (end != ".")) {
+        auto startValue = to!long(start);
+        auto endValue = to!long(end);
+        if (startValue > endValue)
+          throw new RecordException("End can't be less then start field", "start=" ~ start ~ ", end=" ~ end);
+      }
+    }
+
+    static void checkIfScoreValid(string score) {
+      checkForCharactersInvalidInAnyField("score", score);
+      if (score != ".") {
+        try {
+          to!double(score);
+        } catch (ConvException e) {
+          throw new RecordException("Score field should contain a float value", score);
+        }
+      }
+    }
+
+    static void checkIfStrandValid(string strand) {
+      switch(strand) {
+        case "+", "-", "?", ".":
+          break; // Strand value valid
+        default:
+          throw new RecordException("Invalid strand field", strand);
+          break;
+      }
+    }
+    static void checkIfPhaseValid(string phase) {
+      switch(phase) {
+        case "0", "1", "2", ".":
+          break; // Phase value valid
+        default:
+          throw new RecordException("Invalid phase field", phase);
+          break;
       }
     }
   }
@@ -361,6 +432,36 @@ unittest {
   assertThrown!RecordException(Record(".\t.\t.\t.\t.\t\t.\t.\t."));
   assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t\t.\t."));
   assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t\t."));
+  // Test for invalid characters in all fields
+  assertThrown!RecordException(Record("\0\t.\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t\0\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t\0\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t\0\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t\0\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t\0\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t\0\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t\0\t."));
+  // Test for invalid characters in seqname
+  assertThrown!RecordException(Record(">\t.\t.\t.\t.\t.\t.\t.\t."));
+  // Test for start and end fields with invalid values
+  assertThrown!RecordException(Record(".\t.\t.\t-5\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t0\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t-4\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t0\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t5\t4\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\ta\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\tb\t.\t.\t.\t."));
+  // Test for score field with invalid values
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\tabc\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t1.0abc\t.\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\tabc1.0\t.\t.\t."));
+  // Test for strand field with invalid values
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t+-\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\ta\t.\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t+\0\t.\t."));
+  // Test for phase field with invalid values
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\ta\t."));
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t12\t."));
 }
 
 unittest {
