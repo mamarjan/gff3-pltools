@@ -44,8 +44,6 @@ class RecordRange(SourceRangeType) {
    * Ignores comments, pragmas and empty lines in the data source
    */
   @property Record front() {
-    // TODO: Think about adding a record cache instead of recreating the front
-    //       record every time
     if (cache == Record.init)
       return cache = Record(nextLine());
     else
@@ -99,21 +97,24 @@ class RecordRange(SourceRangeType) {
     bool fastaMode = false;
 
     Record cache;
+    string lineCache;
 
     string nextLine() {
-      Array line = null;
-      if (!data.empty)
-        line = data.front;
+      if (data.empty) return null;
+      if (!(lineCache is null))
+        return lineCache;
+
+      auto line = data.front;
+      data.popFront();
       while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
+        line = data.front;
         data.popFront();
-        if (!data.empty)
-          line = data.front;
       }
+      lineCache = line;
       if (startOfFASTA(line)) {
         fastaMode = true;
         if (!isFastaHeader(line))
-          //Remove ##FASTA line from data source
-          data.popFront();
+          data.popFront(); //Remove ##FASTA line from data source
       }
       if (data.empty || fastaMode)
         return null;
