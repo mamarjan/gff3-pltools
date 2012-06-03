@@ -89,6 +89,9 @@ class LazySplitLines {
  */
 string detectNewLineDelim(string data) {
   // TODO: Implement a better line termination detection strategy
+  //
+  // FIXME: We can assume newlines are platform specific. D has a way of handling these. 
+  //        Any digressions are resposibility of the user, not this library.
   return "\n";
 }
 
