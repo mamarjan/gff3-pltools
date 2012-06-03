@@ -45,7 +45,7 @@ class RecordRange(SourceRangeType) {
    */
   @property Record front() {
     if (cache == Record.init)
-      return cache = Record(nextLine());
+      return cache = Record(next_line());
     else
       return cache;
   }
@@ -55,26 +55,26 @@ class RecordRange(SourceRangeType) {
    */
   void popFront() {
     // First get to a line that has a valid record in it
-    nextLine();
+    next_line();
     data.popFront();
     cache = Record.init;
-    lineCache = null;
+    line_cache = null;
   }
 
   /**
    * Return true if no more records left in the range.
    */
   @property bool empty() { 
-    return nextLine() is null;
+    return next_line() is null;
   }
 
   /**
    * Retrieve a range of FASTA sequences appended to
    * GFF3 data.
    */
-  auto getFastaRange() {
-    scrollUntilFasta();
-    if (empty && fastaMode)
+  auto get_fasta_range() {
+    scroll_until_fasta();
+    if (empty && fasta_mode)
       return new FastaRange!(SourceRangeType)(data);
     else
       return null;
@@ -84,10 +84,10 @@ class RecordRange(SourceRangeType) {
    * Retrieves the FASTA data at the end of file
    * in a string.
    */
-  string getFastaData() {
-    scrollUntilFasta();
-    if (empty && fastaMode) {
-      return joinLines(data);
+  string get_fasta_data() {
+    scroll_until_fasta();
+    if (empty && fasta_mode) {
+      return join_lines(data);
     } else {
       return null;
     }
@@ -95,10 +95,10 @@ class RecordRange(SourceRangeType) {
 
   private {
     SourceRangeType data;
-    bool fastaMode = false;
+    bool fasta_mode = false;
 
     Record cache;
-    string lineCache;
+    string line_cache;
 
     /**
      * Retrieve the next line with a valid record, or null is there
@@ -106,52 +106,52 @@ class RecordRange(SourceRangeType) {
      * leave the line in data source just in case if it's part of
      * FASTA data.
      */
-    string nextLine() {
-      if (!(lineCache is null))
-        return lineCache;
-      if (fastaMode)
+    string next_line() {
+      if (!(line_cache is null))
+        return line_cache;
+      if (fasta_mode)
         return null;
       Array line = null;
       while (!data.empty) {
         line = data.front;
-        if (isComment(line)) { data.popFront(); continue; }
-        if (isEmptyLine(line)) { data.popFront(); continue; }
-        if (startOfFASTA(line)) {
-          fastaMode = true;
-          if (!isFastaHeader(line))
+        if (is_comment(line)) { data.popFront(); continue; }
+        if (is_empty_line(line)) { data.popFront(); continue; }
+        if (is_start_of_fasta(line)) {
+          fasta_mode = true;
+          if (!is_fasta_header(line))
             data.popFront(); // Remove ##FASTA line from data source
           break;
         }
         // Found line with a valid record
         break;
       }
-      if (data.empty || fastaMode)
-        lineCache = null;
+      if (data.empty || fasta_mode)
+        line_cache = null;
       else {
         static if (is(typeof(SourceRangeType.front()) == string)) {
-          lineCache = line;
+          line_cache = line;
         } else {
-          lineCache = to!string(line);
+          line_cache = to!string(line);
         }
       }
-      return lineCache;
+      return line_cache;
     }
 
     /**
      * Skips all the GFF3 records until it gets to the start of
      * the FASTA section or end of file
      */
-    void scrollUntilFasta() {
+    void scroll_until_fasta() {
       auto line = data.front;
-      while ((!data.empty) && (!startOfFASTA(line))) {
+      while ((!data.empty) && (!is_start_of_fasta(line))) {
         data.popFront();
         if (!data.empty)
           line = data.front;
       }
 
-      if (startOfFASTA(line)) {
-        fastaMode = true;
-        if (!isFastaHeader(line))
+      if (is_start_of_fasta(line)) {
+        fasta_mode = true;
+        if (!is_fasta_header(line))
           //Remove ##FASTA line from data source
           data.popFront();
       }
@@ -165,7 +165,7 @@ class RecordRange(SourceRangeType) {
  */
 struct Record {
   this(string line) {
-    parseLine(line);
+    parse_line(line);
   }
 
   /**
@@ -173,28 +173,28 @@ struct Record {
    * The line is first split into its parts and then escaped
    * characters are replaced in those fields.
    */
-  void parseLine(string line) {
-    checkIfNineColumnsPresent(line);
+  void parse_line(string line) {
+    check_if_nine_columns_present(line);
     auto parts = split(line, "\t");
 
-    checkRecordForEmptyFields(parts);
-    checkIfValidSeqname(parts[0]);
-    checkForCharactersInvalidInAnyField("source", parts[1]);
-    checkForCharactersInvalidInAnyField("feature", parts[2]);
-    checkIfCoordinatesValid(parts[3], parts[4]);
-    checkIfScoreValid(parts[5]);
-    checkIfStrandValid(parts[6]);
-    checkIfPhaseValid(parts[7]);
+    check_record_for_empty_fields(parts);
+    check_if_valid_seqname(parts[0]);
+    check_for_characters_invalid_in_any_field("source", parts[1]);
+    check_for_characters_invalid_in_any_field("feature", parts[2]);
+    check_if_coordinates_valid(parts[3], parts[4]);
+    check_if_score_valid(parts[5]);
+    check_if_strand_valid(parts[6]);
+    check_if_phase_valid(parts[7]);
 
-    seqname = replaceURLEscapedChars(parts[0]);
-    source  = replaceURLEscapedChars(parts[1]);
-    feature = replaceURLEscapedChars(parts[2]);
+    seqname = replace_url_escaped_chars(parts[0]);
+    source  = replace_url_escaped_chars(parts[1]);
+    feature = replace_url_escaped_chars(parts[2]);
     start   = parts[3];
     end     = parts[4];
     score   = parts[5];
     strand  = parts[6];
     phase   = parts[7];
-    parseAttributes(parts[8]);
+    parse_attributes(parts[8]);
   }
 
   string seqname;
@@ -231,7 +231,7 @@ struct Record {
    * Returns true if the attribute Is_circular is true for
    * this record.
    */
-  @property bool isCircular() {
+  @property bool is_circular() {
     if ("Is_circular" in attributes)
       return attributes["Is_circular"] == "true";
     else
@@ -240,38 +240,38 @@ struct Record {
 
   private {
 
-    void parseAttributes(string attributesField) {
-      checkIfFieldNotEmptyString("attributes", attributesField);
-      if (attributesField[0] != '.') {
-        foreach(attribute; split(attributesField, ";")) {
+    void parse_attributes(string attributes_field) {
+      check_if_field_not_empty_string("attributes", attributes_field);
+      if (attributes_field[0] != '.') {
+        foreach(attribute; split(attributes_field, ";")) {
           if (attribute == "") continue;
-          checkIfAttributeHasTwoParts(attribute);
-          checkIfAttributeNameValid(attribute);
-          auto attributeParts = split(attribute, "=");
-          auto attributeName = replaceURLEscapedChars(attributeParts[0]);
-          auto attributeValue = replaceURLEscapedChars(attributeParts[1]);
-          attributes[attributeName] = attributeValue;
+          check_if_attribute_has_two_parts(attribute);
+          check_if_attribute_name_valid(attribute);
+          auto attribute_parts = split(attribute, "=");
+          auto attribute_name = replace_url_escaped_chars(attribute_parts[0]);
+          auto attribute_value = replace_url_escaped_chars(attribute_parts[1]);
+          attributes[attribute_name] = attribute_value;
         }
-        checkForInvalidIsCircularValues();
+        check_for_invalid_is_circular_values();
       }
     }
 
-    static void checkIfFieldNotEmptyString(string field, string fieldValue) {
-      if (fieldValue.length == 0)
-        throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", fieldValue);
+    static void check_if_field_not_empty_string(string field, string field_value) {
+      if (field_value.length == 0)
+        throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", field_value);
     }
 
-    static void checkIfAttributeHasTwoParts(string attribute) {
+    static void check_if_attribute_has_two_parts(string attribute) {
       if (attribute.count('=') != 1)
         throw new AttributeException("Invalid attribute format", attribute);
     }
 
-    static void checkIfAttributeNameValid(string attribute) {
+    static void check_if_attribute_name_valid(string attribute) {
       if (attribute.indexOf("=") == 0) // attribute name missing
         throw new AttributeException("An attribute value without an attribute name", attribute);
     }
 
-    void checkForInvalidIsCircularValues() {
+    void check_for_invalid_is_circular_values() {
       if ("Is_circular" in attributes) {
         switch (attributes["Is_circular"]) {
           case "true", "false":
@@ -282,34 +282,34 @@ struct Record {
       }
     }
 
-    static void checkIfNineColumnsPresent(string line) {
+    static void check_if_nine_columns_present(string line) {
       if (line.count("\t") < 8)
         throw new RecordException("A record with invalid number of columns", line);
     }
 
-    static void checkRecordForEmptyFields(string[] fields) {
+    static void check_record_for_empty_fields(string[] fields) {
       foreach(i; 0..8) {
         if (fields[i].length < 1)
           throw new RecordException("Found an empty field in record", fields.join("\t"));
       }
     }
 
-    static void checkIfValidSeqname(string seqname) {
-      string validSeqnameChars = cast(immutable(char)[])(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
+    static void check_if_valid_seqname(string seqname) {
+      string valid_seqname_chars = cast(immutable(char)[])(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
       foreach(character; seqname) {
-        if (validSeqnameChars.indexOf(character) < 0)
+        if (valid_seqname_chars.indexOf(character) < 0)
           throw new RecordException("Invalid characters in seqname field", seqname);
       }
     }
 
-    static void checkForCharactersInvalidInAnyField(string fieldName, string field) {
+    static void check_for_characters_invalid_in_any_field(string field_name, string field) {
       foreach(character; field) {
         if (std.ascii.isControl(character))
-          throw new RecordException("Control characters not allowed in field " ~ fieldName, field);
+          throw new RecordException("Control characters not allowed in field " ~ field_name, field);
       }
     }
 
-    static void checkIfCoordinatesValid(string start, string end) {
+    static void check_if_coordinates_valid(string start, string end) {
       if (start != ".") {
         foreach(character; start) {
           if (!(character.isDigit()))
@@ -327,15 +327,15 @@ struct Record {
           throw new RecordException("End field can't be a number less then 1", start);
       }
       if ((start != ".") && (end != ".")) {
-        auto startValue = to!long(start);
-        auto endValue = to!long(end);
-        if (startValue > endValue)
+        auto start_value = to!long(start);
+        auto end_value = to!long(end);
+        if (start_value > end_value)
           throw new RecordException("End can't be less then start field", "start=" ~ start ~ ", end=" ~ end);
       }
     }
 
-    static void checkIfScoreValid(string score) {
-      checkForCharactersInvalidInAnyField("score", score);
+    static void check_if_score_valid(string score) {
+      check_for_characters_invalid_in_any_field("score", score);
       if (score != ".") {
         try {
           to!double(score);
@@ -345,7 +345,7 @@ struct Record {
       }
     }
 
-    static void checkIfStrandValid(string strand) {
+    static void check_if_strand_valid(string strand) {
       switch(strand) {
         case "+", "-", "?", ".":
           break; // Strand value valid
@@ -355,7 +355,7 @@ struct Record {
       }
     }
 
-    static void checkIfPhaseValid(string phase) {
+    static void check_if_phase_valid(string phase) {
       switch(phase) {
         case "0", "1", "2", ".":
           break; // Phase value valid
@@ -369,38 +369,38 @@ struct Record {
 
 private {
 
-  bool isEmptyLine(T)(T[] line) {
+  bool is_empty_line(T)(T[] line) {
     return line.strip() == "";
   }
 
-  bool isComment(T)(T[] line) {
+  bool is_comment(T)(T[] line) {
     return indexOf(line, '#') != -1;
   }
 
-  bool startOfFASTA(T)(T[] line) {
+  bool is_start_of_fasta(T)(T[] line) {
     return (line.length >= 1) ? (line.startsWith("##FASTA") || (line[0] == '>')) : false;
   }
 
-  bool isFastaHeader(T)(T[] line) {
+  bool is_fasta_header(T)(T[] line) {
     return line[0] == '>';
   }
 }
 
 unittest {
-  writeln("Testing isComment...");
-  assert(isComment("# test") == true);
-  assert(isComment("     # test") == true);
-  assert(isComment("# test\n") == true);
+  writeln("Testing is_comment...");
+  assert(is_comment("# test") == true);
+  assert(is_comment("     # test") == true);
+  assert(is_comment("# test\n") == true);
 
-  writeln("Testing isEmptyLine...");
-  assert(isEmptyLine("") == true);
-  assert(isEmptyLine("    ") == true);
-  assert(isEmptyLine("\n") == true);
+  writeln("Testing is_empty_line...");
+  assert(is_empty_line("") == true);
+  assert(is_empty_line("    ") == true);
+  assert(is_empty_line("\n") == true);
 
-  writeln("Testing startOfFASTA...");
-  assert(startOfFASTA("##FASTA") == true);
-  assert(startOfFASTA(">ctg123") == true);
-  assert(startOfFASTA("Test 123") == false);
+  writeln("Testing is_start_of_fasta...");
+  assert(is_start_of_fasta("##FASTA") == true);
+  assert(is_start_of_fasta(">ctg123") == true);
+  assert(is_start_of_fasta("Test 123") == false);
 }
 
 unittest {
@@ -468,9 +468,9 @@ unittest {
   assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").id is null);
 
   // Test isCircular() method/property
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").isCircular == false);
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false").isCircular == false);
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true").isCircular == true);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").is_circular == false);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false").is_circular == false);
+  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true").is_circular == true);
 
   // Test the Parent() method/property
   assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").parent is null);
@@ -529,9 +529,9 @@ unittest {
   writeln("Testing parsing strings with parse function and RecordRange...");
 
   // Retrieve test file into a string
-  File gff3File;
-  gff3File.open("./test/data/records.gff3", "r");
-  auto data = gff3File.read();
+  File gff3_file;
+  gff3_file.open("./test/data/records.gff3", "r");
+  auto data = gff3_file.read();
 
   // Parse data
   auto records = parse(data);
@@ -559,7 +559,7 @@ unittest {
 
   // Test scrolling to FASTA data
   records = parse(data);
-  assert(records.getFastaData() ==
+  assert(records.get_fasta_data() ==
       ">ctg123\n" ~
       "cttctgggcgtacccgattctcggagaacttgccgcaccattccgccttg\n" ~
       "tgttcattgctgcctgcatgttcattgtctacctcggctacgtgtggcta\n" ~
@@ -608,7 +608,7 @@ unittest {
   }
 
   // Testing with various files
-  uint[string] fileRecordsN = [
+  uint[string] file_records_n = [
       "messy_protein_domains.gff3" : 1009,
       "gff3_with_syncs.gff3" : 19,
       "au9_scaffold_subset.gff3" : 1005,
@@ -622,12 +622,12 @@ unittest {
       "tomato_test.gff3" : 249,
       "spec_eden.gff3" : 23,
       "spec_match.gff3" : 3 ];
-  foreach(filename, recordsN; fileRecordsN) {
+  foreach(filename, records_n; file_records_n) {
     writeln("  Parsing file ./test/data/" ~ filename ~ "...");
     uint counter = 0;
     foreach(rec; open("./test/data/" ~ filename))
       counter++;
-    assert(counter == recordsN);
+    assert(counter == records_n);
   }
 }
 

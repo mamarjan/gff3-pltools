@@ -10,21 +10,21 @@ import std.stdio, std.conv, std.range, std.string, std.array;
  * Converts the characters escaped with the URL escaping convention (%XX)
  * in a string to their real char values.
  */
-string replaceURLEscapedChars(string original) {
+string replace_url_escaped_chars(string original) {
   auto index = indexOf(original, '%');
   if (index < 0) {
     return original;
   } else {
     return original[0..index] ~
-           convertURLEscapedChar(original[index+1..index+3]) ~
-           replaceURLEscapedChars(original[index+3..$]);
+           convert_url_escaped_char(original[index+1..index+3]) ~
+           replace_url_escaped_chars(original[index+3..$]);
   }
 }
 
 /**
   * Converts characters in hexadecimal format to their real char value.
   */
-char convertURLEscapedChar(string code) {
+char convert_url_escaped_char(string code) {
   uint numeric = to!int(code, 16);
   return cast(char) numeric;
 }
@@ -38,7 +38,7 @@ class LazySplitLines {
   this(string data) {
     this.data = data;
     this.data_left = data;
-    this.newline = detectNewLineDelim(data);
+    this.newline = detect_newline_delim(data);
   }
 
   /**
@@ -87,7 +87,7 @@ class LazySplitLines {
  * Detects the character or a character sequence which is used in the string
  * for line termination.
  */
-string detectNewLineDelim(string data) {
+string detect_newline_delim(string data) {
   // TODO: Implement a better line termination detection strategy
   return "\n";
 }
@@ -105,7 +105,7 @@ string read(File file) {
 /**
  * Joins a range of strings or char arrays into lines.
  */
-string joinLines(T)(T range) {
+string join_lines(T)(T range) {
   alias typeof(range.front()) ArrayType;
 
   auto result = appender!(ArrayType)();
@@ -118,17 +118,17 @@ string joinLines(T)(T range) {
 }
 
 unittest {
-  writeln("Testing convertEscapedChar...");
-  assert(convertURLEscapedChar("3D") == '=');
-  assert(convertURLEscapedChar("00") == '\0');
+  writeln("Testing convert_url_escaped_char...");
+  assert(convert_url_escaped_char("3D") == '=');
+  assert(convert_url_escaped_char("00") == '\0');
 }
 
 unittest {
-  writeln("Testing replaceURLEscapedChars...");
-  assert(replaceURLEscapedChars("%3D") == "=");
-  assert(replaceURLEscapedChars("Testing %3D") == "Testing =");
-  assert(replaceURLEscapedChars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
-  assert(replaceURLEscapedChars("One after another %3D%3B%25") == "One after another =;%");
+  writeln("Testing replace_url_escaped_chars...");
+  assert(replace_url_escaped_chars("%3D") == "=");
+  assert(replace_url_escaped_chars("Testing %3D") == "Testing =");
+  assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
+  assert(replace_url_escaped_chars("One after another %3D%3B%25") == "One after another =;%");
 }
 
 unittest {

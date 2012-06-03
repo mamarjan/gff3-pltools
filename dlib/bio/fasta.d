@@ -25,7 +25,7 @@ class FastaRange(SourceRangeType) {
    */
   @property FastaRecord front() {
     if (cache is null) {
-      cache = getNextRecord();
+      cache = get_next_record();
     }
     return cache;
   }
@@ -42,7 +42,7 @@ class FastaRange(SourceRangeType) {
    */
   @property bool empty() {
     if (cache is null)
-      cache = getNextRecord();
+      cache = get_next_record();
     return cache is null;
   }
 
@@ -52,8 +52,8 @@ class FastaRange(SourceRangeType) {
     SourceRangeType data;
     FastaRecord cache;
 
-    FastaRecord getNextRecord() {
-      auto header = nextFastaLine().idup;
+    FastaRecord get_next_record() {
+      auto header = next_fasta_line().idup;
       if (header is null)
         return null;
 
@@ -66,27 +66,27 @@ class FastaRange(SourceRangeType) {
       data.popFront();
 
       auto sequence = appender!Array();
-      auto currentFastaLine = nextFastaLine();
-      while ((currentFastaLine != null) && (!isFastaHeader(currentFastaLine)) && (!data.empty)) {
-        sequence.put(currentFastaLine);
+      auto current_fasta_line = next_fasta_line();
+      while ((current_fasta_line != null) && (!is_fasta_header(current_fasta_line)) && (!data.empty)) {
+        sequence.put(current_fasta_line);
         data.popFront();
-        currentFastaLine = nextFastaLine();
+        current_fasta_line = next_fasta_line();
       }
-      auto fastaSequence = sequence.data;
+      auto fasta_sequence = sequence.data;
 
       static if (is(typeof(data) == LazySplitLines)) {
-        result.sequence = fastaSequence;
+        result.sequence = fasta_sequence;
       } else {
-        result.sequence = to!string(fastaSequence);
+        result.sequence = to!string(fasta_sequence);
       }
       return result;
     }
 
-    Array nextFastaLine() {
+    Array next_fasta_line() {
       if (data.empty)
         return null;
       auto line = data.front;
-      while ((isComment(line) || isEmptyLine(line)) && !data.empty) {
+      while ((is_comment(line) || is_empty_line(line)) && !data.empty) {
         data.popFront();
         if (!data.empty)
           line = data.front;
@@ -101,15 +101,15 @@ class FastaRange(SourceRangeType) {
 
 private {
 
-  bool isFastaHeader(T)(T[] line) {
+  bool is_fasta_header(T)(T[] line) {
     return line[0] == '>';
   }
 
-  bool isEmptyLine(T)(T[] line) {
+  bool is_empty_line(T)(T[] line) {
     return line.strip() == "";
   }
 
-  bool isComment(T)(T[] line) {
+  bool is_comment(T)(T[] line) {
     if (line.length >= 1)
       return line[0] == ';';
     else
