@@ -26,6 +26,8 @@ auto open(string filename) {
  * which is used as a data source. It's enough for the data source to
  * support front, popFront() and empty methods to be used by this
  * class.
+ *
+ * FIXME: Lazy?
  */
 class RecordRange(SourceRangeType) {
   /**
