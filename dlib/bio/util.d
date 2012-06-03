@@ -127,6 +127,9 @@ unittest {
   writeln("Testing convertEscapedChar...");
   assert(convertURLEscapedChar("3D") == '=');
   assert(convertURLEscapedChar("00") == '\0');
+  assert(convertURLEscapedChar("000") == '\0');
+  assert(convertURLEscapedChar("00F") == '\0');
+  assert(convertURLEscapedChar("0H") == '\0');
 }
 
 unittest {
@@ -135,6 +138,8 @@ unittest {
   assert(replaceURLEscapedChars("Testing %3D") == "Testing =");
   assert(replaceURLEscapedChars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
   assert(replaceURLEscapedChars("One after another %3D%3B%25") == "One after another =;%");
+  assert(replaceURLEscapedChars("One after another %3D0%3B%25") == "One after another =;%");
+  assert(replaceURLEscapedChars("One after another %3H%3B%25") == "One after another =;%");
 }
 
 unittest {
