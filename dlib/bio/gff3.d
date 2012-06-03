@@ -58,6 +58,7 @@ class RecordRange(SourceRangeType) {
     nextLine();
     data.popFront();
     cache = Record.init;
+    lineCache = null;
   }
 
   /**
@@ -97,32 +98,43 @@ class RecordRange(SourceRangeType) {
     bool fastaMode = false;
 
     Record cache;
-    Array lineCache;
+    string lineCache;
 
+    /**
+     * Retrieve the next line with a valid record, or null is there
+     * is no such line anymore. Cache the line in lineCache, but
+     * leave the line in data source just in case if it's part of
+     * FASTA data.
+     */
     string nextLine() {
+      if (!(lineCache is null))
+        return lineCache;
+      if (fastaMode)
+        return null;
       Array line = null;
-      if (!data.empty)
+      while (!data.empty) {
         line = data.front;
-      while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
-        data.popFront();
-        if (!data.empty)
-          line = data.front;
-      }
-      if (startOfFASTA(line)) {
-        fastaMode = true;
-        if (!isFastaHeader(line))
-          //Remove ##FASTA line from data source
-          data.popFront();
+        if (isComment(line)) { data.popFront(); continue; }
+        if (isEmptyLine(line)) { data.popFront(); continue; }
+        if (startOfFASTA(line)) {
+          fastaMode = true;
+          if (!isFastaHeader(line))
+            data.popFront(); // Remove ##FASTA line from data source
+          break;
+        }
+        // Found line with a valid record
+        break;
       }
       if (data.empty || fastaMode)
-        return null;
+        lineCache = null;
       else {
         static if (is(typeof(SourceRangeType.front()) == string)) {
-          return line;
+          lineCache = line;
         } else {
-          return to!string(line);
+          lineCache = to!string(line);
         }
       }
+      return lineCache;
     }
 
     /**
