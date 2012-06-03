@@ -35,6 +35,7 @@ DFILES = ["dlib/bio/gff3.d",
           "dlib/bio/util.d",
           "dlib/bio/exceptions.d"].join(" ")
 
+desc "Compile and run D unit tests"
 task :unittests => ["builddir"] do
   sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
   sh "./unittests"

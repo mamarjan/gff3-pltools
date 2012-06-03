@@ -44,8 +44,6 @@ class RecordRange(SourceRangeType) {
    * Ignores comments, pragmas and empty lines in the data source
    */
   @property Record front() {
-    // TODO: Think about adding a record cache instead of recreating the front
-    //       record every time
     if (cache == Record.init)
       return cache = Record(nextLine());
     else
@@ -99,6 +97,7 @@ class RecordRange(SourceRangeType) {
     bool fastaMode = false;
 
     Record cache;
+    Array lineCache;
 
     string nextLine() {
       Array line = null;
