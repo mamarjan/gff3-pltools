@@ -33,6 +33,9 @@ char convertURLEscapedChar(string code) {
  * A lazy string splitter. The constructor takes a string,
  * detects what the line terminator is and then returns lines
  * one by one. There is no copying involved, only slicing.
+ *
+ * FIXME: This class is not truely lazy (no delegation), though
+ *        it defers parsing until calling. Look up terminology.
  */
 class LazySplitLines {
   this(string data) {
