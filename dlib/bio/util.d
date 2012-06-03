@@ -31,7 +31,7 @@ char convertURLEscapedChar(string code) {
 
 /**
  * A lazy string splitter. The constructor takes a string,
- * detects what the line terminator is and then returs lines
+ * detects what the line terminator is and then returns lines
  * one by one. There is no copying involved, only slicing.
  */
 class LazySplitLines {
