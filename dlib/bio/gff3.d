@@ -97,24 +97,22 @@ class RecordRange(SourceRangeType) {
     bool fastaMode = false;
 
     Record cache;
-    string lineCache;
+    Array lineCache;
 
     string nextLine() {
-      if (data.empty) return null;
-      if (!(lineCache is null))
-        return lineCache;
-
-      auto line = data.front;
-      data.popFront();
-      while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
+      Array line = null;
+      if (!data.empty)
         line = data.front;
+      while ((isComment(line) || isEmptyLine(line)) && !data.empty && !startOfFASTA(line)) {
         data.popFront();
+        if (!data.empty)
+          line = data.front;
       }
-      lineCache = line;
       if (startOfFASTA(line)) {
         fastaMode = true;
         if (!isFastaHeader(line))
-          data.popFront(); //Remove ##FASTA line from data source
+          //Remove ##FASTA line from data source
+          data.popFront();
       }
       if (data.empty || fastaMode)
         return null;
