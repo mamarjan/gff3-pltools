@@ -31,8 +31,11 @@ char convert_url_escaped_char(string code) {
 
 /**
  * A lazy string splitter. The constructor takes a string,
- * detects what the line terminator is and then returs lines
+ * detects what the line terminator is and then returns lines
  * one by one. There is no copying involved, only slicing.
+ *
+ * FIXME: This class is not truely lazy (no delegation), though
+ *        it defers parsing until calling. Look up terminology.
  */
 class LazySplitLines {
   this(string data) {
@@ -89,6 +92,9 @@ class LazySplitLines {
  */
 string detect_newline_delim(string data) {
   // TODO: Implement a better line termination detection strategy
+  //
+  // FIXME: We can assume newlines are platform specific. D has a way of handling these. 
+  //        Any digressions are resposibility of the user, not this library.
   return "\n";
 }
 
@@ -121,6 +127,9 @@ unittest {
   writeln("Testing convert_url_escaped_char...");
   assert(convert_url_escaped_char("3D") == '=');
   assert(convert_url_escaped_char("00") == '\0');
+  assert(convert_url_escaped_char("000") == '\0');
+  assert(convert_url_escaped_char("00F") == '\0');
+  assert(convert_url_escaped_char("0H") == '\0');
 }
 
 unittest {
@@ -129,6 +138,8 @@ unittest {
   assert(replace_url_escaped_chars("Testing %3D") == "Testing =");
   assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
   assert(replace_url_escaped_chars("One after another %3D%3B%25") == "One after another =;%");
+  assert(replace_url_escaped_chars("One after another %3D0%3B%25") == "One after another =;%");
+  assert(replace_url_escaped_chars("One after another %3H%3B%25") == "One after another =;%");
 }
 
 unittest {
