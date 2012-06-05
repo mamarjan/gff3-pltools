@@ -9,7 +9,7 @@ import bio.util, bio.fasta, bio.exceptions;
  * Returns: a range of records.
  */
 auto parse(string data) {
-  return new RecordRange!(LazySplitIntoLines)(new LazySplitIntoLines(data));
+  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data));
 }
 
 /**
@@ -21,13 +21,11 @@ auto open(string filename) {
 }
 
 /**
- * Represents a lazy range of GFF3 records from a range of lines.
+ * Represents a range of GFF3 records derived from a range of lines.
  * The class takes a type parameter, which is the class or the struct
  * which is used as a data source. It's enough for the data source to
  * support front, popFront() and empty methods to be used by this
  * class.
- *
- * FIXME: Lazy?
  */
 class RecordRange(SourceRangeType) {
   /**
