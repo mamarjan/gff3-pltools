@@ -30,7 +30,7 @@ end
 
 CLEAN.include("lib/*.so")
 
-DFILES = ["dlib/bio/gff3.d",
+DFILES = ["dlib/bio/gff3_file.d",
           "dlib/bio/gff3_record.d",
           "dlib/bio/gff3_validation.d",
           "dlib/bio/fasta.d",
