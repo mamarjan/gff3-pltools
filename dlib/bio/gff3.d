@@ -378,11 +378,7 @@ private {
   }
 
   bool is_start_of_fasta(T)(T[] line) {
-    return (line.length >= 1) ? (line.startsWith("##FASTA") || (line[0] == '>')) : false;
-  }
-
-  bool is_fasta_header(T)(T[] line) {
-    return line[0] == '>';
+    return (line.length >= 1) ? (line.startsWith("##FASTA") || is_fasta_header(line)) : false;
   }
 }
 

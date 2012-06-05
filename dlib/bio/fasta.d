@@ -99,11 +99,11 @@ class FastaRange(SourceRangeType) {
   }
 }
 
-private {
+bool is_fasta_header(T)(T[] line) {
+  return line[0] == '>';
+}
 
-  bool is_fasta_header(T)(T[] line) {
-    return line[0] == '>';
-  }
+private {
 
   bool is_empty_line(T)(T[] line) {
     return line.strip() == "";
