@@ -9,7 +9,7 @@ import bio.util, bio.fasta, bio.exceptions;
  * Returns: a range of records.
  */
 auto parse(string data) {
-  return new RecordRange!(LazySplitLines)(new LazySplitLines(data));
+  return new RecordRange!(LazySplitIntoLines)(new LazySplitIntoLines(data));
 }
 
 /**

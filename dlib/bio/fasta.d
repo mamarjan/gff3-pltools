@@ -58,7 +58,7 @@ class FastaRange(SourceRangeType) {
         return null;
 
       FastaRecord result = new FastaRecord();
-      static if (is(typeof(data) == LazySplitLines)) {
+      static if (is(typeof(data) == LazySplitIntoLines)) {
         result.header = header;
       } else {
         result.header = to!string(header);
@@ -74,7 +74,7 @@ class FastaRange(SourceRangeType) {
       }
       auto fasta_sequence = sequence.data;
 
-      static if (is(typeof(data) == LazySplitLines)) {
+      static if (is(typeof(data) == LazySplitIntoLines)) {
         result.sequence = fasta_sequence;
       } else {
         result.sequence = to!string(fasta_sequence);

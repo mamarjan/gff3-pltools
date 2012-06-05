@@ -45,7 +45,7 @@ char convert_url_escaped_char(string code) {
  * FIXME: This class is not truely lazy (no delegation), though
  *        it defers parsing until calling. Look up terminology.
  */
-class LazySplitLines {
+class LazySplitIntoLines {
   this(string data) {
     this.data = data;
     this.data_left = data;
@@ -151,8 +151,8 @@ unittest {
 }
 
 unittest {
-  writeln("Testing LazySplitLines...");
-  auto lines = new LazySplitLines("Test\n1\n2\n3");
+  writeln("Testing LazySplitIntoLines...");
+  auto lines = new LazySplitIntoLines("Test\n1\n2\n3");
   assert(lines.empty == false);
   assert(lines.front == "Test"); lines.popFront();
   assert(lines.empty == false);
@@ -164,7 +164,7 @@ unittest {
   assert(lines.empty == true);
   
   // Test for correct behavior when newline at the end of the file
-  lines = new LazySplitLines("Test newline at the end\n");
+  lines = new LazySplitIntoLines("Test newline at the end\n");
   assert(lines.empty == false);
   assert(lines.front == "Test newline at the end"); lines.popFront();
   assert(lines.empty == false);
@@ -172,7 +172,7 @@ unittest {
   assert(lines.empty == true);
 
   // Test if it's working with foreach
-  lines = new LazySplitLines("1\n2\n3\n4");
+  lines = new LazySplitIntoLines("1\n2\n3\n4");
   int i = 1;
   foreach(value; lines) {
     assert(value == to!string(i));
