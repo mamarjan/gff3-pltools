@@ -1,6 +1,7 @@
 module bio.util;
 
-import std.stdio, std.conv, std.range, std.string, std.array;
+import std.stdio, std.conv, std.range, std.string, std.array, std.exception;
+import std.ascii;
 
 /**
  * General utilities useful for more then one project
@@ -25,6 +26,13 @@ string replace_url_escaped_chars(string original) {
   * Converts characters in hexadecimal format to their real char value.
   */
 char convert_url_escaped_char(string code) {
+  // First check if code valid
+  if (code.length != 2)
+    throw new ConvException("Invalid URL escaped code: " ~ code);
+  foreach(character; code)
+    if (std.ascii.fullHexDigits.indexOf(character) == -1)
+      throw new ConvException("Invalid URL escaped code: " ~ code);
+
   uint numeric = to!int(code, 16);
   return cast(char) numeric;
 }
@@ -127,9 +135,9 @@ unittest {
   writeln("Testing convert_url_escaped_char...");
   assert(convert_url_escaped_char("3D") == '=');
   assert(convert_url_escaped_char("00") == '\0');
-  assert(convert_url_escaped_char("000") == '\0');
-  assert(convert_url_escaped_char("00F") == '\0');
-  assert(convert_url_escaped_char("0H") == '\0');
+  assertThrown!ConvException(convert_url_escaped_char("000") == '\0');
+  assertThrown!ConvException(convert_url_escaped_char("00F") == '\0');
+  assertThrown!ConvException(convert_url_escaped_char("0H") == '\0');
 }
 
 unittest {
@@ -138,8 +146,8 @@ unittest {
   assert(replace_url_escaped_chars("Testing %3D") == "Testing =");
   assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
   assert(replace_url_escaped_chars("One after another %3D%3B%25") == "One after another =;%");
-  assert(replace_url_escaped_chars("One after another %3D0%3B%25") == "One after another =;%");
-  assert(replace_url_escaped_chars("One after another %3H%3B%25") == "One after another =;%");
+  assert(replace_url_escaped_chars("One after another %3D0%3B%25") == "One after another =0;%");
+  assertThrown!ConvException(replace_url_escaped_chars("One after another %3H%3B%25") == "One after another =;%");
 }
 
 unittest {
