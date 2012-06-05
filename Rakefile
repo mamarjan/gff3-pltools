@@ -31,6 +31,8 @@ end
 CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/bio/gff3.d",
+          "dlib/bio/gff3_record.d",
+          "dlib/bio/gff3_validation.d",
           "dlib/bio/fasta.d",
           "dlib/bio/util.d",
           "dlib/bio/exceptions.d"].join(" ")
