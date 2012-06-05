@@ -2,7 +2,7 @@ module bio.gff3_record;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.util, bio.exceptions, bio.gff3_validation;
+import bio.exceptions, bio.gff3_validation, util.esc_char_conv;
 
 /**
  * Represents a parsed line in a GFF3 file.

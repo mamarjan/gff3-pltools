@@ -2,7 +2,8 @@ module bio.gff3;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
-import bio.util, bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
+import bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
+import util.join_lines, util.split_into_lines, util.read_file;
 
 /**
  * Parses a string of GFF3 data.

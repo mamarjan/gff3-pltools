@@ -2,7 +2,7 @@ module bio.gff3_validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.util, bio.exceptions;
+import bio.exceptions, util.esc_char_conv;
 
 alias bool function(string) RecordValidator;
 

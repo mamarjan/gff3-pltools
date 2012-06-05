@@ -34,7 +34,10 @@ DFILES = ["dlib/bio/gff3_file.d",
           "dlib/bio/gff3_record.d",
           "dlib/bio/gff3_validation.d",
           "dlib/bio/fasta.d",
-          "dlib/bio/util.d",
+          "dlib/util/esc_char_conv.d",
+          "dlib/util/join_lines.d",
+          "dlib/util/read_file.d",
+          "dlib/util/split_into_lines.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"

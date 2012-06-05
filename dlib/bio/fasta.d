@@ -1,7 +1,7 @@
 module bio.fasta;
 
 import std.conv, std.array, std.stdio, std.algorithm, std.string;
-import bio.util;
+import util.split_into_lines;
 
 /**
  * A minimal class for grouping the header and sequence
