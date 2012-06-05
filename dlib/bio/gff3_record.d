@@ -8,6 +8,10 @@ import bio.exceptions, bio.gff3_validation, util.esc_char_conv;
  * Represents a parsed line in a GFF3 file.
  */
 struct Record {
+  /**
+   * Constructor for the Record object, arguments are passed to the
+   * parser_line() method.
+   */
   this(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
     parse_line(line, validator);
   }
@@ -15,7 +19,11 @@ struct Record {
   /**
    * Parse a line from a GFF3 file and set object values.
    * The line is first split into its parts and then escaped
-   * characters are replaced in those fields.
+   * characters are replaced in those fields. If there is no
+   * need for record validation, pass NO_VALIDATION as the
+   * second argument to this method, or WARNINGS_ON_ERROR if
+   * badly formatted records should be skipped but logged to
+   * stderr.
    */
   void parse_line(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
     if (!validator(line))
@@ -112,16 +120,8 @@ unittest {
   // Test for an attribute with no value
   record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
   assert(record.attributes == [ "ID" : "" ]);
-  // Test for an attribute without a name; should raise an error
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t=123"));
-  // Test for invalid attribute field
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t123"));
-  // Test when one attribute ok and a second is invalid
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;123"));
-  // Test if two = characters in one attribute
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;1=2=3"));
-  // Test with empty string instead of attributes field
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
+  // Test if the validator is properly activated
+  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
 }
 
 unittest {
@@ -165,51 +165,7 @@ unittest {
   assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test").parent == "test");
   assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;").parent == "test");
 
-  // Testing for invalid values
-  // Test for one column missing
+  // Test if the validator is properly activated
   assertThrown!RecordException(Record(".\t..\t.\t.\t.\t.\t.\t."));
-  // Test for random text
-  assertThrown!RecordException(Record("Test123"));
-  // Test for empty columns
-  assertThrown!RecordException(Record("\t.\t.\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t\t.\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t\t."));
-  // Test for invalid characters in all fields
-  assertThrown!RecordException(Record("\0\t.\t.\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t\0\t.\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t\0\t.\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t\0\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t\0\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t\0\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t\0\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t\0\t."));
-  // Test for invalid characters in seqname
-  assertThrown!RecordException(Record(">\t.\t.\t.\t.\t.\t.\t.\t."));
-  // Test for start and end fields with invalid values
-  assertThrown!RecordException(Record(".\t.\t.\t-5\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t0\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t-4\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t0\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t5\t4\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\ta\t.\t.\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\tb\t.\t.\t.\t."));
-  // Test for score field with invalid values
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\tabc\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t1.0abc\t.\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\tabc1.0\t.\t.\t."));
-  // Test for strand field with invalid values
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t+-\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\ta\t.\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t+\0\t.\t."));
-  // Test for phase field with invalid values
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\ta\t."));
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t12\t."));
-  // Test for invalid values in Is_circular
-  assertThrown!AttributeException(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=invalid"));
 }
 

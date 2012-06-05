@@ -21,14 +21,15 @@ auto EXCEPTIONS_ON_ERROR = function bool(string line) {
 };
 
 auto NO_VALIDATION = function bool(string line) {
-  return false;
+  return true;
 };
+
 
 void validate_gff3_line(string line) {
   check_if_nine_columns_present(line);
   auto parts = split(line, "\t");
 
-  check_record_for_empty_fields(parts);
+  check_for_empty_fields(parts);
   check_if_valid_seqname(parts[0]);
   check_for_characters_invalid_in_any_field("source", parts[1]);
   check_for_characters_invalid_in_any_field("feature", parts[2]);
@@ -37,8 +38,10 @@ void validate_gff3_line(string line) {
   check_if_strand_valid(parts[6]);
   check_if_phase_valid(parts[7]);
 
-  check_if_field_not_empty_string("attributes", parts[8]);
-  auto attributes_field = parts[8];
+  validate_attributes(parts[8]);
+}
+
+void validate_attributes(string attributes_field) {
   if (attributes_field[0] != '.') {
     string[string] attributes;
     foreach(attribute; split(attributes_field, ";")) {
@@ -52,11 +55,6 @@ void validate_gff3_line(string line) {
     }
     check_for_invalid_is_circular_values(attributes);
   }
-}
-
-void check_if_field_not_empty_string(string field, string field_value) {
-  if (field_value.length == 0)
-    throw new AttributeException("Empty " ~ field ~ " field. Use dot for no attributes.", field_value);
 }
 
 void check_if_attribute_has_two_parts(string attribute) {
@@ -85,8 +83,8 @@ void check_if_nine_columns_present(string line) {
     throw new RecordException("A record with invalid number of columns", line);
 }
 
-void check_record_for_empty_fields(string[] fields) {
-  foreach(i; 0..8) {
+void check_for_empty_fields(string[] fields) {
+  foreach(i; 0..9) {
     if (fields[i].length < 1)
       throw new RecordException("Found an empty field in record", fields.join("\t"));
   }
@@ -161,5 +159,90 @@ void check_if_phase_valid(string phase) {
       throw new RecordException("Invalid phase field", phase);
       break;
   }
+}
+
+unittest {
+  writeln("Testing validate_gff3_line...");
+
+  // Minimal test
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  // Test splitting multiple attributes
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45"));
+  // Test if parser survives trailing semicolon
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45;"));
+  // Test if first splitting and then replacing escaped chars
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID%3D=1"));
+  // Test for an attribute with the value of a single space
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID= ;"));
+  // Test for an attribute with no value
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=;"));
+  // Test parsing lines with dots - undefined values
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\t."));
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID="));
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false"));
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true"));
+  // Test line parsing with a normal line
+  assertNotThrown(validate_gff3_line("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true"));
+  // Test parsing lines with escaped characters
+  assertNotThrown(validate_gff3_line("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239"));
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tParent=test"));
+  assertNotThrown(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;"));
+
+  // Testing for invalid values
+  // Test for an attribute without a name; should raise an error
+  assertThrown!AttributeException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\t=123"));
+  // Test for invalid attribute field
+  assertThrown!AttributeException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\t123"));
+  // Test when one attribute ok and a second is invalid
+  assertThrown!AttributeException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;123"));
+  // Test if two = characters in one attribute
+  assertThrown!AttributeException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;1=2=3"));
+  // Test with empty string instead of attributes field
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\t"));
+  // Test for one column missing
+  assertThrown!RecordException(validate_gff3_line(".\t..\t.\t.\t.\t.\t.\t."));
+  // Test for random text
+  assertThrown!RecordException(validate_gff3_line("Test123"));
+  // Test for empty columns
+  assertThrown!RecordException(validate_gff3_line("\t.\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t\t."));
+  // Test for invalid characters in all fields
+  assertThrown!RecordException(validate_gff3_line("\0\t.\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t\0\t.\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t\0\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t\0\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t\0\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t\0\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t\0\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t\0\t."));
+  // Test for invalid characters in seqname
+  assertThrown!RecordException(validate_gff3_line(">\t.\t.\t.\t.\t.\t.\t.\t."));
+  // Test for start and end fields with invalid values
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t-5\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t0\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t-4\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t0\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t5\t4\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\ta\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\tb\t.\t.\t.\t."));
+  // Test for score field with invalid values
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\tabc\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t1.0abc\t.\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\tabc1.0\t.\t.\t."));
+  // Test for strand field with invalid values
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t+-\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\ta\t.\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t+\0\t.\t."));
+  // Test for phase field with invalid values
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\ta\t."));
+  assertThrown!RecordException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t12\t."));
+  // Test for invalid values in Is_circular
+  assertThrown!AttributeException(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=invalid"));
 }
 
