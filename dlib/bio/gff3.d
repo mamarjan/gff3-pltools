@@ -2,7 +2,7 @@ module bio.gff3;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
-import bio.util, bio.fasta, bio.exceptions, bio.gff3_record;
+import bio.util, bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
 
 /**
  * Parses a string of GFF3 data.
@@ -33,8 +33,9 @@ class RecordRange(SourceRangeType) {
    * be any range of lines without newlines and with front, popFront()
    * and empty defined.
    */
-  this(SourceRangeType data) {
+  this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
     this.data = data;
+    this.validator = validator;
   }
 
   alias typeof(SourceRangeType.front()) Array;
@@ -45,7 +46,7 @@ class RecordRange(SourceRangeType) {
    */
   @property Record front() {
     if (cache == Record.init)
-      return cache = Record(next_line());
+      return cache = Record(next_line(), validator);
     else
       return cache;
   }
@@ -94,6 +95,7 @@ class RecordRange(SourceRangeType) {
   }
 
   private {
+    RecordValidator validator;
     SourceRangeType data;
     bool fasta_mode = false;
 

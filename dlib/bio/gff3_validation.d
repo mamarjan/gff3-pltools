@@ -4,6 +4,26 @@ import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
 import bio.util, bio.exceptions;
 
+alias bool function(string) RecordValidator;
+
+auto WARNINGS_ON_ERROR = function bool(string line) {
+  try {
+    validate_gff3_line(line);
+  } catch (ParsingException e) {
+    stderr.writeln(e.msg);
+  }
+  return true;
+};
+
+auto EXCEPTIONS_ON_ERROR = function bool(string line) {
+  validate_gff3_line(line);
+  return true;
+};
+
+auto NO_VALIDATION = function bool(string line) {
+  return false;
+};
+
 void validate_gff3_line(string line) {
   check_if_nine_columns_present(line);
   auto parts = split(line, "\t");

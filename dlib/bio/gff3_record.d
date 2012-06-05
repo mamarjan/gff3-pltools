@@ -8,8 +8,8 @@ import bio.util, bio.exceptions, bio.gff3_validation;
  * Represents a parsed line in a GFF3 file.
  */
 struct Record {
-  this(string line) {
-    parse_line(line);
+  this(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
+    parse_line(line, validator);
   }
 
   /**
@@ -17,8 +17,10 @@ struct Record {
    * The line is first split into its parts and then escaped
    * characters are replaced in those fields.
    */
-  void parse_line(string line) {
-    validate_gff3_line(line);
+  void parse_line(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
+    if (!validator(line))
+      return;
+
     auto parts = split(line, "\t");
 
     seqname = replace_url_escaped_chars(parts[0]);
