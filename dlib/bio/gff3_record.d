@@ -29,17 +29,8 @@ class Record {
     if (!validator(line))
       return;
 
-    auto parts = split(line, "\t");
-
-    seqname = replace_url_escaped_chars(parts[0]);
-    source  = replace_url_escaped_chars(parts[1]);
-    feature = replace_url_escaped_chars(parts[2]);
-    start   = parts[3];
-    end     = parts[4];
-    score   = parts[5];
-    strand  = parts[6];
-    phase   = parts[7];
-    parse_attributes(parts[8]);
+    extract_fields(line);
+    parse_attributes();
   }
 
   string seqname;
@@ -84,14 +75,64 @@ class Record {
   }
 
   private {
+    string attributes_field;
 
-    void parse_attributes(string attributes_field) {
+    void extract_fields(string line) {
+      int next_tab = line.indexOf("\t");
+      seqname = replace_url_escaped_chars(line[0..next_tab]);
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      source = replace_url_escaped_chars(line[0..next_tab]);
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      feature = replace_url_escaped_chars(line[0..next_tab]);
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      start = line[0..next_tab];
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      end = line[0..next_tab];
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      score = line[0..next_tab];
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      strand = line[0..next_tab];
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      phase = line[0..next_tab];
+      line = line[next_tab+1..$];
+
+      next_tab = line.indexOf("\t");
+      if (next_tab == -1)
+        attributes_field = line;
+      else
+        attributes_field = line[0..next_tab];
+    }
+
+    void parse_attributes() {
       if (attributes_field[0] != '.') {
-        foreach(attribute; split(attributes_field, ";")) {
+        int next_semicolon = 0;
+        while(next_semicolon != -1) {
+          next_semicolon = attributes_field.indexOf(';');
+          string attribute = null;
+          if (next_semicolon == -1)
+            attribute = attributes_field;
+          else {
+            attribute = attributes_field[0..next_semicolon];
+            attributes_field = attributes_field[next_semicolon+1..$];
+          }
           if (attribute == "") continue;
-          auto attribute_parts = split(attribute, "=");
-          auto attribute_name = replace_url_escaped_chars(attribute_parts[0]);
-          auto attribute_value = replace_url_escaped_chars(attribute_parts[1]);
+          int next_assign = attribute.indexOf('=');
+          auto attribute_name = replace_url_escaped_chars(attribute[0..next_assign]);
+          auto attribute_value = replace_url_escaped_chars(attribute[next_assign+1..$]);
           attributes[attribute_name] = attribute_value;
         }
       }
