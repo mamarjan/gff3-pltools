@@ -32,6 +32,21 @@ the net.
 
 The API doc is online. For more code examples see the test files in
 the source tree.
+
+### GFF3 File validation
+
+The validation utility can be built using the "validator" rake task,
+like this:
+
+```sh
+    rake validator
+```
+
+The result will be in the root directory, and can be used like this:
+
+```sh
+    ./validate-gff3 path/to/file.gff3
+```
         
 ## Project home page
 

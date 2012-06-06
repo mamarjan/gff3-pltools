@@ -42,13 +42,20 @@ DFILES = ["dlib/bio/gff3_file.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"
-task :unittests => ["builddir"] do
+task :unittests do
   sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
   sh "./unittests"
 end
 
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
+
+desc "Compile the validate-gff3 utility"
+task :validator do
+  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofvalidate-gff3"
+end
+CLEAN.include("validate-gff3")
+CLEAN.include("validate-gff3.o")
 
 require 'rubygems'
 require 'bundler'

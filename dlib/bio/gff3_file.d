@@ -1,4 +1,4 @@
-module bio.gff3;
+module bio.gff3_file;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
@@ -10,16 +10,16 @@ import util.range_with_cache;
  * Parses a string of GFF3 data.
  * Returns: a range of records.
  */
-auto parse(string data) {
-  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data));
+auto parse(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
+  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator);
 }
 
 /**
  * Parses a file with GFF3 data.
  * Returns: a range of records.
  */
-auto open(string filename) {
-  return new RecordRange!(typeof(File.byLine()))(File(filename, "r").byLine());
+auto open(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
+  return new RecordRange!(typeof(File.byLine()))(File(filename, "r").byLine(), validator);
 }
 
 /**
