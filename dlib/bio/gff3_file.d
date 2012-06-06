@@ -46,21 +46,28 @@ class RecordRange(SourceRangeType) {
    * Ignores comments, pragmas and empty lines in the data source
    */
   @property Record front() {
-    return next_record();
+    if (cache is null)
+      cache = next_record();
+    return cache;
   }
 
   /**
    * Pops the next record in range.
    */
   void popFront() {
-    cache = null;
+    if (cache is null)
+      next_record();
+    cache = next_record();
   }
 
   /**
    * Return true if no more records left in the range.
    */
   @property bool empty() { 
-    return next_record() is null;
+    if (cache is null)
+      return (cache = next_record()) is null;
+    else
+      return false;
   }
 
   /**
@@ -102,10 +109,8 @@ class RecordRange(SourceRangeType) {
      * data source, except if the line is part of FASTA data.
      */
     Record next_record() {
-      if (!(cache is null))
-        return cache;
       if (fasta_mode)
-        return cache; // Which is null
+        return null;
       Array line = null;
       while (!data.empty) {
         line = data.front;
@@ -120,15 +125,16 @@ class RecordRange(SourceRangeType) {
         // Found line with a valid record
         break;
       }
+      Record result;
       if (!(data.empty || fasta_mode)) {
         static if (is(Array == string)) {
-          cache = new Record(line, validator);
+          result = new Record(line, validator);
         } else {
-          cache = new Record(to!string(line), validator);
+          result = new Record(to!string(line), validator);
         }
         data.popFront();
       }
-      return cache;
+      return result;
     }
 
     /**
