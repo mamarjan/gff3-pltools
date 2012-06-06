@@ -4,7 +4,7 @@ import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
 import bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
 import util.join_lines, util.split_into_lines, util.read_file;
-import util.range_with_cache;
+import util.range_with_cache, util.split_file;
 
 /**
  * Parses a string of GFF3 data.
@@ -19,7 +19,7 @@ auto parse(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
  * Returns: a range of records.
  */
 auto open(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
-  return new RecordRange!(typeof(File.byLine()))(File(filename, "r").byLine(), validator);
+  return new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator);
 }
 
 /**
