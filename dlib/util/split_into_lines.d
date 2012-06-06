@@ -12,7 +12,6 @@ import std.string, std.stdio, std.conv;
 class SplitIntoLines {
   this(string data) {
     this.data = data;
-    this.data_left = data;
     this.newline = detect_newline_delim(data);
   }
 
@@ -20,41 +19,50 @@ class SplitIntoLines {
    * Returns the next line in range.
    */
   string front() {
-    string result = null;
-    auto nl_index = indexOf(data_left, newline);
-    if (nl_index == -1) {
-      // last line
-      result = data_left;
-    } else {
-      result = data_left[0..nl_index];
-    }
-    return result;
+    if (cache is null)
+      cache = next_line();
+    return cache;
   }
 
   /**
    * Pops the next line of the range.
    */
   void popFront() {
-    auto nl_index = indexOf(data_left, newline);
-    if (nl_index == -1) {
-      // last line
-      data_left = null;
-    } else {
-      data_left = data_left[(nl_index+newline.length)..$];
-    }
+    if (cache is null)
+      next_line();
+    cache = next_line();
   }
 
   /**
    * Return true if no more lines left in the range.
    */
   bool empty() {
-    return data_left is null;
+    if (cache is null)
+      return (cache = next_line()) is null;
+    else
+      return false;
   }
   
   private {
+    string cache;
     string newline;
     string data;
-    string data_left;
+
+    string next_line() {
+      string line = string.init;
+      if (!(data is null)) {
+        auto nl_index = indexOf(data, newline);
+        if (nl_index == -1) {
+          // last line
+          line = data;
+          data = null;
+        } else {
+          line = data[0..nl_index];
+          data = data[(nl_index+newline.length)..$];
+        }
+      }
+      return line;
+    }
   }
 }
 
