@@ -53,14 +53,14 @@ class RecordRange(SourceRangeType) {
    * Pops the next record in range.
    */
   void popFront() {
-    cache = Record.init;
+    cache = null;
   }
 
   /**
    * Return true if no more records left in the range.
    */
   @property bool empty() { 
-    return next_record() == Record.init;
+    return next_record() is null;
   }
 
   /**
@@ -102,10 +102,10 @@ class RecordRange(SourceRangeType) {
      * data source, except if the line is part of FASTA data.
      */
     Record next_record() {
-      if (cache != Record.init)
+      if (!(cache is null))
         return cache;
       if (fasta_mode)
-        return cache; // Which is Record.init
+        return cache; // Which is null
       Array line = null;
       while (!data.empty) {
         line = data.front;
@@ -122,9 +122,9 @@ class RecordRange(SourceRangeType) {
       }
       if (!(data.empty || fasta_mode)) {
         static if (is(Array == string)) {
-          cache = Record(line, validator);
+          cache = new Record(line, validator);
         } else {
-          cache = Record(to!string(line), validator);
+          cache = new Record(to!string(line), validator);
         }
         data.popFront();
       }

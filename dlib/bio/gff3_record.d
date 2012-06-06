@@ -7,7 +7,7 @@ import bio.exceptions, bio.gff3_validation, util.esc_char_conv;
 /**
  * Represents a parsed line in a GFF3 file.
  */
-struct Record {
+class Record {
   /**
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
@@ -103,31 +103,31 @@ unittest {
   writeln("Testing parseAttributes...");
 
   // Minimal test
-  auto record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1");
+  auto record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1");
   assert(record.attributes == [ "ID" : "1" ]);
   // Test splitting multiple attributes
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45");
   assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
   // Test if first splitting and then replacing escaped chars
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID%3D=1");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID%3D=1");
   assert(record.attributes == [ "ID=" : "1"]);
   // Test if parser survives trailing semicolon
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45;");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=45;");
   assert(record.attributes == [ "ID" : "1", "Parent" : "45" ]);
   // Test for an attribute with the value of a single space
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID= ;");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID= ;");
   assert(record.attributes == [ "ID" : " " ]);
   // Test for an attribute with no value
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
   assert(record.attributes == [ "ID" : "" ]);
   // Test if the validator is properly activated
-  assertThrown!RecordException(Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
+  assertThrown!RecordException(new Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
 }
 
 unittest {
   writeln("Testing GFF3 Record...");
   // Test line parsing with a normal line
-  auto record = Record("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
+  auto record = new Record("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
   with (record) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
@@ -135,7 +135,7 @@ unittest {
   }
 
   // Test parsing lines with dots - undefined values
-  record = Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
   with (record) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            [".", ".", ".", ".", ".", ".", ".", "."]);
@@ -143,7 +143,7 @@ unittest {
   }
 
   // Test parsing lines with escaped characters
-  record = Record("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
+  record = new Record("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
   with (record) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
@@ -151,21 +151,21 @@ unittest {
   }
 
   // Test id() method/property
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1").id == "1");
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=").id == "");
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").id is null);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")).id == "1");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=")).id == "");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).id is null);
 
   // Test isCircular() method/property
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").is_circular == false);
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false").is_circular == false);
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true").is_circular == true);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).is_circular == false);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false")).is_circular == false);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true")).is_circular == true);
 
   // Test the Parent() method/property
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\t.").parent is null);
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test").parent == "test");
-  assert(Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;").parent == "test");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).parent is null);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
 
   // Test if the validator is properly activated
-  assertThrown!RecordException(Record(".\t..\t.\t.\t.\t.\t.\t."));
+  assertThrown!RecordException(new Record(".\t..\t.\t.\t.\t.\t.\t."));
 }
 
