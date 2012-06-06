@@ -131,7 +131,7 @@ class RecordRange(SourceRangeType) {
       if (data.empty || fasta_mode)
         line_cache = null;
       else {
-        static if (is(typeof(SourceRangeType.front()) == string)) {
+        static if (is(Array == string)) {
           line_cache = line;
         } else {
           line_cache = to!string(line);
