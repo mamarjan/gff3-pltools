@@ -1,6 +1,7 @@
 module util.split_into_lines;
 
 import std.string, std.stdio, std.conv;
+import util.range_with_cache;
 
 /**
  * A string splitter, which defers parsing until front is called.
@@ -9,60 +10,31 @@ import std.string, std.stdio, std.conv;
  * detected and retrieved. Also, there is no copying involved, only
  * slicing.
  */
-class SplitIntoLines {
+class SplitIntoLines : RangeWithCache!string {
   this(string data) {
     this.data = data;
     this.newline = detect_newline_delim(data);
   }
 
-  /**
-   * Returns the next line in range.
-   */
-  string front() {
-    if (cache is null)
-      cache = next_line();
-    return cache;
+  protected string next_item() {
+    string line = string.init;
+    if (!(data is null)) {
+      auto nl_index = indexOf(data, newline);
+      if (nl_index == -1) {
+        // last line
+        line = data;
+        data = null;
+      } else {
+        line = data[0..nl_index];
+        data = data[(nl_index+newline.length)..$];
+      }
+    }
+    return line;
   }
 
-  /**
-   * Pops the next line of the range.
-   */
-  void popFront() {
-    if (cache is null)
-      next_line();
-    cache = next_line();
-  }
-
-  /**
-   * Return true if no more lines left in the range.
-   */
-  bool empty() {
-    if (cache is null)
-      return (cache = next_line()) is null;
-    else
-      return false;
-  }
-  
   private {
-    string cache;
     string newline;
     string data;
-
-    string next_line() {
-      string line = string.init;
-      if (!(data is null)) {
-        auto nl_index = indexOf(data, newline);
-        if (nl_index == -1) {
-          // last line
-          line = data;
-          data = null;
-        } else {
-          line = data[0..nl_index];
-          data = data[(nl_index+newline.length)..$];
-        }
-      }
-      return line;
-    }
   }
 }
 

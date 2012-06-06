@@ -4,6 +4,7 @@ import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
 import bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
 import util.join_lines, util.split_into_lines, util.read_file;
+import util.range_with_cache;
 
 /**
  * Parses a string of GFF3 data.
@@ -28,7 +29,7 @@ auto open(string filename) {
  * support front, popFront() and empty methods to be used by this
  * class.
  */
-class RecordRange(SourceRangeType) {
+class RecordRange(SourceRangeType) : RangeWithCache!Record {
   /**
    * Creates a record range with data as the _data source. data can
    * be any range of lines without newlines and with front, popFront()
@@ -40,35 +41,6 @@ class RecordRange(SourceRangeType) {
   }
 
   alias typeof(SourceRangeType.front()) Array;
-
-  /**
-   * Return the next record in range.
-   * Ignores comments, pragmas and empty lines in the data source
-   */
-  @property Record front() {
-    if (cache is null)
-      cache = next_record();
-    return cache;
-  }
-
-  /**
-   * Pops the next record in range.
-   */
-  void popFront() {
-    if (cache is null)
-      next_record();
-    cache = next_record();
-  }
-
-  /**
-   * Return true if no more records left in the range.
-   */
-  @property bool empty() { 
-    if (cache is null)
-      return (cache = next_record()) is null;
-    else
-      return false;
-  }
 
   /**
    * Retrieve a range of FASTA sequences appended to
@@ -95,47 +67,45 @@ class RecordRange(SourceRangeType) {
     }
   }
 
+  /**
+   * Retrieve the next record, or Record.init if is there
+   * is no such record anymore in the data source. Cache
+   * the record in cache, and remove the line from the
+   * data source, except if the line is part of FASTA data.
+   */
+  protected Record next_item() {
+    if (fasta_mode)
+      return null;
+    Array line = null;
+    while (!data.empty) {
+      line = data.front;
+      if (is_comment(line)) { data.popFront(); continue; }
+      if (is_empty_line(line)) { data.popFront(); continue; }
+      if (is_start_of_fasta(line)) {
+        fasta_mode = true;
+        if (!is_fasta_header(line))
+          data.popFront(); // Remove ##FASTA line from data source
+        break;
+      }
+      // Found line with a valid record
+      break;
+    }
+    Record result;
+    if (!(data.empty || fasta_mode)) {
+      static if (is(Array == string)) {
+        result = new Record(line, validator);
+      } else {
+        result = new Record(to!string(line), validator);
+      }
+      data.popFront();
+    }
+    return result;
+  }
+
   private {
     RecordValidator validator;
     SourceRangeType data;
     bool fasta_mode = false;
-
-    Record cache;
-
-    /**
-     * Retrieve the next record, or Record.init if is there
-     * is no such record anymore in the data source. Cache
-     * the record in cache, and remove the line from the
-     * data source, except if the line is part of FASTA data.
-     */
-    Record next_record() {
-      if (fasta_mode)
-        return null;
-      Array line = null;
-      while (!data.empty) {
-        line = data.front;
-        if (is_comment(line)) { data.popFront(); continue; }
-        if (is_empty_line(line)) { data.popFront(); continue; }
-        if (is_start_of_fasta(line)) {
-          fasta_mode = true;
-          if (!is_fasta_header(line))
-            data.popFront(); // Remove ##FASTA line from data source
-          break;
-        }
-        // Found line with a valid record
-        break;
-      }
-      Record result;
-      if (!(data.empty || fasta_mode)) {
-        static if (is(Array == string)) {
-          result = new Record(line, validator);
-        } else {
-          result = new Record(to!string(line), validator);
-        }
-        data.popFront();
-      }
-      return result;
-    }
 
     /**
      * Skips all the GFF3 records until it gets to the start of
@@ -156,7 +126,6 @@ class RecordRange(SourceRangeType) {
           data.popFront();
       }
     }
-
   }
 }
 
