@@ -15,7 +15,7 @@ void main(string[] args) {
     print_usage();
   }
 
-  foreach(rec; bio.gff3_file.open(to!string(filename), NO_VALIDATION)) {}
+  foreach(rec; bio.gff3_file.open(to!string(filename), WARNINGS_ON_ERROR)) {}
 }
 
 void print_usage() {
