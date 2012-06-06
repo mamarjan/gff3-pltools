@@ -2,14 +2,23 @@
 
 [![Build Status](https://secure.travis-ci.org/mamarjan/bioruby-hpc-gff3.png)](http://travis-ci.org/mamarjan/bioruby-hpc-gff3)
 
-Full description goes here
-
 Note: this software is under active development!
+
+This is currently an early work in progress to create a parallel GFF3
+and GTF parser library for D and a Ruby gem which would take advantage
+of that library.
 
 ## Installation
 
+TODO: Write scripts for installation.
+
+### Run tests
+
+Currently only D unit tests are working. You can run them using the
+"unittests" rake task, like this:
+
 ```sh
-    gem install bio-hpc-gff3
+    rake unittests
 ```
 
 ## Usage
@@ -17,6 +26,9 @@ Note: this software is under active development!
 ```ruby
     require 'bio-hpc-gff3'
 ```
+
+TODO: Generate API docs and find a nice place for them somewhere on
+the net.
 
 The API doc is online. For more code examples see the test files in
 the source tree.
