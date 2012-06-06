@@ -46,28 +46,21 @@ class RecordRange(SourceRangeType) {
    * Ignores comments, pragmas and empty lines in the data source
    */
   @property Record front() {
-    if (cache == Record.init)
-      return cache = Record(next_line(), validator);
-    else
-      return cache;
+    return next_record();
   }
 
   /**
    * Pops the next record in range.
    */
   void popFront() {
-    // First get to a line that has a valid record in it
-    next_line();
-    data.popFront();
     cache = Record.init;
-    line_cache = null;
   }
 
   /**
    * Return true if no more records left in the range.
    */
   @property bool empty() { 
-    return next_line() is null;
+    return next_record() == Record.init;
   }
 
   /**
@@ -101,19 +94,18 @@ class RecordRange(SourceRangeType) {
     bool fasta_mode = false;
 
     Record cache;
-    string line_cache;
 
     /**
-     * Retrieve the next line with a valid record, or null is there
-     * is no such line anymore. Cache the line in lineCache, but
-     * leave the line in data source just in case if it's part of
-     * FASTA data.
+     * Retrieve the next record, or Record.init if is there
+     * is no such record anymore in the data source. Cache
+     * the record in cache, and remove the line from the
+     * data source, except if the line is part of FASTA data.
      */
-    string next_line() {
-      if (!(line_cache is null))
-        return line_cache;
+    Record next_record() {
+      if (cache != Record.init)
+        return cache;
       if (fasta_mode)
-        return null;
+        return cache; // Which is Record.init
       Array line = null;
       while (!data.empty) {
         line = data.front;
@@ -128,16 +120,15 @@ class RecordRange(SourceRangeType) {
         // Found line with a valid record
         break;
       }
-      if (data.empty || fasta_mode)
-        line_cache = null;
-      else {
+      if (!(data.empty || fasta_mode)) {
         static if (is(Array == string)) {
-          line_cache = line;
+          cache = Record(line, validator);
         } else {
-          line_cache = to!string(line);
+          cache = Record(to!string(line), validator);
         }
+        data.popFront();
       }
-      return line_cache;
+      return cache;
     }
 
     /**
