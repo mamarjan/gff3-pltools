@@ -57,6 +57,13 @@ end
 CLEAN.include("validate-gff3")
 CLEAN.include("validate-gff3.o")
 
+desc "Compile the benchmark-gff3 utility"
+task :benchmark do
+  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbenchmark-gff3"
+end
+CLEAN.include("benchmark-gff3")
+CLEAN.include("benchmark-gff3.o")
+
 require 'rubygems'
 require 'bundler'
 begin
