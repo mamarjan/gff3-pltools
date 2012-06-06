@@ -47,6 +47,21 @@ The result will be in the root directory, and can be used like this:
 ```sh
     ./validate-gff3 path/to/file.gff3
 ```
+
+### Benchmarking utility
+
+There is a small D application for performance benchmarking, you can
+build it using:
+
+```sh
+    rake benchmark
+```
+
+And then run it like this:
+
+```sh
+    ./benchmark-gff3 path/to/file.gff3
+```
         
 ## Project home page
 
