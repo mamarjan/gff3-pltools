@@ -63,7 +63,7 @@ void check_if_attribute_has_two_parts(string attribute) {
 }
 
 void check_if_attribute_name_valid(string attribute) {
-  if (attribute.indexOf("=") == 0) // attribute name missing
+  if (attribute.indexOf('=') == 0) // attribute name missing
     throw new AttributeException("An attribute value without an attribute name", attribute);
 }
 

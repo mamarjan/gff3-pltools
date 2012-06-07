@@ -29,7 +29,16 @@ class Record {
     if (!validator(line))
       return;
 
-    extract_fields(line);
+    seqname = replace_url_escaped_chars(get_and_skip_next_field(line));
+    source = replace_url_escaped_chars(get_and_skip_next_field(line));
+    feature = replace_url_escaped_chars(get_and_skip_next_field(line));
+    start = get_and_skip_next_field(line);
+    end = get_and_skip_next_field(line);
+    score = get_and_skip_next_field(line);
+    strand = get_and_skip_next_field(line);
+    phase = get_and_skip_next_field(line);
+    attributes_field = get_and_skip_next_field(line);
+
     parse_attributes();
   }
 
@@ -77,44 +86,17 @@ class Record {
   private {
     string attributes_field;
 
-    void extract_fields(string line) {
-      int next_tab = line.indexOf("\t");
-      seqname = replace_url_escaped_chars(line[0..next_tab]);
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      source = replace_url_escaped_chars(line[0..next_tab]);
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      feature = replace_url_escaped_chars(line[0..next_tab]);
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      start = line[0..next_tab];
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      end = line[0..next_tab];
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      score = line[0..next_tab];
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      strand = line[0..next_tab];
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      phase = line[0..next_tab];
-      line = line[next_tab+1..$];
-
-      next_tab = line.indexOf("\t");
-      if (next_tab == -1)
-        attributes_field = line;
-      else
-        attributes_field = line[0..next_tab];
+    static string get_and_skip_next_field(ref string line, immutable(char) delim = '\t') {
+      string field;
+      int next_tab = line.indexOf(delim);
+      if (next_tab != -1) {
+        field = line[0..next_tab];
+        line = line[next_tab+1..$];
+      } else {
+        field = line;
+        line = null;
+      }
+      return field;
     }
 
     void parse_attributes() {
