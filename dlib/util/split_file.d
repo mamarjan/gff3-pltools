@@ -3,7 +3,17 @@ module util.split_file;
 import std.stdio, std.string;
 import util.range_with_cache;
 
+/**
+ * A range for retrieving text lines from a file. The object retrieves
+ * some chunk_size of bytes from the file and then a line is returned
+ * by front as a slice of the bigger string.
+ */
 class SplitFile : RangeWithCache!string {
+  /**
+   * The constructor receives the file struct as a parameter and
+   * a chunk_size parameter, which is the size of the block which
+   * is retrieved from the file at once.
+   */
   this(File input_file, size_t chunk_size = 65536) {
     this.input_file = input_file;
     this.chunk_size = chunk_size;
