@@ -20,32 +20,41 @@ class SplitFile : RangeWithCache!string {
   }
 
   protected string next_item() {
-    string line;
     if (current_chunk.length == 0)
       if (eof_reached)
         return null;
-    auto newline_index = current_chunk.indexOf('\n');
-    if (newline_index != -1) {
-      line = current_chunk[0..newline_index];
-      current_chunk = current_chunk[newline_index+1..$];
-    } else {
-      line = current_chunk;
-      auto tmp = new char[chunk_size];
-      tmp = input_file.rawRead(tmp);
-      current_chunk = cast(immutable)tmp;
-      if (current_chunk.length < chunk_size)
-        eof_reached = true;
+    string line;
+    bool line_complete = false;
+    while (!line_complete) {
       if (current_chunk.length != 0) {
-        newline_index = current_chunk.indexOf('\n');
+        auto newline_index = current_chunk.indexOf('\n');
         if (newline_index != -1) {
-          line ~= current_chunk[0..newline_index];
+          if (line is null)
+            line = current_chunk[0..newline_index];
+          else
+            line ~= current_chunk[0..newline_index];
           current_chunk = current_chunk[newline_index+1..$];
+          line_complete = true;
         } else {
-          line ~= current_chunk;
+          if (line is null)
+            line = current_chunk;
+          else
+            line ~= current_chunk;
           current_chunk = null;
+        }
+      } else {
+        if (eof_reached) {
+          line_complete = true;
+        } else {
+          auto tmp = new char[chunk_size];
+          tmp = input_file.rawRead(tmp);
+          current_chunk = cast(immutable)tmp;
+          if (current_chunk.length < chunk_size)
+            eof_reached = true;
         }
       }
     }
+
     return line;
   }
 
