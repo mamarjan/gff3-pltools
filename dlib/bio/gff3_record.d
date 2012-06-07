@@ -29,9 +29,9 @@ class Record {
     if (!validator(line))
       return;
 
-    seqname = replace_url_escaped_chars(get_and_skip_next_field(line));
-    source = replace_url_escaped_chars(get_and_skip_next_field(line));
-    feature = replace_url_escaped_chars(get_and_skip_next_field(line));
+    seqname = replace_url_escaped_chars( get_and_skip_next_field(line) );
+    source = replace_url_escaped_chars( get_and_skip_next_field(line) );
+    feature = replace_url_escaped_chars( get_and_skip_next_field(line) );
     start = get_and_skip_next_field(line);
     end = get_and_skip_next_field(line);
     score = get_and_skip_next_field(line);
@@ -39,7 +39,7 @@ class Record {
     phase = get_and_skip_next_field(line);
     attributes_field = get_and_skip_next_field(line);
 
-    parse_attributes();
+    attributes = parse_attributes(attributes_field);
   }
 
   string seqname;
@@ -86,7 +86,7 @@ class Record {
   private {
     string attributes_field;
 
-    static string get_and_skip_next_field(ref string line, immutable(char) delim = '\t') {
+    static string get_and_skip_next_field(ref string line, char delim = '\t') {
       string field;
       int next_tab = line.indexOf(delim);
       if (next_tab != -1) {
@@ -99,25 +99,19 @@ class Record {
       return field;
     }
 
-    void parse_attributes() {
+    static string[string] parse_attributes(string attributes_field) {
+      string[string] attributes;
       if (attributes_field[0] != '.') {
-        int next_semicolon = 0;
-        while(next_semicolon != -1) {
-          next_semicolon = attributes_field.indexOf(';');
-          string attribute = null;
-          if (next_semicolon == -1)
-            attribute = attributes_field;
-          else {
-            attribute = attributes_field[0..next_semicolon];
-            attributes_field = attributes_field[next_semicolon+1..$];
-          }
+        string attribute = attributes_field; // Required for the next while loop to start
+        while(attributes_field.length != 0) {
+          attribute = get_and_skip_next_field(attributes_field, ';');
           if (attribute == "") continue;
-          int next_assign = attribute.indexOf('=');
-          auto attribute_name = replace_url_escaped_chars(attribute[0..next_assign]);
-          auto attribute_value = replace_url_escaped_chars(attribute[next_assign+1..$]);
+          auto attribute_name = replace_url_escaped_chars( get_and_skip_next_field( attribute, '=') );
+          auto attribute_value = replace_url_escaped_chars( attribute );
           attributes[attribute_name] = attribute_value;
         }
       }
+      return attributes;
     }
   }
 }
