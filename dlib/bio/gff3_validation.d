@@ -4,108 +4,94 @@ import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
 import bio.exceptions, util.esc_char_conv;
 
+/**
+ * A validator function. It should accept a line in a string value,
+ * and return a boolean value. In case the value is true, the parser
+ * continues parsing the line, but if it's false, the parser returns
+ * a Record object with the default values.
+ */
 alias bool function(string) RecordValidator;
 
+/**
+ * This function will perform validation, and in case there is a problem,
+ * it will print the error message to stderr and return false, but there
+ * will be no exceptions raised.
+ */
 auto WARNINGS_ON_ERROR = function bool(string line) {
+  bool ok = true;
   try {
     validate_gff3_line(line);
   } catch (ParsingException e) {
+    ok = false;
     stderr.writeln(e.msg);
   }
-  return true;
+  return ok;
 };
 
+/**
+ * This function will perform validation, and in case there is a problem,
+ * an exception will be thrown. Otherwise true is returned.
+ */
 auto EXCEPTIONS_ON_ERROR = function bool(string line) {
   validate_gff3_line(line);
   return true;
 };
 
+/**
+ * This function will perform no validation, and will always return true.
+ */
 auto NO_VALIDATION = function bool(string line) {
   return true;
 };
 
+private:
 
 void validate_gff3_line(string line) {
   check_if_nine_columns_present(line);
   auto parts = split(line, "\t");
 
-  check_for_empty_fields(parts);
-  check_if_valid_seqname(parts[0]);
-  check_for_characters_invalid_in_any_field("source", parts[1]);
-  check_for_characters_invalid_in_any_field("feature", parts[2]);
-  check_if_coordinates_valid(parts[3], parts[4]);
-  check_if_score_valid(parts[5]);
-  check_if_strand_valid(parts[6]);
-  check_if_phase_valid(parts[7]);
+  validate_seqname(parts[0]);
+  validate_source(parts[1]);
+  validate_feature(parts[2]);
+  validate_coordinates(parts[3], parts[4]);
+  validate_score(parts[5]);
+  validate_strand(parts[6]);
+  validate_phase(parts[7]);
 
   validate_attributes(parts[8]);
 }
 
-void validate_attributes(string attributes_field) {
-  if (attributes_field[0] != '.') {
-    string[string] attributes;
-    foreach(attribute; split(attributes_field, ";")) {
-      if (attribute == "") continue;
-      check_if_attribute_has_two_parts(attribute);
-      check_if_attribute_name_valid(attribute);
-      auto attribute_parts = split(attribute, "=");
-      auto attribute_name = replace_url_escaped_chars(attribute_parts[0]);
-      auto attribute_value = replace_url_escaped_chars(attribute_parts[1]);
-      attributes[attribute_name] = attribute_value;
-    }
-    check_for_invalid_is_circular_values(attributes);
-  }
-}
+// Validation of seqname
 
-void check_if_attribute_has_two_parts(string attribute) {
-  if (attribute.count('=') != 1)
-    throw new AttributeException("Invalid attribute format", attribute);
-}
+string valid_seqname_chars = cast(string)(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
 
-void check_if_attribute_name_valid(string attribute) {
-  if (attribute.indexOf('=') == 0) // attribute name missing
-    throw new AttributeException("An attribute value without an attribute name", attribute);
-}
-
-void check_for_invalid_is_circular_values(string[string] attributes) {
-  if ("Is_circular" in attributes) {
-    switch (attributes["Is_circular"]) {
-      case "true", "false":
-      break; // Value valid
-    default:
-      throw new AttributeException("Ivalid value for Is_circular attribute", attributes["Is_circular"]);
-    }
-  }
-}
-
-void check_if_nine_columns_present(string line) {
-  if (line.count("\t") < 8)
-    throw new RecordException("A record with invalid number of columns", line);
-}
-
-void check_for_empty_fields(string[] fields) {
-  foreach(i; 0..9) {
-    if (fields[i].length < 1)
-      throw new RecordException("Found an empty field in record", fields.join("\t"));
-  }
-}
-
-void check_if_valid_seqname(string seqname) {
-  string valid_seqname_chars = cast(immutable(char)[])(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
+void validate_seqname(string seqname) {
+  check_if_empty_field("seqname", seqname);
   foreach(character; seqname) {
     if (valid_seqname_chars.indexOf(character) < 0)
       throw new RecordException("Invalid characters in seqname field", seqname);
   }
 }
 
-void check_for_characters_invalid_in_any_field(string field_name, string field) {
-  foreach(character; field) {
-    if (std.ascii.isControl(character))
-      throw new RecordException("Control characters not allowed in field " ~ field_name, field);
-  }
+// Validation of source
+
+void validate_source(string source) {
+  check_if_empty_field("source", source);
+  check_for_characters_invalid_in_any_field("source", source);
 }
 
-void check_if_coordinates_valid(string start, string end) {
+// Validation of feature
+
+void validate_feature(string feature) {
+  check_if_empty_field("feature", feature);
+  check_for_characters_invalid_in_any_field("feature", feature);
+}
+
+// Validation of start and end fields (coordinates)
+
+void validate_coordinates(string start, string end) {
+  check_if_empty_field("start", start);
+  check_if_empty_field("end", end);
   if (start != ".") {
     foreach(character; start) {
       if (!(character.isDigit()))
@@ -130,7 +116,11 @@ void check_if_coordinates_valid(string start, string end) {
   }
 }
 
-void check_if_score_valid(string score) {
+
+// Validation of score
+
+void validate_score(string score) {
+  check_if_empty_field("score", score);
   check_for_characters_invalid_in_any_field("score", score);
   if (score != ".") {
     try {
@@ -141,7 +131,10 @@ void check_if_score_valid(string score) {
   }
 }
 
-void check_if_strand_valid(string strand) {
+// Validation of strand
+
+void validate_strand(string strand) {
+  check_if_empty_field("strand", strand);
   switch(strand) {
     case "+", "-", "?", ".":
       break; // Strand value valid
@@ -151,7 +144,10 @@ void check_if_strand_valid(string strand) {
   }
 }
 
-void check_if_phase_valid(string phase) {
+// Validation of phase
+
+void validate_phase(string phase) {
+  check_if_empty_field("phase", phase);
   switch(phase) {
     case "0", "1", "2", ".":
       break; // Phase value valid
@@ -160,6 +156,67 @@ void check_if_phase_valid(string phase) {
       break;
   }
 }
+
+// Validate attributes
+
+void validate_attributes(string attributes_field) {
+  check_if_empty_field("attributes", attributes_field);
+  if (attributes_field != ".") {
+    string[string] attributes;
+    foreach(attribute; split(attributes_field, ";")) {
+      if (attribute == "") continue;
+      check_if_attribute_has_two_parts(attribute);
+      validate_attribute_name(attribute);
+      auto attribute_parts = split(attribute, "=");
+      auto attribute_name = replace_url_escaped_chars(attribute_parts[0]);
+      auto attribute_value = replace_url_escaped_chars(attribute_parts[1]);
+      attributes[attribute_name] = attribute_value;
+    }
+    check_for_invalid_is_circular_value(attributes);
+  }
+}
+
+void validate_attribute_name(string attribute) {
+  if (attribute.indexOf('=') == 0) // attribute name missing
+    throw new AttributeException("An attribute value without an attribute name", attribute);
+}
+
+void check_if_attribute_has_two_parts(string attribute) {
+  if (attribute.count('=') != 1)
+    throw new AttributeException("Invalid attribute format", attribute);
+}
+
+void check_for_invalid_is_circular_value(string[string] attributes) {
+  if ("Is_circular" in attributes) {
+    switch (attributes["Is_circular"]) {
+      case "true", "false":
+      break; // Value valid
+    default:
+      throw new AttributeException("Ivalid value for Is_circular attribute", attributes["Is_circular"]);
+    }
+  }
+}
+
+
+// Helper functions
+
+void check_if_nine_columns_present(string line) {
+  if (line.count('\t') < 8)
+    throw new RecordException("A record with invalid number of columns", line);
+}
+
+void check_if_empty_field(string field_name, string field) {
+  if (field.length < 1)
+    throw new RecordException("Found an empty " ~ field_name ~ " field", field);
+}
+
+void check_for_characters_invalid_in_any_field(string field_name, string field) {
+  foreach(character; field) {
+    if (std.ascii.isControl(character))
+      throw new RecordException("Control characters not allowed in field " ~ field_name, field);
+  }
+}
+
 
 unittest {
   writeln("Testing validate_gff3_line...");
