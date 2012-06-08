@@ -3,6 +3,7 @@ module bio.gff3_record;
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
 import bio.exceptions, bio.gff3_validation, util.esc_char_conv;
+import util.split_line;
 
 /**
  * Represents a parsed line in a GFF3 file.
@@ -98,19 +99,6 @@ class Record {
 
   private {
     string attributes_field;
-
-    static string get_and_skip_next_field(ref string line, char delim = '\t') {
-      string field;
-      int next_tab = line.indexOf(delim);
-      if (next_tab != -1) {
-        field = line[0..next_tab];
-        line = line[next_tab+1..$];
-      } else {
-        field = line;
-        line = null;
-      }
-      return field;
-    }
 
     static string[string] parse_attributes(string attributes_field, ReplaceCharsFunc replace_chars) {
       string[string] attributes;

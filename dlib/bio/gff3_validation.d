@@ -2,7 +2,7 @@ module bio.gff3_validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, util.esc_char_conv;
+import bio.exceptions, util.esc_char_conv, util.split_line;
 
 /**
  * A validator function. It should accept a line in a string value,
@@ -48,17 +48,16 @@ private:
 
 void validate_gff3_line(string line) {
   check_if_nine_columns_present(line);
-  auto parts = split(line, "\t");
 
-  validate_seqname(parts[0]);
-  validate_source(parts[1]);
-  validate_feature(parts[2]);
-  validate_coordinates(parts[3], parts[4]);
-  validate_score(parts[5]);
-  validate_strand(parts[6]);
-  validate_phase(parts[7]);
+  validate_seqname(get_and_skip_next_field(line));
+  validate_source(get_and_skip_next_field(line));
+  validate_feature(get_and_skip_next_field(line));
+  validate_coordinates(get_and_skip_next_field(line), get_and_skip_next_field(line));
+  validate_score(get_and_skip_next_field(line));
+  validate_strand(get_and_skip_next_field(line));
+  validate_phase(get_and_skip_next_field(line));
 
-  validate_attributes(parts[8]);
+  validate_attributes(get_and_skip_next_field(line));
 }
 
 // Validation of seqname
@@ -163,22 +162,23 @@ void validate_attributes(string attributes_field) {
   check_if_empty_field("attributes", attributes_field);
   if (attributes_field != ".") {
     string[string] attributes;
-    foreach(attribute; split(attributes_field, ";")) {
+    string attribute = attributes_field;
+    while(attributes_field.length != 0) {
+      attribute = get_and_skip_next_field(attributes_field, ';');
       if (attribute == "") continue;
       check_if_attribute_has_two_parts(attribute);
-      validate_attribute_name(attribute);
-      auto attribute_parts = split(attribute, "=");
-      auto attribute_name = replace_url_escaped_chars(attribute_parts[0]);
-      auto attribute_value = replace_url_escaped_chars(attribute_parts[1]);
+      auto attribute_name = replace_url_escaped_chars( get_and_skip_next_field(attribute, '=') );
+      auto attribute_value = replace_url_escaped_chars(attribute);
+      validate_attribute_name(attribute_name);
       attributes[attribute_name] = attribute_value;
     }
     check_for_invalid_is_circular_value(attributes);
   }
 }
 
-void validate_attribute_name(string attribute) {
-  if (attribute.indexOf('=') == 0) // attribute name missing
-    throw new AttributeException("An attribute value without an attribute name", attribute);
+void validate_attribute_name(string attribute_name) {
+  if (attribute_name.length == 0) // attribute name missing
+    throw new AttributeException("An attribute value without an attribute name", attribute_name);
 }
 
 void check_if_attribute_has_two_parts(string attribute) {
