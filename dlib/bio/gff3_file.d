@@ -10,16 +10,20 @@ import util.range_with_cache, util.split_file;
  * Parses a string of GFF3 data.
  * Returns: a range of records.
  */
-auto parse(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
-  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator);
+auto parse(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+           bool replace_esc_chars = true) {
+  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator,
+                                          replace_esc_chars);
 }
 
 /**
  * Parses a file with GFF3 data.
  * Returns: a range of records.
  */
-auto open(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
-  return new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator);
+auto open(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+          bool replace_esc_chars = true) {
+  return new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
+                                     replace_esc_chars);
 }
 
 /**
@@ -35,9 +39,11 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * be any range of lines without newlines and with front, popFront()
    * and empty defined.
    */
-  this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR) {
+  this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+       bool replace_esc_chars = true) {
     this.data = data;
     this.validator = validator;
+    this.replace_esc_chars = replace_esc_chars;
   }
 
   alias typeof(SourceRangeType.front()) Array;
@@ -93,9 +99,9 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     Record result;
     if (!(data.empty || fasta_mode)) {
       static if (is(Array == string)) {
-        result = new Record(line, validator);
+        result = new Record(line, validator, replace_esc_chars);
       } else {
-        result = new Record(to!string(line), validator);
+        result = new Record(to!string(line), validator, replace_esc_chars);
       }
       data.popFront();
     }
@@ -106,6 +112,7 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     RecordValidator validator;
     SourceRangeType data;
     bool fasta_mode = false;
+    bool replace_esc_chars;
 
     /**
      * Skips all the GFF3 records until it gets to the start of
