@@ -41,6 +41,8 @@ DFILES = ["dlib/bio/gff3_file.d",
           "dlib/util/range_with_cache.d",
           "dlib/util/split_file.d",
           "dlib/util/split_line.d",
+          "dlib/bio/gff3_file_mt.d",
+          "dlib/util/split_file_mt.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"
@@ -65,6 +67,13 @@ task :benchmark do
 end
 CLEAN.include("benchmark-gff3")
 CLEAN.include("benchmark-gff3.o")
+
+desc "Compile the benchmark-gff3-mt utility"
+task "benchmark-mt" do
+  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3_mt.d #{DFILES} -Idlib -ofbenchmark-gff3-mt"
+end
+CLEAN.include("benchmark-gff3-mt")
+CLEAN.include("benchmark-gff3-mt.o")
 
 require 'rubygems'
 require 'bundler'
