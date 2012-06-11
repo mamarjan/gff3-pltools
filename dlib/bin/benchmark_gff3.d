@@ -1,43 +1,17 @@
 import std.stdio, std.file, std.conv, std.string;
 
 void main(string[] args) {
-  foreach(rec; new RecordRange!(SplitFile)(new SplitFile(File(args[1], "r")))) {}
+  auto data = new SplitFile(File(args[1], "r"));
+  while(true) {
+    data.next_item();
+    try_and_catch();
+  }
 }
 
-class RecordRange(SourceRangeType) {
-  this(SourceRangeType data) {
-    this.data = data;
-  }
-
-  @property string front() {
-    if (cache is null)
-      cache = next_item();
-    return cache;
-  }
-
-  void popFront() {
-    cache = null;
-  }
-
-  @property bool empty() {
-    if (cache is null)
-      cache = next_item();
-    return cache is null;
-  }
-
-  private string cache;
-
-  protected string next_item() {
-    data.next_item();
-    try {
-      throw new Exception("A record with invalid number of columns");
-    } catch (Exception e) {
-    }
-    return "";
-  }
-
-  private {
-    SourceRangeType data;
+void try_and_catch() {
+  try {
+    throw new Exception("A record with invalid number of columns");
+  } catch (Exception e) {
   }
 }
 
