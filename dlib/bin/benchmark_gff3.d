@@ -25,39 +25,30 @@ class SplitFile {
     this.input_file = input_file;
   }
 
-  string next_item() {
-    string line;
+  void next_item() {
+    char[] line;
     bool line_complete = false;
     while (!line_complete) {
-      if (current_chunk.length != 0) {
+      if (current_chunk.length == 0) {
+        current_chunk = new char[65536];
+        current_chunk = input_file.rawRead(current_chunk);
+      } else {
         auto newline_index = current_chunk.indexOf('\n');
         if (newline_index != -1) {
-          if (line is null)
-            line = current_chunk[0..newline_index];
-          else
-            line ~= current_chunk[0..newline_index];
+          line ~= current_chunk[0..newline_index];
           current_chunk = current_chunk[newline_index+1..$];
           line_complete = true;
         } else {
-          if (line is null)
-            line = current_chunk;
-          else
-            line ~= current_chunk;
+          line = current_chunk;
           current_chunk = null;
         }
-      } else {
-        auto tmp = new char[65536];
-        tmp = input_file.rawRead(tmp);
-        current_chunk = cast(immutable)tmp;
       }
     }
-
-    return line;
   }
 
   private {
     File input_file;
-    string current_chunk;
+    char[] current_chunk;
   }
 }
 
