@@ -26,9 +26,7 @@ void main(string[] args) {
   }
 
   // Open file and loop over all records
-  auto records = bio.gff3_file.open(filename,
-                                    validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                    replace_escaped_chars);
+  auto records = bio.gff3_file.open(filename);
   foreach(rec; records) {}
 }
 

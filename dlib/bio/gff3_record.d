@@ -13,8 +13,7 @@ class Record {
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
    */
-  this(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true) {
+  this(string line) {
     WARNINGS_ON_ERROR(line);
   }
 
