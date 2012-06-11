@@ -10,15 +10,16 @@ auto open(string filename) {
   return new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")));
 }
 
-class RecordRange(SourceRangeType) : RangeWithCache!Record {
+class RecordRange(SourceRangeType) : RangeWithCache!string {
   this(SourceRangeType data) {
     this.data = data;
   }
 
-  protected Record next_item() {
+  protected string next_item() {
     auto line = data.front;
     data.popFront();
-    return new Record(to!string(line));
+    WARNINGS_ON_ERROR(line);
+    return "";
   }
 
   private {

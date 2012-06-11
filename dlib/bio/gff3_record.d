@@ -13,8 +13,8 @@ class Record {
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
    */
-  this(string line) {
-    WARNINGS_ON_ERROR(line);
+  this() {
+//    WARNINGS_ON_ERROR(line);
   }
 
 }
