@@ -7,16 +7,6 @@ import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
 
 /**
- * Parses a string of GFF3 data.
- * Returns: a range of records.
- */
-auto parse(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true) {
-  return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator,
-                                          replace_esc_chars);
-}
-
-/**
  * Parses a file with GFF3 data.
  * Returns: a range of records.
  */
