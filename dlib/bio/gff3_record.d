@@ -139,7 +139,7 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
   assert(record.attributes == [ "ID" : "" ]);
   // Test if the validator is properly activated
-  assertThrown!RecordException(new Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
+  assertThrown!ParsingException(new Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
 }
 
 unittest {
@@ -184,6 +184,6 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
 
   // Test if the validator is properly activated
-  assertThrown!RecordException(new Record(".\t..\t.\t.\t.\t.\t.\t."));
+  assertThrown!ParsingException(new Record(".\t..\t.\t.\t.\t.\t.\t."));
 }
 
