@@ -14,7 +14,7 @@ class SplitFile : RangeWithCache!string {
    * a chunk_size parameter, which is the size of the block which
    * is retrieved from the file at once.
    */
-  this(File input_file, size_t chunk_size = 65536) {
+  this(File input_file, size_t chunk_size = 8176) {
     this.input_file = input_file;
     this.chunk_size = chunk_size;
   }
