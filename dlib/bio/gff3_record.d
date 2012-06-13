@@ -2,8 +2,7 @@ module bio.gff3_record;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, bio.gff3_validation, util.esc_char_conv;
-import util.split_line;
+import bio.exceptions, util.esc_char_conv, util.split_line;
 
 /**
  * Represents a parsed line in a GFF3 file.
@@ -13,9 +12,8 @@ class Record {
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
    */
-  this(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true) {
-    parse_line(line, validator, replace_esc_chars);
+  this(string line, bool replace_esc_chars = true) {
+    parse_line(line, replace_esc_chars);
   }
 
   alias string function(string) ReplaceCharsFunc;
@@ -23,20 +21,13 @@ class Record {
   /**
    * Parse a line from a GFF3 file and set object values.
    * The line is first split into its parts and then escaped
-   * characters are replaced in those fields. If there is no
-   * need for record validation, pass NO_VALIDATION as the
-   * second argument to this method, or WARNINGS_ON_ERROR if
-   * badly formatted records should be skipped but logged to
-   * stderr.
+   * characters are replaced in those fields.
    * 
    * Setting replace_esc_chars to false will skip replacing
    * escaped characters, and make parsing significantly faster.
    */
-  void parse_line(string line, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-                  bool replace_esc_chars = true) {
-    if (!validator(line))
-      return;
-   
+  void parse_line(string line, bool replace_esc_chars = true) {
+
     ReplaceCharsFunc replace_chars;
     if (replace_esc_chars)
       replace_chars = &replace_url_escaped_chars;
@@ -138,8 +129,6 @@ unittest {
   // Test for an attribute with no value
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
   assert(record.attributes == [ "ID" : "" ]);
-  // Test if the validator is properly activated
-  assertThrown!ParsingException(new Record(".\t.\t.\t.\t.\t.\t.\t.\t"));
 }
 
 unittest {
@@ -182,8 +171,5 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).parent is null);
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
-
-  // Test if the validator is properly activated
-  assertThrown!ParsingException(new Record(".\t..\t.\t.\t.\t.\t.\t."));
 }
 

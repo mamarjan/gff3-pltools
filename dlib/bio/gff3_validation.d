@@ -10,17 +10,17 @@ import bio.exceptions, util.esc_char_conv, util.split_line;
  * continues parsing the line, but if it's false, the parser returns
  * a Record object with the default values.
  */
-alias bool function(string) RecordValidator;
+alias bool function(string filename, int line_number, string line) RecordValidator;
 
 /**
  * This function will perform validation, and in case there is a problem,
  * it will print the error message to stderr and return false, but there
  * will be no exceptions raised.
  */
-auto WARNINGS_ON_ERROR = function bool(string line) {
+auto WARNINGS_ON_ERROR = function bool(string filename, int line_number, string line) {
   auto error_msg = validate_gff3_line(line);
   if (error_msg !is null)
-    stderr.writeln(error_msg);
+    stderr.writeln(addFilenameAndLine(filename, line_number, error_msg));
   return error_msg is null;
 };
 
@@ -28,21 +28,25 @@ auto WARNINGS_ON_ERROR = function bool(string line) {
  * This function will perform validation, and in case there is a problem,
  * an exception will be thrown. Otherwise true is returned.
  */
-auto EXCEPTIONS_ON_ERROR = function bool(string line) {
+auto EXCEPTIONS_ON_ERROR = function bool(string filename, int line_number, string line) {
   auto error_msg = validate_gff3_line(line);
   if (!(error_msg is null))
-    throw new ParsingException(error_msg);
+    throw new ParsingException(addFilenameAndLine(filename, line_number, error_msg));
   return true;
 };
 
 /**
  * This function will perform no validation, and will always return true.
  */
-auto NO_VALIDATION = function bool(string line) {
+auto NO_VALIDATION = function bool(string filename, int line_number, string line) {
   return true;
 };
 
 private:
+
+string addFilenameAndLine(string filename, int line_number, string error_msg) {
+  return filename ~ "(" ~ to!string(line_number) ~ "): " ~ error_msg;
+}
 
 string validate_gff3_line(string line) {
   auto error_msg = check_if_nine_columns_present(line);
@@ -69,7 +73,7 @@ string validate_seqname(string seqname) {
   if (error_msg is null) {
     foreach(character; seqname) {
       if (valid_seqname_chars.indexOf(character) < 0) {
-        error_msg = "Invalid characters in seqname field" ~ seqname;
+        error_msg = "Invalid characters in seqname field";
         break;
       }
     }
@@ -107,24 +111,24 @@ string validate_coordinates(string start, string end) {
   if (start != ".") {
     foreach(character; start) {
       if (!(character.isDigit()))
-        return "Only a dot or digits are allowed in field start: " ~ start;
+        return "Only a dot or digits are allowed in field start";
     }
     if (to!long(start) < 1)
-      return "Start field can't be a number less then 1: " ~ start;
+      return "Start field can't be a number less then 1";
   }
   if (end != ".") {
     foreach(character; start) {
       if (!(character.isDigit()))
-        return "Only a dot or digits are allowed in field end: " ~ end;
+        return "Only a dot or digits are allowed in field end";
     }
     if (to!long(end) < 1)
-      return "End field can't be a number less then 1" ~ start;
+      return "End field can't be a number less then 1";
   }
   if ((start != ".") && (end != ".")) {
     auto start_value = to!long(start);
     auto end_value = to!long(end);
     if (start_value > end_value)
-      return "End can't be less then start field: start=" ~ start ~ ", end=" ~ end;
+      return "End can't be less then start field";
   }
   return null;
 }
@@ -142,7 +146,7 @@ string validate_score(string score) {
       try {
         to!double(score);
       } catch (ConvException e) {
-        error_msg = "Score field should contain a float value: " ~ score;
+        error_msg = "Score field should contain a float value";
       }
     }
   }
@@ -158,7 +162,7 @@ string validate_strand(string strand) {
       case "+", "-", "?", ".":
         break; // Strand value valid
       default:
-        error_msg = "Invalid strand field: " ~ strand;
+        error_msg = "Invalid strand field";
         break;
     }
   }
@@ -174,7 +178,7 @@ string validate_phase(string phase) {
       case "0", "1", "2", ".":
         break; // Phase value valid
       default:
-        error_msg = "Invalid phase field: " ~ phase;
+        error_msg = "Invalid phase field";
         break;
     }
   }
@@ -216,7 +220,7 @@ string validate_attribute_name(string attribute_name) {
 
 string check_if_attribute_has_two_parts(string attribute) {
   if (attribute.count('=') != 1)
-    return "Invalid attribute format: " ~ attribute;
+    return "Invalid attribute format";
   else
     return null;
 }
@@ -227,7 +231,7 @@ string check_for_invalid_is_circular_value(string[string] attributes) {
       case "true", "false":
       break; // Value valid
     default:
-      return "Ivalid value for Is_circular attribute: " ~ attributes["Is_circular"];
+      return "Ivalid value for Is_circular attribute";
     }
   }
   return null;
@@ -238,14 +242,14 @@ string check_for_invalid_is_circular_value(string[string] attributes) {
 
 string check_if_nine_columns_present(string line) {
   if (line.count('\t') < 8)
-    return "A record with invalid number of columns: " ~ line;
+    return "A record with invalid number of columns";
   else
     return null;
 }
 
 string check_if_empty_field(string field_name, string field) {
   if (field.length < 1)
-    return "Found an empty " ~ field_name ~ " field: " ~ field;
+    return "Found an empty " ~ field_name ~ " field";
   else
     return null;
 }
@@ -253,7 +257,7 @@ string check_if_empty_field(string field_name, string field) {
 string check_for_characters_invalid_in_any_field(string field_name, string field) {
   foreach(character; field) {
     if (std.ascii.isControl(character))
-      return "Control characters not allowed in field " ~ field_name ~ ": " ~ field;
+      return "Control characters not allowed in field " ~ field_name;
   }
   return null;
 }
