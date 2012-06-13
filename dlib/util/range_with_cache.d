@@ -34,6 +34,19 @@ class RangeWithCache(T) {
   }
 
   /**
+   * Method used in foreach statement. Calls the delegate parameter
+   * once for every item in the range.
+   */
+  int opApply(int delegate(ref T) call) {
+    T current_item = null;
+    while((current_item = next_item()) !is null) {
+      auto result = call(current_item);
+      if (result) return result;
+    }
+    return 0;
+  }
+
+  /**
    * Descendants need to implement this class. It should return
    * the next item in range every time it's called.
    */
