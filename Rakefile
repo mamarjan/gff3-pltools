@@ -32,9 +32,11 @@ CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/bio/gff3_file.d",
           "dlib/bio/gff3_record.d",
+          "dlib/bio/gff3_record_range.d",
           "dlib/bio/gff3_validation.d",
           "dlib/bio/fasta.d",
           "dlib/bio/gff3_feature.d",
+          "dlib/bio/gff3_feature_range.d",
           "dlib/util/esc_char_conv.d",
           "dlib/util/join_lines.d",
           "dlib/util/read_file.d",
