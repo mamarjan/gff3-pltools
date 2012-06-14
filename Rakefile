@@ -31,6 +31,7 @@ end
 CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/bio/gff3_file.d",
+          "dlib/bio/gff3_data.d",
           "dlib/bio/gff3_record.d",
           "dlib/bio/gff3_record_range.d",
           "dlib/bio/gff3_validation.d",
