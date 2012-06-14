@@ -1,11 +1,7 @@
 module bio.gff3_file;
 
-import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
-import std.ascii;
-import bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
-import bio.gff3_record_range, bio.gff3_feature_range;
-import util.join_lines, util.split_into_lines, util.read_file;
-import util.range_with_cache, util.split_file;
+import bio.gff3_validation, bio.gff3_record_range, bio.gff3_feature_range;
+import util.split_file;
 
 class GFF3File {
   /**
@@ -27,6 +23,8 @@ class GFF3File {
   static FeatureRange parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
           bool replace_esc_chars = true) { return null; }
 }
+
+import std.stdio;
 
 unittest {
   writeln("Testing parsing strings with open function and RecordRange...");

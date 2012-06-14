@@ -1,7 +1,7 @@
 module bio.gff3_data;
 
-import bio.gff3_record, bio.gff3_record_range, bio.gff3_validation, bio.gff3_feature_range;
-import util.split_into_lines, util.range_with_cache;
+import bio.gff3_validation, bio.gff3_record_range, bio.gff3_feature_range;
+import util.split_into_lines;
 
 class GFF3Data {
   /**
