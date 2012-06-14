@@ -3,19 +3,23 @@ import bio.gff3_file, bio.gff3_validation;
 
 void main(string[] args) {
   // Check if one argument was passed
-  if (args.length != 2)
+  if (args.length != 2) {
     print_usage();
-
-  alias char[] array;
-  auto filename = to!array(args[1]);
-
-  // Check if file exists
-  if (!(filename.exists)) {
-    writeln("Count not find file: " ~ filename ~ "\n");
-    print_usage();
+    return; // Exit the application
   }
 
-  foreach(rec; bio.gff3_file.open(to!string(filename), WARNINGS_ON_ERROR)) {}
+  auto filename = args[1];
+
+  // Check if file exists
+  alias char[] array;
+  if (!(to!array(filename).exists)) {
+    writeln("Could not find file: " ~ filename ~ "\n");
+    print_usage();
+    return;
+  }
+
+  // Open file and loop over all records, while printing error messages
+  foreach(rec; GFF3File.parse_by_records(filename, WARNINGS_ON_ERROR)) {}
 }
 
 void print_usage() {

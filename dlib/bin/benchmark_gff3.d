@@ -26,14 +26,18 @@ void main(string[] args) {
   }
 
   // Open file and loop over all records
-  auto records = bio.gff3_file.open(filename,
-                                    validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                    replace_escaped_chars);
+  auto records = GFF3File.parse_by_records(filename,
+                                           validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
+                                           replace_escaped_chars);
   foreach(rec; records) {}
 }
 
 void print_usage() {
   writeln("Usage: benchmark-gff3 FILE");
   writeln("Parse FILE without any validation");
+  writeln();
+  writeln("  -v  turn on validation");
+  writeln("  -r  turn on replacement of escaped characters");
+  writeln();
 }
 
