@@ -18,8 +18,11 @@ class GFF3Data {
    * Parses a string of GFF3 data.
    * Returns: a range of features.
    */
-  static FeatureRange parse_by_features(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true) { return null; }
+  static FeatureRange!SplitIntoLines parse_by_features(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+           bool replace_esc_chars = true) {
+    return new FeatureRange!(SplitIntoLines)(new SplitIntoLines(data), validator,
+                                             replace_esc_chars);
+  }
 }
 
 import std.stdio;
