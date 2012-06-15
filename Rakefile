@@ -45,6 +45,7 @@ DFILES = ["dlib/bio/gff3_file.d",
           "dlib/util/range_with_cache.d",
           "dlib/util/split_file.d",
           "dlib/util/split_line.d",
+          "dlib/util/dlist.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"
