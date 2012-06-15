@@ -10,7 +10,7 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
     this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
   }
 
-  Feature next_item() {
+  protected Feature next_item() {
     Feature feature;
     while((!records.empty) && (feature is null)) {
       feature = data.add_record(records.front);
@@ -82,8 +82,8 @@ class FeatureCache {
 struct FeatureCacheItem {
   string id;
   Feature feature;
+
   FeatureCacheItem * prev;
   FeatureCacheItem * next;
 }
-
 

@@ -5,10 +5,12 @@ void main(string[] args) {
   // Parse command line arguments
   bool replace_escaped_chars = false;
   bool validate = false;
+  bool parse_features = false;
   getopt(args,
       std.getopt.config.passThrough,
       "r", &replace_escaped_chars,
-      "v", &validate);
+      "v", &validate,
+      "f", &parse_features);
 
   // Only a filename should be left at this point
   auto filename = args[1];
@@ -25,11 +27,19 @@ void main(string[] args) {
     return;
   }
 
-  // Open file and loop over all records
-  auto records = GFF3File.parse_by_records(filename,
-                                           validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                           replace_escaped_chars);
-  foreach(rec; records) {}
+  if (parse_features) {
+    // Open file and loop over all features
+    auto features = GFF3File.parse_by_features(filename,
+                                               validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
+                                               replace_escaped_chars);
+    foreach(feature; features) {}
+  } else {
+    // Open file and loop over all records
+    auto records = GFF3File.parse_by_records(filename,
+                                             validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
+                                             replace_escaped_chars);
+    foreach(rec; records) {}
+  }
 }
 
 void print_usage() {
