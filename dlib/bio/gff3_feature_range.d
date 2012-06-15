@@ -1,6 +1,5 @@
 module bio.gff3_feature_range;
 
-import std.container;
 import bio.gff3_feature, bio.gff3_record_range, bio.gff3_record, bio.gff3_validation;
 import util.range_with_cache;
 
@@ -12,7 +11,15 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
   }
 
   Feature next_item() {
-    return null;
+    Feature feature;
+    while((!records.empty) && (feature is null)) {
+      feature = data.add_record(records.front);
+      records.popFront();
+    }
+    if (records.empty) {
+      feature = data.remove_from_back().feature;
+    }
+    return feature;
   }
 
   void set_filename(string filename) {
@@ -21,6 +28,7 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
 
   private {
     RecordRange!SourceRangeType records;
+    FeatureCache data;
   }
 }
 
@@ -30,13 +38,19 @@ class FeatureCache {
   }
 
   Feature add_record(Record new_record) {
-    auto current = list.start;
-    while(item; list) {
-      last = item;
-      if (item.id == new_record.id) {
+    FeatureCacheItem * item = list.start;
+    while(item !is null) {
+      if (current.id == new_record.id) {
         item.feature.add_record(new_record);
         return null;
       }
+    }
+    auto new_item = FeatureCacheItem(new_record.id, new Feature(new_record), null, null)
+    if (!list.full) {
+      list.add_item(new_item);
+      return null;
+    } else {
+      return list.add_front_remove_back(new_item).feature;
     }
   }
 
@@ -63,8 +77,8 @@ class FixedSizeDList(T) {
     this.readArray = new T[max_size];
   }
 
-  T start() {
-    return *start;
+  T * start() {
+    return start;
   }
 
   T add_front_remove_back(T new_item) {
@@ -78,6 +92,27 @@ class FixedSizeDList(T) {
     start.prev = null;
 
     return tmp;
+  }
+
+  T remove_from_back() {
+    if (end = null)
+      return T.init;
+
+    T item = *end;
+    if (start == end) {
+      start = null;
+      end = null;
+    } else {
+      current_count -= 1;
+      T item = *end;
+      end = item.prev;
+      end.next = null;
+    }
+    return item;
+  }
+
+  @property bool full {
+    return current_count == max_size;
   }
 
   private {
