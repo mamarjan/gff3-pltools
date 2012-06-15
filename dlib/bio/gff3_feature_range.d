@@ -8,6 +8,7 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
        bool replace_esc_chars = true) {
     this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
+    this.data = new FeatureCache;
   }
 
   protected Feature next_item() {
@@ -33,7 +34,7 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
 }
 
 class FeatureCache {
-  this(size_t max_size = 1000) {
+    this(size_t max_size = 1000) {
     this.max_size = max_size;
     this.dlist = new DList!FeatureCacheItem();
     this.list = new FeatureCacheItem[max_size];
@@ -46,6 +47,7 @@ class FeatureCache {
         item.feature.add_record(new_record);
         return null;
       }
+      item = item.next;
     }
     auto new_item = FeatureCacheItem(new_record.id, new Feature(new_record), null, null);
     if (current_size != max_size) {
@@ -85,5 +87,35 @@ struct FeatureCacheItem {
 
   FeatureCacheItem * prev;
   FeatureCacheItem * next;
+}
+
+import util.split_into_lines;
+import std.stdio;
+
+unittest {
+  string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
+                        ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
+                        ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
+  auto features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  assert(features.front.id == "1");
+  features.popFront();
+  assert(features.empty == true);
+
+  test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=4\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=5\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=6";
+  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  assert(features.empty == false);
+  assert(features.front.id == "1");
+  assert(features.front.records.length == 3);
+  features.popFront();
+  assert(features.empty == false);
+  assert(features.front.id == "2");
+  assert(features.front.records.length == 3);
+  features.popFront();
+  assert(features.empty == true);
 }
 
