@@ -49,8 +49,10 @@ void print_usage() {
   writeln("Usage: benchmark-gff3 FILE");
   writeln("Parse FILE without any validation");
   writeln();
-  writeln("  -v  turn on validation");
-  writeln("  -r  turn on replacement of escaped characters");
+  writeln("  -v     turn on validation");
+  writeln("  -r     turn on replacement of escaped characters");
+  writeln("  -f     merge records into features");
+  writeln("  -c N   feature cache size (how many features to keep in memory), default=1000");
   writeln();
 }
 
