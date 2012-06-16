@@ -90,9 +90,12 @@ struct FeatureCacheItem {
 }
 
 import util.split_into_lines;
-import std.stdio;
+import std.stdio, std.conv;
 
 unittest {
+  writeln("Testing FeatureRange...");
+
+  // Test with only one feature
   string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
@@ -101,12 +104,13 @@ unittest {
   features.popFront();
   assert(features.empty == true);
 
+  // Test with two features
   test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=4\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=5\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=6";
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=1\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=2\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=3\n";
   features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
   assert(features.empty == false);
   assert(features.front.id == "1");
@@ -116,6 +120,34 @@ unittest {
   assert(features.front.id == "2");
   assert(features.front.records.length == 3);
   features.popFront();
+  assert(features.empty == true);
+
+  // Test with more then the default number of features in cache
+  foreach(i; 3..1003) {
+    foreach(j; 1..4) {
+      test_records ~= ".\t.\t.\t.\t.\t.\t.\t.\tID=" ~ to!string(i) ~ ";value=" ~ to!string(j) ~ "\n";
+    }
+  }
+  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  assert(features.empty == false);
+  foreach(i; 1..1003) {
+    assert(features.empty == false);
+    assert(features.front.id == to!string(i));
+    assert(features.front.records.length == 3);
+    features.popFront();
+  }
+  assert(features.empty == true);
+
+  // Retest with a smaller feature cache
+  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records),
+                                             EXCEPTIONS_ON_ERROR, false, 97);
+  assert(features.empty == false);
+  foreach(i; 1..1003) {
+    assert(features.empty == false);
+    assert(features.front.id == to!string(i));
+    assert(features.front.records.length == 3);
+    features.popFront();
+  }
   assert(features.empty == true);
 }
 
