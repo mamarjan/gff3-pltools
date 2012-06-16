@@ -1,7 +1,7 @@
 module bio.gff3_feature_range;
 
 import bio.gff3_feature, bio.gff3_record_range, bio.gff3_record, bio.gff3_validation;
-import util.range_with_cache, util.dlist;
+import util.range_with_cache, util.dlist, util.string_hash;
 
 class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
 
@@ -41,15 +41,18 @@ class FeatureCache {
   }
 
   Feature add_record(Record new_record) {
+    int record_hash = hash(new_record.id);
     FeatureCacheItem * item = dlist.first;
     while(item !is null) {
-      if (item.id == new_record.id) {
-        item.feature.add_record(new_record);
-        return null;
+      if (item.id_hash == record_hash) {
+        if (item.feature.id == new_record.id) {
+          item.feature.add_record(new_record);
+          return null;
+        }
       }
       item = item.next;
     }
-    auto new_item = FeatureCacheItem(new_record.id, new Feature(new_record), null, null);
+    auto new_item = FeatureCacheItem(record_hash, new Feature(new_record), null, null);
     if (current_size != max_size) {
       list[current_size] = new_item;
       dlist.insert_front(&(list[current_size]));
@@ -82,7 +85,7 @@ class FeatureCache {
 }
 
 struct FeatureCacheItem {
-  string id;
+  int id_hash;
   Feature feature;
 
   FeatureCacheItem * prev;
