@@ -21,9 +21,9 @@ class GFF3File {
    * Returns: a range of features.
    */
   static FeatureRange!SplitFile parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-          bool replace_esc_chars = true) {
+          bool replace_esc_chars = true, size_t feature_cache_size = 1000) {
     auto features = new FeatureRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
-                                                 replace_esc_chars);
+                                                 replace_esc_chars, feature_cache_size);
     features.set_filename(filename);
     return features;
   }

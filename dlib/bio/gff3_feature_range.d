@@ -6,9 +6,9 @@ import util.range_with_cache, util.dlist;
 class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
 
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true) {
+       bool replace_esc_chars = true, size_t feature_cache_size = 1000) {
     this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
-    this.data = new FeatureCache;
+    this.data = new FeatureCache(feature_cache_size);
   }
 
   protected Feature next_item() {

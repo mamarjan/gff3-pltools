@@ -6,11 +6,13 @@ void main(string[] args) {
   bool replace_escaped_chars = false;
   bool validate = false;
   bool parse_features = false;
+  uint feature_cache_size = 1000;
   getopt(args,
       std.getopt.config.passThrough,
       "r", &replace_escaped_chars,
       "v", &validate,
-      "f", &parse_features);
+      "f", &parse_features,
+      "c", &feature_cache_size);
 
   // Only a filename should be left at this point
   auto filename = args[1];
@@ -31,7 +33,8 @@ void main(string[] args) {
     // Open file and loop over all features
     auto features = GFF3File.parse_by_features(filename,
                                                validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                               replace_escaped_chars);
+                                               replace_escaped_chars,
+                                               feature_cache_size);
     foreach(feature; features) {}
   } else {
     // Open file and loop over all records
