@@ -35,13 +35,17 @@ void main(string[] args) {
                                                validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
                                                replace_escaped_chars,
                                                feature_cache_size);
-    foreach(feature; features) {}
+    size_t counter = 0;
+    foreach(feature; features) { counter++; }
+    writeln("Parsed " ~ to!string(counter) ~ " features");
   } else {
     // Open file and loop over all records
     auto records = GFF3File.parse_by_records(filename,
                                              validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
                                              replace_escaped_chars);
-    foreach(rec; records) {}
+    size_t counter = 0;
+    foreach(rec; records) { counter++; }
+    writeln("Parsed " ~ to!string(counter) ~ " records");
   }
 }
 
