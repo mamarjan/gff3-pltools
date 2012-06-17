@@ -4,7 +4,14 @@ import bio.gff3_feature, bio.gff3_record_range, bio.gff3_record, bio.gff3_valida
 import util.range_with_cache, util.dlist, util.string_hash;
 
 class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
-
+  /**
+   * Constructor of a range of features. Use front, popFront() and empty for traversal.
+   * Params:
+   *     data =        A range of lines from a file or string,
+   *     validator =   Delegate which does validation of records,
+   *     replace_esc_chars =  If true escaped characters will be replaced with their real values,
+   *     feature_cache_size =  Cache size for features.
+   */
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
        bool replace_esc_chars = true, size_t feature_cache_size = 1000) {
     this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
@@ -23,6 +30,9 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
     return feature;
   }
 
+  /**
+   * Used for error messages when validating.
+   */
   void set_filename(string filename) {
     records.set_filename(filename);
   }
@@ -33,6 +43,13 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
   }
 }
 
+private:
+
+/**
+ * Keeps the last max_size features in an array. That way there is
+ * some buffer space for records which are at most max_size records
+ * far from the last record which is part of the same feature.
+ */
 class FeatureCache {
     this(size_t max_size = 1000) {
     this.max_size = max_size;
@@ -40,6 +57,12 @@ class FeatureCache {
     this.list = new FeatureCacheItem[max_size];
   }
 
+  /**
+   * If the feature with the same ID is already in the cache, this method
+   * adds the new record to that feature and returns null. Otherwise it
+   * adds a new feature to the cache and removes and returns the oldest
+   * feature in the cache.
+   */
   Feature add_record(Record new_record) {
     int record_hash = hash(new_record.id);
     FeatureCacheItem * item = dlist.first;
@@ -67,6 +90,10 @@ class FeatureCache {
     }
   }
 
+  /**
+   * Call this method when there are no more records in the data
+   * source. Removes and returns the oldest feature in the cache.
+   */
   Feature remove_from_back() {
     auto item = dlist.remove_back();
     if (item !is null)
