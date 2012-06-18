@@ -1,5 +1,5 @@
 import std.stdio, std.file, std.conv;
-import bio.gff3_file, bio.gff3_validation;
+import bio.gff3.file, bio.gff3.validation;
 
 void main(string[] args) {
   // Check if one argument was passed

@@ -1,4 +1,4 @@
-module bio.gff3_record;
+module bio.gff3.record;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;

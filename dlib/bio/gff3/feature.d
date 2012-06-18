@@ -1,7 +1,7 @@
-module bio.gff3_feature;
+module bio.gff3.feature;
 
 import std.array;
-import bio.gff3_record;
+import bio.gff3.record;
 
 class Feature {
   this(Record first_record = null) {

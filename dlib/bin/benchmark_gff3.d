@@ -1,5 +1,5 @@
 import std.stdio, std.file, std.conv, std.getopt;
-import bio.gff3_file, bio.gff3_validation;
+import bio.gff3.file, bio.gff3.validation;
 
 void main(string[] args) {
   // Parse command line arguments

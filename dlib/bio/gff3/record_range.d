@@ -1,8 +1,8 @@
-module bio.gff3_record_range;
+module bio.gff3.record_range;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
-import bio.fasta, bio.exceptions, bio.gff3_record, bio.gff3_validation;
+import bio.fasta, bio.exceptions, bio.gff3.record, bio.gff3.validation;
 import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
 

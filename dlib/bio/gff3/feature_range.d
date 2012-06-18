@@ -1,6 +1,6 @@
-module bio.gff3_feature_range;
+module bio.gff3.feature_range;
 
-import bio.gff3_feature, bio.gff3_record_range, bio.gff3_record, bio.gff3_validation;
+import bio.gff3.feature, bio.gff3.record_range, bio.gff3.record, bio.gff3.validation;
 import util.range_with_cache, util.dlist, util.string_hash;
 
 class FeatureRange(SourceRangeType) : RangeWithCache!Feature {

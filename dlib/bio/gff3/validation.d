@@ -1,4 +1,4 @@
-module bio.gff3_validation;
+module bio.gff3.validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;

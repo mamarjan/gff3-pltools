@@ -1,6 +1,6 @@
-module bio.gff3_file;
+module bio.gff3.file;
 
-import bio.gff3_validation, bio.gff3_record_range, bio.gff3_feature_range;
+import bio.gff3.validation, bio.gff3.record_range, bio.gff3.feature_range;
 import util.split_file;
 
 class GFF3File {

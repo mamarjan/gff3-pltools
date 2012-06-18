@@ -30,14 +30,14 @@ end
 
 CLEAN.include("lib/*.so")
 
-DFILES = ["dlib/bio/gff3_file.d",
-          "dlib/bio/gff3_data.d",
-          "dlib/bio/gff3_record.d",
-          "dlib/bio/gff3_record_range.d",
-          "dlib/bio/gff3_validation.d",
+DFILES = ["dlib/bio/gff3/file.d",
+          "dlib/bio/gff3/data.d",
+          "dlib/bio/gff3/record.d",
+          "dlib/bio/gff3/record_range.d",
+          "dlib/bio/gff3/validation.d",
           "dlib/bio/fasta.d",
-          "dlib/bio/gff3_feature.d",
-          "dlib/bio/gff3_feature_range.d",
+          "dlib/bio/gff3/feature.d",
+          "dlib/bio/gff3/feature_range.d",
           "dlib/util/esc_char_conv.d",
           "dlib/util/join_lines.d",
           "dlib/util/read_file.d",
