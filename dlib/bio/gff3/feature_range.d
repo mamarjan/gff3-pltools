@@ -64,16 +64,19 @@ class FeatureCache {
    * feature in the cache.
    */
   Feature add_record(Record new_record) {
-    int record_hash = hash(new_record.id);
-    FeatureCacheItem * item = dlist.first;
-    while(item !is null) {
-      if (item.id_hash == record_hash) {
-        if (item.feature.id == new_record.id) {
-          item.feature.add_record(new_record);
-          return null;
+    int record_hash = 0;
+    if (new_record.id != null) {
+      record_hash = hash(new_record.id);
+      FeatureCacheItem * item = dlist.first;
+      while(item !is null) {
+        if (item.id_hash == record_hash) {
+          if (item.feature.id == new_record.id) {
+            item.feature.add_record(new_record);
+            return null;
+          }
         }
+        item = item.next;
       }
-      item = item.next;
     }
     auto new_item = FeatureCacheItem(record_hash, new Feature(new_record), null, null);
     if (current_size != max_size) {
@@ -83,7 +86,7 @@ class FeatureCache {
       return null;
     } else {
       auto feature = dlist.last.feature;
-      item = dlist.remove_back();
+      FeatureCacheItem * item = dlist.remove_back();
       *item = new_item;
       dlist.insert_front(item);
       return feature;
