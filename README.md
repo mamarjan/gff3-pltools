@@ -62,6 +62,18 @@ And then run it like this:
 ```sh
     ./benchmark-gff3 path/to/file.gff3
 ```
+
+The most basic case for the banchmarking utility is to parse the
+file into records. More functionality is available using command
+line options:
+
+```
+  -v     turn on validation
+  -r     turn on replacement of escaped characters
+  -f     merge records into features
+  -c N   feature cache size (how many features to keep in memory), default=1000
+  -l     link feature into parent-child relationships
+```
         
 ## Project home page
 

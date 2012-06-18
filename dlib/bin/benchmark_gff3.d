@@ -7,12 +7,21 @@ void main(string[] args) {
   bool validate = false;
   bool parse_features = false;
   uint feature_cache_size = 1000;
-  getopt(args,
-      std.getopt.config.passThrough,
-      "r", &replace_escaped_chars,
-      "v", &validate,
-      "f", &parse_features,
-      "c", &feature_cache_size);
+  bool link_features = false;
+  try {
+    getopt(args,
+        std.getopt.config.passThrough,
+        "r", &replace_escaped_chars,
+        "v", &validate,
+        "f", &parse_features,
+        "c", &feature_cache_size,
+        "l", &link_features);
+  } catch (Exception e) {
+    writeln(e.msg);
+    writeln();
+    print_usage();
+    return; // Exit the application
+  }
 
   // Only a filename should be left at this point
   auto filename = args[1];
@@ -34,7 +43,8 @@ void main(string[] args) {
     auto features = GFF3File.parse_by_features(filename,
                                                validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
                                                replace_escaped_chars,
-                                               feature_cache_size);
+                                               feature_cache_size,
+                                               link_features);
     size_t counter = 0;
     foreach(feature; features) { counter++; }
     writeln("Parsed " ~ to!string(counter) ~ " features");
@@ -57,6 +67,7 @@ void print_usage() {
   writeln("  -r     turn on replacement of escaped characters");
   writeln("  -f     merge records into features");
   writeln("  -c N   feature cache size (how many features to keep in memory), default=1000");
+  writeln("  -l     link feature into parent-child relationships");
   writeln();
 }
 

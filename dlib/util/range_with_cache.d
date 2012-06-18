@@ -39,6 +39,11 @@ class RangeWithCache(T) {
    */
   int opApply(int delegate(ref T) call) {
     T current_item = null;
+    if (cache !is null) {
+      auto result = call(cache);
+      if (result) return result;
+      cache = null;
+    }
     while((current_item = next_item()) !is null) {
       auto result = call(current_item);
       if (result) return result;

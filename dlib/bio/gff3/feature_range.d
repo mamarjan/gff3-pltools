@@ -13,9 +13,9 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
    *     feature_cache_size =  Cache size for features.
    */
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true, size_t feature_cache_size = 1000) {
+       bool replace_esc_chars = true, size_t feature_cache_size = 1000, bool link_features = false) {
     this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
-    this.data = new FeatureCache(feature_cache_size);
+    this.data = new FeatureCache(feature_cache_size, link_features);
   }
 
   protected Feature next_item() {
@@ -51,8 +51,9 @@ private:
  * far from the last record which is part of the same feature.
  */
 class FeatureCache {
-    this(size_t max_size = 1000) {
+    this(size_t max_size = 1000, bool link_features = false) {
     this.max_size = max_size;
+    this.link_features = link_features;
     this.dlist = new DList!FeatureCacheItem();
     this.list = new FeatureCacheItem[max_size];
   }
@@ -78,19 +79,24 @@ class FeatureCache {
         item = item.next;
       }
     }
-    auto new_item = FeatureCacheItem(record_hash, new Feature(new_record), null, null);
+    auto new_item = FeatureCacheItem(record_hash, hash(new_record.parent), new Feature(new_record), null, null);
+    Feature result;
     if (current_size != max_size) {
       list[current_size] = new_item;
       dlist.insert_front(&(list[current_size]));
       current_size++;
-      return null;
+      result = null;
     } else {
       auto feature = dlist.last.feature;
       FeatureCacheItem * item = dlist.remove_back();
       *item = new_item;
       dlist.insert_front(item);
-      return feature;
+      result = feature;
     }
+    if (link_features) {
+      check_for_children_and_parents(result);
+    }
+    return result;
   }
 
   /**
@@ -99,23 +105,63 @@ class FeatureCache {
    */
   Feature remove_from_back() {
     auto item = dlist.remove_back();
-    if (item !is null)
+    if (item !is null) {
+      if (link_features) {
+        check_for_children_and_parents(item.feature);
+      }
       return item.feature;
-    else
+    } else {
       return null;
+    }
   }
 
   private {
+    void check_for_children_and_parents(Feature feature) {
+      if (feature !is null) {
+        bool search_for_parent = ((feature.parent_feature is null) &&
+                                  (feature.parent !is null));
+        bool search_for_children = feature.id !is null;
+        // Search for parents or children
+        if (search_for_parent || search_for_children) {
+          int feature_hash = hash(feature.id);
+          int parent_hash = hash(feature.parent);
+          FeatureCacheItem * item = dlist.first;
+          while((item !is null) && (search_for_parent || search_for_children)) {
+            if (search_for_parent) {
+              if (item.id_hash == parent_hash) {
+                if (item.feature.id == feature.parent) {
+                  feature.set_parent_feature(item.feature);
+                  item.feature.add_child(feature);
+                  search_for_parent = false;
+                }
+              }
+            }
+            if (search_for_children) {
+              if (item.parent_hash == feature_hash) {
+                if (item.feature.parent == feature.id) {
+                  item.feature.set_parent_feature(feature);
+                  feature.add_child(item.feature);
+                }
+              }
+            }
+            item = item.next;
+          }
+        }
+      }
+    }
+
     DList!FeatureCacheItem dlist;
     FeatureCacheItem[] list;
 
     size_t max_size;
+    bool link_features = false;
     uint current_size = 0;
   }
 }
 
 struct FeatureCacheItem {
   int id_hash;
+  int parent_hash;
   Feature feature;
 
   FeatureCacheItem * prev;
@@ -182,5 +228,43 @@ unittest {
     features.popFront();
   }
   assert(features.empty == true);
+
+  // Test parent-child linking
+  test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;Parent=1\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
+                 ".\t.\t.\t.\t.\t.\t.\t.\tID=5;Parent=3\n";
+  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records),
+                                             EXCEPTIONS_ON_ERROR, false, 100, true);
+  assert(features.empty == false);
+  uint count_features = 0;
+  foreach(feature; features) {
+    if (feature.id == "1") {
+      assert(feature.parent_feature is null);
+      assert(features.front.children.length == 2);
+    } else if (feature.id == "2") {
+      assert(feature.parent_feature !is null);
+      assert(feature.parent_feature.id == "1");
+      assert(feature.children.length == 1);
+      assert(feature.children[0].id == "4");
+    } else if (feature.id == "3") {
+      assert(feature.parent_feature !is null);
+      assert(feature.parent_feature.id == "1");
+      assert(feature.children.length == 1);
+      assert(feature.children[0].id == "5");
+    } else if (feature.id == "4") {
+      assert(feature.parent_feature !is null);
+      assert(feature.parent_feature.id == "2");
+      assert(feature.children.length == 0);
+    } else if (feature.id == "5") {
+      assert(feature.parent_feature !is null);
+      assert(feature.parent_feature.id == "3");
+      assert(feature.children.length == 0);
+    }
+    count_features++;
+  }
+  assert(count_features == 5);
 }
 
