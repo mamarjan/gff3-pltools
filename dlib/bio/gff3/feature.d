@@ -10,7 +10,7 @@ class Feature {
   }
 
   void add_record(Record record) {
-    records ~= record;
+    _records ~= record;
   }
 
   /**
@@ -18,7 +18,7 @@ class Feature {
    * of its records.
    */
   @property string id() {
-    return (records.length > 0) ? records[0].id : null;
+    return (_records.length > 0) ? _records[0].id : null;
   }
 
   /**
@@ -27,7 +27,7 @@ class Feature {
    * for this feature is not defined.
    */
   @property string parent() {
-    return (records.length > 0) ? records[0].parent : null;
+    return (_records.length > 0) ? _records[0].parent : null;
   }
 
   /**
@@ -67,7 +67,7 @@ class Feature {
 
   private {
     Feature _parent_feature = null;
-    Records[] _records;
+    Record[] _records;
     Feature[] _children;
   }
 }
@@ -94,5 +94,8 @@ unittest {
   feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1")));
   feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=1")));
   assert(feature.children.length == 2);
+  feature.set_parent_feature(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")));
+  assert(feature.parent_feature !is null);
+  assert(feature.parent_feature.id == "1");
 }
 
