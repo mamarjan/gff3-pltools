@@ -1,20 +1,23 @@
 module bio.gff3.feature_range;
 
-import bio.gff3.feature, bio.gff3.record_range, bio.gff3.record, bio.gff3.validation;
+import bio.gff3.feature, bio.gff3.record, bio.gff3.validation;
 import util.range_with_cache, util.dlist, util.string_hash;
 
-class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
+/**
+ * FeatureRange is a range of features from a range of records.
+ * Use front, popFront() and empty for traversal.
+ */
+class FeatureRange : RangeWithCache!Feature {
   /**
-   * Constructor of a range of features. Use front, popFront() and empty for traversal.
+   * Constructor of a range of features.
    * Params:
-   *     data =        A range of lines from a file or string,
-   *     validator =   Delegate which does validation of records,
-   *     replace_esc_chars =  If true escaped characters will be replaced with their real values,
+   *     records =             A range of records.
    *     feature_cache_size =  Cache size for features.
+   *     link_features =       The parser will link features into parent-child relationships
+   *                           if this parameter is true.
    */
-  this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true, size_t feature_cache_size = 1000, bool link_features = false) {
-    this.records = new RecordRange!SourceRangeType(data, validator, replace_esc_chars);
+  this(RangeWithCache!Record records, size_t feature_cache_size = 1000, bool link_features = false) {
+    this.records = records;
     this.data = new FeatureCache(feature_cache_size, link_features);
   }
 
@@ -30,15 +33,8 @@ class FeatureRange(SourceRangeType) : RangeWithCache!Feature {
     return feature;
   }
 
-  /**
-   * Used for error messages when validating.
-   */
-  void set_filename(string filename) {
-    records.set_filename(filename);
-  }
-
   private {
-    RecordRange!SourceRangeType records;
+    RangeWithCache!Record records;
     FeatureCache data;
   }
 }
@@ -168,8 +164,9 @@ struct FeatureCacheItem {
   FeatureCacheItem * next;
 }
 
-import util.split_into_lines;
 import std.stdio, std.conv;
+import bio.gff3.record_range;
+import util.split_into_lines;
 
 unittest {
   writeln("Testing FeatureRange...");
@@ -178,7 +175,8 @@ unittest {
   string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
-  auto features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  auto records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  auto features = new FeatureRange(records);
   assert(features.front.id == "1");
   features.popFront();
   assert(features.empty == true);
@@ -190,7 +188,8 @@ unittest {
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=3\n";
-  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  features = new FeatureRange(records);
   assert(features.empty == false);
   assert(features.front.id == "1");
   assert(features.front.records.length == 3);
@@ -207,7 +206,8 @@ unittest {
       test_records ~= ".\t.\t.\t.\t.\t.\t.\t.\tID=" ~ to!string(i) ~ ";value=" ~ to!string(j) ~ "\n";
     }
   }
-  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  features = new FeatureRange(records);
   assert(features.empty == false);
   foreach(i; 1..1003) {
     assert(features.empty == false);
@@ -218,8 +218,8 @@ unittest {
   assert(features.empty == true);
 
   // Retest with a smaller feature cache
-  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records),
-                                             EXCEPTIONS_ON_ERROR, false, 97);
+  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  features = new FeatureRange(records, 97);
   assert(features.empty == false);
   foreach(i; 1..1003) {
     assert(features.empty == false);
@@ -236,8 +236,8 @@ unittest {
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=5;Parent=3\n";
-  features = new FeatureRange!SplitIntoLines(new SplitIntoLines(test_records),
-                                             EXCEPTIONS_ON_ERROR, false, 100, true);
+  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  features = new FeatureRange(records, 10, true);
   assert(features.empty == false);
   uint count_features = 0;
   foreach(feature; features) {

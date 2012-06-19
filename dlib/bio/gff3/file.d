@@ -20,12 +20,10 @@ class GFF3File {
    * Parses a file with GFF3 data.
    * Returns: a range of features.
    */
-  static FeatureRange!SplitFile parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+  static FeatureRange parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
           bool replace_esc_chars = true, size_t feature_cache_size = 1000, bool link_features = false) {
-    auto features = new FeatureRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
-                                                 replace_esc_chars, feature_cache_size, link_features);
-    features.set_filename(filename);
-    return features;
+    auto records = parse_by_records(filename, validator, replace_esc_chars);
+    return new FeatureRange(records, feature_cache_size, link_features);
   }
 }
 
