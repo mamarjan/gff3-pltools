@@ -23,9 +23,15 @@ void main(string[] args) {
   auto records = GFF3File.parse_by_records(filename,
                                            NO_VALIDATION,
                                            false);
+  size_t records_counter = 0;
+  foreach(rec; records) { if (rec.id !is null) records_counter++; }
 
-  ID[] IDs;
+  records = GFF3File.parse_by_records(filename,
+                                      NO_VALIDATION,
+                                      false);
+  ID[] IDs = new ID[records_counter];
   size_t null_IDs = 0;
+  size_t id_counter = 0;
   foreach(rec; records) {
     string rec_id = rec.id;
     int rec_id_hash = hash(rec_id);
@@ -33,7 +39,7 @@ void main(string[] args) {
       null_IDs++;
     else {
       bool found = false;
-      foreach(id; IDs) {
+      foreach(id; IDs[0..id_counter]) {
         if (id.hash == rec_id_hash) {
           if (id.id == rec_id) {
             found = true;
@@ -42,7 +48,8 @@ void main(string[] args) {
         }
       }
       if (!found) {
-        IDs ~= ID(rec_id_hash, rec_id.idup);
+        IDs[id_counter] = ID(rec_id_hash, rec_id.idup);
+        id_counter++;
       }
     }
   }
