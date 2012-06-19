@@ -61,9 +61,13 @@ class Feature {
   /**
    * All records which are part of this feature.
    */
-  Record[] records;
+  @property Record[] records() {
+    return _records;
+  }
+
   private {
     Feature _parent_feature = null;
+    Records[] _records;
     Feature[] _children;
   }
 }
