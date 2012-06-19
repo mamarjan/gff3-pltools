@@ -72,6 +72,13 @@ end
 CLEAN.include("benchmark-gff3")
 CLEAN.include("benchmark-gff3.o")
 
+desc "Compile utilities"
+task :utilities do
+  sh "dmd -O -release -m32 dlib/bin/count_features.d #{DFILES} -Idlib -ofcount-features"
+end
+CLEAN.include("count-features")
+CLEAN.include("count-features.o")
+
 require 'rubygems'
 require 'bundler'
 begin
