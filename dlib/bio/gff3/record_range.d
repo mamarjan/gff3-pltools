@@ -70,6 +70,7 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     if (fasta_mode)
       return null;
     Array line = null;
+    Record result;
     while (!data.empty) {
       line = data.front;
       if (is_comment(line)) { dataPopFront(); continue; }
@@ -80,18 +81,15 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
           dataPopFront(); // Remove ##FASTA line from data source
         break;
       }
-      if (validate(filename, line_number, line))
+      if (validate(filename, line_number, line)) {
         // Found line with a valid record
-        break;
-      else
+        static if (is(Array == string)) {
+          result = new Record(line, replace_esc_chars);
+        } else {
+          result = new Record(to!string(line), replace_esc_chars);
+        }
         dataPopFront();
-    }
-    Record result;
-    if (!(data.empty || fasta_mode)) {
-      static if (is(Array == string)) {
-        result = new Record(line, replace_esc_chars);
-      } else {
-        result = new Record(to!string(line), replace_esc_chars);
+        break;
       }
       dataPopFront();
     }
