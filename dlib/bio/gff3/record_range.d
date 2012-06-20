@@ -3,6 +3,7 @@ module bio.gff3.record_range;
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
 import bio.fasta, bio.exceptions, bio.gff3.record, bio.gff3.validation;
+import bio.gff3.filtering;
 import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
 
@@ -20,10 +21,13 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * and empty defined.
    */
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true) {
+       bool replace_esc_chars = true, FilterPredicate before_filter = NO_FILTER,
+       FilterPredicate after_filter = NO_FILTER) {
     this.data = data;
     this.validate = validator;
     this.replace_esc_chars = replace_esc_chars;
+    this.before_filter = before_filter;
+    this.after_filter = after_filter;
   }
 
   /**
@@ -83,13 +87,17 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
       }
       if (validate(filename, line_number, line)) {
         // Found line with a valid record
-        static if (is(Array == string)) {
-          result = new Record(line, replace_esc_chars);
-        } else {
-          result = new Record(to!string(line), replace_esc_chars);
+        if (before_filter.keep(line)) {
+          static if (is(Array == string)) {
+            result = new Record(line, replace_esc_chars);
+          } else {
+            result = new Record(to!string(line), replace_esc_chars);
+          }
+          if (after_filter.keep(result)) {
+            dataPopFront();
+            break;
+          }
         }
-        dataPopFront();
-        break;
       }
       dataPopFront();
     }
@@ -101,6 +109,9 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     SourceRangeType data;
     bool fasta_mode = false;
     bool replace_esc_chars;
+
+    FilterPredicate before_filter;
+    FilterPredicate after_filter;
 
     string filename;
     int line_number = 1;

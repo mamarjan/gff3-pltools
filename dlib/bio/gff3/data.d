@@ -1,6 +1,7 @@
 module bio.gff3.data;
 
 import bio.gff3.validation, bio.gff3.record_range, bio.gff3.feature_range;
+import bio.gff3.filtering;
 import util.split_into_lines;
 
 class GFF3Data {
@@ -9,9 +10,10 @@ class GFF3Data {
    * Returns: a range of records.
    */
   static RecordRange!SplitIntoLines parse_by_records(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true) {
+           bool replace_esc_chars = true, FilterPredicate before_filter = NO_FILTER,
+           FilterPredicate after_filter = NO_FILTER) {
     return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator,
-                                            replace_esc_chars);
+                                            replace_esc_chars, before_filter, after_filter);
   }
 
   /**
@@ -19,8 +21,10 @@ class GFF3Data {
    * Returns: a range of features.
    */
   static FeatureRange parse_by_features(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true, size_t features_cache_size = 1000, bool link_features = false) {
-    auto records = parse_by_records(data, validator, replace_esc_chars);
+           bool replace_esc_chars = true, size_t features_cache_size = 1000,
+           bool link_features = false, FilterPredicate before_filter = NO_FILTER,
+           FilterPredicate after_filter = NO_FILTER) {
+    auto records = parse_by_records(data, validator, replace_esc_chars, before_filter, after_filter);
     return new FeatureRange(records, features_cache_size, link_features);
   }
 }

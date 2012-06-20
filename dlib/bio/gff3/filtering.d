@@ -14,8 +14,7 @@ set_filter(BEFORE(OR(ATTRIBUTE("ID",
                                EQUALS("test"))));
 */
 
-auto AFTER(FilterPredicate p) { return new AfterPredicate(p); }
-auto BEFORE(FilterPredicate p) { return new BeforePredicate(p); }
+FilterPredicate NO_FILTER;
 
 auto FIELD(string field_name, FilterPredicate p) { return new FieldPredicate(field_name, p); }
 auto ATTRIBUTE(string attribute_name, FilterPredicate p) { return new AttributePredicate(attribute_name, p); }
@@ -29,27 +28,12 @@ auto AND(FilterPredicate[] predicates...) { return new AndPredicate(predicates);
 auto OR(FilterPredicate[] predicates...) { return new OrPredicate(predicates); }
 
 class FilterPredicate {
-  bool is_after() { return false; }
-  bool is_before() { return false; }
-  bool keep(string value) { return false; }
-  bool keep(Record value) { return false; }
+  bool keep(string value) { return true; }
+  bool keep(Record value) { return true; }
 }
 
-
-private:
-
-class AfterPredicate : FilterPredicate {
-  this(FilterPredicate p) { this.p = p; }
-  override bool is_after() { return true; }
-  override bool keep(Record record) { return p.keep(record); }
-  FilterPredicate p;
-}
-
-class BeforePredicate : FilterPredicate {
-  this(FilterPredicate p) { this.p = p; }
-  override bool is_before() { return true; }
-  override bool keep(string line) { return p.keep(line); }
-  FilterPredicate p;
+static this() {
+  NO_FILTER = new FilterPredicate;
 }
 
 enum
@@ -61,6 +45,8 @@ enum
    FIELD_SCORE   = "score",
    FIELD_STRAND  = "strand",
    FIELD_PHASE   = "phase";
+
+private:
 
 class FieldPredicate : FilterPredicate {
   this(string field_name, FilterPredicate p) {
