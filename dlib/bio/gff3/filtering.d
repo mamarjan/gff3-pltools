@@ -94,7 +94,14 @@ class AttributePredicate : FilterPredicate {
     this.attribute_name = attribute_name;
   }
 
-  override bool keep(Record r) { return p.keep(r.attributes[attribute_name]); }
+  override bool keep(Record r) {
+    string attribute_value;
+    if (attribute_name in r.attributes)
+      attribute_value = r.attributes[attribute_name];
+    else
+      attribute_value = "";
+    return p.keep(attribute_value);
+  }
 
   FilterPredicate p;
   string attribute_name;

@@ -96,6 +96,8 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
           if (after_filter.keep(result)) {
             dataPopFront();
             break;
+          } else {
+            result = null;
           }
         }
       }
