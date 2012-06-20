@@ -111,7 +111,9 @@ class EqualsPredicate : FilterPredicate {
   this(string value) { this.value = value; }
   override bool keep(string s) { return s == value; }
 
-  string value; } 
+  string value;
+} 
+
 class StartsWithPredicate : FilterPredicate {
   this(string value) { this.value = value; }
   override bool keep(string s) { return s.startsWith(value); }
@@ -129,6 +131,7 @@ class ContainsPredicate : FilterPredicate {
 class NotPredicate : FilterPredicate {
   this(FilterPredicate p) { this.p = p; }
   override bool keep(string s) { return !(p.keep(s)); }
+  override bool keep(Record r) { return !(p.keep(r)); }
 
   FilterPredicate p;
 }
@@ -203,11 +206,13 @@ import std.stdio;
 
 unittest {
   writeln("Testing filtering predicates...");
-  
+
+  // Testing NO_FILTER
   assert(NO_FILTER.keep("") == true);
   assert(NO_FILTER.keep("test test") == true);
   assert(NO_FILTER.keep(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")) == true);
 
+  // Testing FIELD
   auto test_record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9");
   assert(FIELD(FIELD_SEQNAME, EQUALS("1")).keep(test_record) == true);
   assert(FIELD(FIELD_SOURCE, EQUALS("2")).keep(test_record) == true);
@@ -237,6 +242,7 @@ unittest {
   assert(FIELD(FIELD_STRAND, EQUALS("+")).keep(test_record) == true);
   assert(FIELD(FIELD_PHASE, EQUALS("2")).keep(test_record) == true);
 
+  // Testing ATTRIBUTE
   test_record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;test=value");
   assert(ATTRIBUTE("ID", EQUALS("1")).keep(test_record) == true);
   assert(ATTRIBUTE("Parent", EQUALS("")).keep(test_record) == true);
@@ -250,4 +256,68 @@ unittest {
 
   test_record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=");
   assert(ATTRIBUTE("ID", EQUALS("")).keep(test_record) == true);
+
+  // Testing EQUALS
+  assert(EQUALS("abc").keep("abc") == true);
+  assert(EQUALS("123").keep("123") == true);
+  assert(EQUALS("abc").keep("def") == false);
+  assert(EQUALS("abc").keep("a") == false);
+  assert(EQUALS("abc").keep("") == false);
+  assert(EQUALS("").keep("abc") == false);
+  assert(EQUALS("").keep("") == true);
+
+  // Testing STARTS_WITH
+  assert(STARTS_WITH("abc").keep("abc") == true);
+  assert(STARTS_WITH("abc").keep("abcdef") == true);
+  assert(STARTS_WITH("abc").keep("ab") == false);
+  assert(STARTS_WITH("abc").keep("a") == false);
+  assert(STARTS_WITH("abc").keep("") == false);
+  assert(STARTS_WITH("").keep("") == true);
+  assert(STARTS_WITH("").keep("abc") == true);
+  assert(STARTS_WITH("a").keep("abc") == true);
+  assert(STARTS_WITH("a").keep("") == false);
+  assert(STARTS_WITH("123").keep("1234") == true);
+
+  // Testing CONTAINS
+  assert(CONTAINS("abc").keep("abc") == true);
+  assert(CONTAINS("abc").keep("0abcdef") == true);
+  assert(CONTAINS("a").keep("0abcdef") == true);
+  assert(CONTAINS("").keep("0abcdef") == true);
+  assert(CONTAINS("abc").keep("") == false);
+  assert(CONTAINS("abc").keep("a") == false);
+  assert(CONTAINS("abc").keep("b") == false);
+  assert(CONTAINS("abc").keep("c") == false);
+
+  // Testing NOT
+  assert(NOT(EQUALS("abc")).keep("abc") == false);
+  assert(NOT(EQUALS("abc")).keep("a") == true);
+  assert(NOT(CONTAINS("abc")).keep("c") == true);
+  assert(NOT(STARTS_WITH("123")).keep("1234") == false);
+  test_record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9");
+  assert(NOT(FIELD(FIELD_SEQNAME, EQUALS("1"))).keep(test_record) == false);
+  assert(NOT(ATTRIBUTE("ID", EQUALS("1"))).keep(test_record) == true);
+
+  // Testing AND
+  test_record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9");
+  assert(AND(FIELD(FIELD_SEQNAME, EQUALS("1")), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(AND(FIELD(FIELD_SEQNAME, EQUALS("1")), FIELD(FIELD_SOURCE, EQUALS("3"))).keep(test_record) == false);
+  assert(AND(FIELD(FIELD_SEQNAME, EQUALS("3")), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == false);
+  assert(AND(FIELD(FIELD_SEQNAME, EQUALS("3")), FIELD(FIELD_SOURCE, EQUALS("3"))).keep(test_record) == false);
+  assert(AND(NOT(FIELD(FIELD_SEQNAME, EQUALS("1"))), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == false);
+  assert(AND(NOT(FIELD(FIELD_SEQNAME, EQUALS("3"))), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(AND(NOT(FIELD(FIELD_SEQNAME, EQUALS("3"))),
+             FIELD(FIELD_SOURCE, EQUALS("2")),
+             FIELD(FIELD_SEQNAME, EQUALS("1"))).keep(test_record) == true);
+
+  // Testing OR
+  test_record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9");
+  assert(OR(FIELD(FIELD_SEQNAME, EQUALS("1")), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(OR(FIELD(FIELD_SEQNAME, EQUALS("1")), FIELD(FIELD_SOURCE, EQUALS("3"))).keep(test_record) == true);
+  assert(OR(FIELD(FIELD_SEQNAME, EQUALS("3")), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(OR(FIELD(FIELD_SEQNAME, EQUALS("3")), FIELD(FIELD_SOURCE, EQUALS("3"))).keep(test_record) == false);
+  assert(OR(NOT(FIELD(FIELD_SEQNAME, EQUALS("1"))), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(OR(NOT(FIELD(FIELD_SEQNAME, EQUALS("3"))), FIELD(FIELD_SOURCE, EQUALS("2"))).keep(test_record) == true);
+  assert(OR(NOT(FIELD(FIELD_SEQNAME, EQUALS("1"))),
+            FIELD(FIELD_SOURCE, EQUALS("2")),
+            FIELD(FIELD_SEQNAME, EQUALS("3"))).keep(test_record) == true);
 }
