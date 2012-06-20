@@ -199,3 +199,55 @@ class OrPredicate : FilterPredicate {
   FilterPredicate[] predicates;
 }
 
+import std.stdio;
+
+unittest {
+  writeln("Testing filtering predicates...");
+  
+  assert(NO_FILTER.keep("") == true);
+  assert(NO_FILTER.keep("test test") == true);
+  assert(NO_FILTER.keep(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")) == true);
+
+  auto test_record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9");
+  assert(FIELD(FIELD_SEQNAME, EQUALS("1")).keep(test_record) == true);
+  assert(FIELD(FIELD_SOURCE, EQUALS("2")).keep(test_record) == true);
+  assert(FIELD(FIELD_FEATURE, EQUALS("3")).keep(test_record) == true);
+  assert(FIELD(FIELD_START, EQUALS("4")).keep(test_record) == true);
+  assert(FIELD(FIELD_END, EQUALS("5")).keep(test_record) == true);
+  assert(FIELD(FIELD_SCORE, EQUALS("6")).keep(test_record) == true);
+  assert(FIELD(FIELD_STRAND, EQUALS("7")).keep(test_record) == true);
+  assert(FIELD(FIELD_PHASE, EQUALS("8")).keep(test_record) == true);
+
+  assert(FIELD(FIELD_SEQNAME, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_SOURCE, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_FEATURE, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_START, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_END, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_SCORE, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_STRAND, EQUALS("bad value")).keep(test_record) == false);
+  assert(FIELD(FIELD_PHASE, EQUALS("bad value")).keep(test_record) == false);
+
+  test_record = new Record(" \t.\ta\t123\t456\t1.0\t+\t2\tID=9");
+  assert(FIELD(FIELD_SEQNAME, EQUALS(" ")).keep(test_record) == true);
+  assert(FIELD(FIELD_SOURCE, EQUALS(".")).keep(test_record) == true);
+  assert(FIELD(FIELD_FEATURE, EQUALS("a")).keep(test_record) == true);
+  assert(FIELD(FIELD_START, EQUALS("123")).keep(test_record) == true);
+  assert(FIELD(FIELD_END, EQUALS("456")).keep(test_record) == true);
+  assert(FIELD(FIELD_SCORE, EQUALS("1.0")).keep(test_record) == true);
+  assert(FIELD(FIELD_STRAND, EQUALS("+")).keep(test_record) == true);
+  assert(FIELD(FIELD_PHASE, EQUALS("2")).keep(test_record) == true);
+
+  test_record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;test=value");
+  assert(ATTRIBUTE("ID", EQUALS("1")).keep(test_record) == true);
+  assert(ATTRIBUTE("Parent", EQUALS("")).keep(test_record) == true);
+  assert(ATTRIBUTE("Parent", EQUALS("123")).keep(test_record) == false);
+  assert(ATTRIBUTE("test", EQUALS("value")).keep(test_record) == true);
+
+  test_record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert(ATTRIBUTE("Parent", EQUALS("123")).keep(test_record) == false);
+  assert(ATTRIBUTE("ID", EQUALS("123")).keep(test_record) == false);
+  assert(ATTRIBUTE("ID", EQUALS("")).keep(test_record) == true);
+
+  test_record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=");
+  assert(ATTRIBUTE("ID", EQUALS("")).keep(test_record) == true);
+}
