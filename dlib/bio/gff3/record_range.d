@@ -21,8 +21,8 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * and empty defined.
    */
   this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true, FilterPredicate before_filter = NO_FILTER,
-       FilterPredicate after_filter = NO_FILTER) {
+       bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
+       RecordPredicate after_filter = NO_AFTER_FILTER) {
     this.data = data;
     this.validate = validator;
     this.replace_esc_chars = replace_esc_chars;
@@ -87,13 +87,13 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
       }
       if (validate(filename, line_number, line)) {
         // Found line with a valid record
-        if (before_filter.keep(line)) {
+        if (before_filter(line)) {
           static if (is(Array == string)) {
             result = new Record(line, replace_esc_chars);
           } else {
             result = new Record(to!string(line), replace_esc_chars);
           }
-          if (after_filter.keep(result)) {
+          if (after_filter(result)) {
             dataPopFront();
             break;
           } else {
@@ -112,8 +112,8 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     bool fasta_mode = false;
     bool replace_esc_chars;
 
-    FilterPredicate before_filter;
-    FilterPredicate after_filter;
+    StringPredicate before_filter;
+    RecordPredicate after_filter;
 
     string filename;
     int line_number = 1;

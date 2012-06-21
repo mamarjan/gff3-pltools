@@ -10,8 +10,8 @@ class GFF3File {
    * Returns: a range of records.
    */
   static RecordRange!SplitFile parse_by_records(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-          bool replace_esc_chars = true, FilterPredicate before_filter = NO_FILTER,
-          FilterPredicate after_filter = NO_FILTER) {
+          bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
+          RecordPredicate after_filter = NO_AFTER_FILTER) {
     auto records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
                                                replace_esc_chars, before_filter, after_filter);
     records.set_filename(filename);
@@ -24,8 +24,8 @@ class GFF3File {
    */
   static FeatureRange parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
           bool replace_esc_chars = true, size_t feature_cache_size = 1000,
-          bool link_features = false, FilterPredicate before_filter = NO_FILTER,
-          FilterPredicate after_filter = NO_FILTER) {
+          bool link_features = false, StringPredicate before_filter = NO_BEFORE_FILTER,
+          RecordPredicate after_filter = NO_AFTER_FILTER) {
     auto records = parse_by_records(filename, validator, replace_esc_chars, before_filter, after_filter);
     return new FeatureRange(records, feature_cache_size, link_features);
   }
