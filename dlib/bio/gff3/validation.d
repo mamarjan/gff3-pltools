@@ -2,7 +2,30 @@ module bio.gff3.validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, util.esc_char_conv, util.split_line;
+import bio.exceptions, util.split_line;
+
+string replace_url_escaped_chars(string original) {
+  auto index = indexOf(original, '%');
+  if (index < 0) {
+    return original;
+  } else {
+    return original[0..index] ~
+           convert_url_escaped_char(original[index+1..index+3]) ~
+           replace_url_escaped_chars(original[index+3..$]);
+  }
+}
+
+char convert_url_escaped_char(string code) {
+   // First check if code valid
+  if (code.length != 2)
+    throw new ConvException("Invalid URL escaped code: " ~ code);
+  foreach(character; code)
+    if (std.ascii.fullHexDigits.indexOf(character) == -1)
+      throw new ConvException("Invalid URL escaped code: " ~ code);
+
+  uint numeric = to!int(code, 16);
+  return cast(char) numeric;
+}
 
 /**
  * A validator function. It should accept a line in a string value,

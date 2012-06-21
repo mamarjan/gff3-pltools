@@ -7,8 +7,8 @@ import std.string;
  * the original string as to remove that part, including the delimiter
  * character.
  */
-string get_and_skip_next_field(ref string line, char delim = '\t') {
-  string field;
+T get_and_skip_next_field(T)(ref T line, char delim = '\t') {
+  T field;
   int next_tab = line.indexOf(delim);
   if (next_tab != -1) {
     field = line[0..next_tab];

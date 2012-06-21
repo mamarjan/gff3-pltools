@@ -6,32 +6,74 @@ import std.string, std.exception, std.conv, std.stdio, std.ascii;
  * Converts the characters escaped with the URL escaping convention (%XX)
  * in a string to their real char values.
  */
-string replace_url_escaped_chars(string original) {
-  auto index = indexOf(original, '%');
-  if (index < 0) {
-    return original;
-  } else {
-    return original[0..index] ~
-           convert_url_escaped_char(original[index+1..index+3]) ~
-           replace_url_escaped_chars(original[index+3..$]);
+char[] replace_url_escaped_chars(char[] original) {
+  char * forward = original.ptr;
+  char * end = forward + original.length;
+  char * current = forward;
+  size_t count = 0;
+  bool start_esc = false;
+  bool start_continue = false;
+  char[2] hex;
+  while(forward != end) {
+    if (start_esc) {
+      hex[0] = *forward;
+      forward++;
+      start_esc = false;
+      start_continue = true;
+      continue;
+    } else if (start_continue) {
+      hex[1] = *forward;
+      forward++;
+      start_continue = false;
+      *current = convert_url_escaped_char(hex);
+      current++;
+      count++;
+    } else if (*forward == '%') {
+      start_esc = true;
+      forward++;
+    } else {
+      *current = *forward;
+      forward++;
+      current++;
+      count++;
+    }
   }
+  return original[0..count];
+}
+
+char convert_url_escaped_char(char[2] code) {
+  uint numeric = 0;
+  char first = code[0];
+  char second = code[1];
+  if ((first > '0') && (first <= '9')) {
+    numeric += (first-'0')*16;
+  } else if ((first >= 'a') && (first <= 'f')) {
+    numeric += ((first-'a')+10)*16;
+  } else if ((first >= 'A') && (first <= 'F')) {
+    numeric += ((first-'A')+10)*16;
+  }
+  if ((second > '0') && (second <= '9')) {
+    numeric += second-'0';
+  } else if ((second >= 'a') && (second <= 'f')) {
+    numeric += (second-'a')+10;
+  } else if ((second >= 'A') && (second <= 'F')) {
+    numeric += (second-'A')+10;
+  }
+  //uint numeric = to!int(code, 16);
+  return cast(char) numeric;
 }
 
 /**
   * Converts characters in hexadecimal format to their real char value.
   */
-char convert_url_escaped_char(string code) {
   // First check if code valid
-  if (code.length != 2)
-    throw new ConvException("Invalid URL escaped code: " ~ code);
-  foreach(character; code)
-    if (std.ascii.fullHexDigits.indexOf(character) == -1)
-      throw new ConvException("Invalid URL escaped code: " ~ code);
+  //if (code.length != 2)
+  //  throw new ConvException("Invalid URL escaped code: " ~ code);
+  //foreach(character; code)
+  //  if (std.ascii.fullHexDigits.indexOf(character) == -1)
+  //    throw new ConvException("Invalid URL escaped code: " ~ code);
 
-  uint numeric = to!int(code, 16);
-  return cast(char) numeric;
-}
-
+/*
 unittest {
   writeln("Testing convert_url_escaped_char...");
   assert(convert_url_escaped_char("3D") == '=');
@@ -50,4 +92,4 @@ unittest {
   assert(replace_url_escaped_chars("One after another %3D0%3B%25") == "One after another =0;%");
   assertThrown!ConvException(replace_url_escaped_chars("One after another %3H%3B%25") == "One after another =;%");
 }
-
+*/

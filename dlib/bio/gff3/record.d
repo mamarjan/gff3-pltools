@@ -13,10 +13,11 @@ class Record {
    * parser_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
-    parse_line(line, replace_esc_chars);
+    if (replace_esc_chars && (line.indexOf('%') != -1))
+      parse_line_and_replace_esc_chars(line);
+    else
+      parse_line(line);
   }
-
-  alias string function(string) ReplaceCharsFunc;
 
   /**
    * Parse a line from a GFF3 file and set object values.
@@ -26,25 +27,34 @@ class Record {
    * Setting replace_esc_chars to false will skip replacing
    * escaped characters, and make parsing significantly faster.
    */
-  void parse_line(string line, bool replace_esc_chars = true) {
-
-    ReplaceCharsFunc replace_chars;
-    if (replace_esc_chars)
-      replace_chars = &replace_url_escaped_chars;
-    else
-      replace_chars = function string(string a) { return a; };
-
-    seqname = replace_chars( get_and_skip_next_field(line) );
-    source = replace_chars( get_and_skip_next_field(line) );
-    feature = replace_chars( get_and_skip_next_field(line) );
+  void parse_line(string line) {
+    seqname = get_and_skip_next_field(line);
+    source = get_and_skip_next_field(line);
+    feature = get_and_skip_next_field(line);
     start = get_and_skip_next_field(line);
     end = get_and_skip_next_field(line);
     score = get_and_skip_next_field(line);
     strand = get_and_skip_next_field(line);
     phase = get_and_skip_next_field(line);
-    attributes_field = get_and_skip_next_field(line);
+    auto attributes_field = get_and_skip_next_field(line);
 
-    attributes = parse_attributes(attributes_field, replace_chars);
+    attributes = parse_attributes(attributes_field);
+  }
+
+  void parse_line_and_replace_esc_chars(string original_line) {
+    char[] line = original_line.dup;
+
+    seqname = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    source = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    feature = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    start = cast(string) get_and_skip_next_field(line);
+    end = cast(string) get_and_skip_next_field(line);
+    score = cast(string) get_and_skip_next_field(line);
+    strand = cast(string) get_and_skip_next_field(line);
+    phase = cast(string) get_and_skip_next_field(line);
+    auto attributes_field = get_and_skip_next_field(line);
+
+    attributes = parse_attributes(attributes_field);
   }
 
   string seqname;
@@ -89,17 +99,30 @@ class Record {
   }
 
   private {
-    string attributes_field;
-
-    static string[string] parse_attributes(string attributes_field, ReplaceCharsFunc replace_chars) {
+    static string[string] parse_attributes(string attributes_field) {
       string[string] attributes;
       if (attributes_field[0] != '.') {
         string attribute = attributes_field; // Required for the next while loop to start
         while(attributes_field.length != 0) {
           attribute = get_and_skip_next_field(attributes_field, ';');
           if (attribute == "") continue;
-          auto attribute_name = replace_chars( get_and_skip_next_field( attribute, '=') );
-          auto attribute_value = replace_chars( attribute );
+          auto attribute_name = get_and_skip_next_field( attribute, '=');
+          auto attribute_value = attribute;
+          attributes[attribute_name] = attribute_value;
+        }
+      }
+      return attributes;
+    }
+
+    static string[string] parse_attributes(char[] attributes_field) {
+      string[string] attributes;
+      if (attributes_field[0] != '.') {
+        char[] attribute = attributes_field; // Required for the next while loop to start
+        while(attributes_field.length != 0) {
+          attribute = get_and_skip_next_field(attributes_field, ';');
+          if (attribute == "") continue;
+          auto attribute_name = cast(string) replace_url_escaped_chars( get_and_skip_next_field( attribute, '=') );
+          auto attribute_value = cast(string) replace_url_escaped_chars( attribute );
           attributes[attribute_name] = attribute_value;
         }
       }
