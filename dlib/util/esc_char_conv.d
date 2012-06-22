@@ -3,15 +3,16 @@ module util.esc_char_conv;
 import std.string, std.exception, std.conv, std.stdio, std.ascii;
 
 /**
- * Converts the characters escaped with the URL escaping convention (%XX)
+ * Converts the characters escaped using the URL escaping convention (%XX)
  * in a string to their real char values.
  */
 char[] replace_url_escaped_chars(char[] original) {
   char * forward = original.ptr;
   char * end = forward + original.length;
   char * current = forward;
-  size_t count = 0;
+  // if true, next character is the first hex number
   bool start_esc = false;
+  // if true, next character is the second hex number
   bool start_continue = false;
   char[2] hex;
   while(forward != end) {
@@ -27,7 +28,6 @@ char[] replace_url_escaped_chars(char[] original) {
       start_continue = false;
       *current = convert_url_escaped_char(hex);
       current++;
-      count++;
     } else if (*forward == '%') {
       start_esc = true;
       forward++;
@@ -35,61 +35,53 @@ char[] replace_url_escaped_chars(char[] original) {
       *current = *forward;
       forward++;
       current++;
-      count++;
     }
   }
-  return original[0..count];
-}
-
-char convert_url_escaped_char(char[2] code) {
-  uint numeric = 0;
-  char first = code[0];
-  char second = code[1];
-  if ((first > '0') && (first <= '9')) {
-    numeric += (first-'0')*16;
-  } else if ((first >= 'a') && (first <= 'f')) {
-    numeric += ((first-'a')+10)*16;
-  } else if ((first >= 'A') && (first <= 'F')) {
-    numeric += ((first-'A')+10)*16;
-  }
-  if ((second > '0') && (second <= '9')) {
-    numeric += second-'0';
-  } else if ((second >= 'a') && (second <= 'f')) {
-    numeric += (second-'a')+10;
-  } else if ((second >= 'A') && (second <= 'F')) {
-    numeric += (second-'A')+10;
-  }
-  //uint numeric = to!int(code, 16);
-  return cast(char) numeric;
+  auto result_length = current-original.ptr;
+  return original[0..result_length];
 }
 
 /**
   * Converts characters in hexadecimal format to their real char value.
   */
-  // First check if code valid
-  //if (code.length != 2)
-  //  throw new ConvException("Invalid URL escaped code: " ~ code);
-  //foreach(character; code)
-  //  if (std.ascii.fullHexDigits.indexOf(character) == -1)
-  //    throw new ConvException("Invalid URL escaped code: " ~ code);
+char convert_url_escaped_char(char[2] code) {
+  if (std.ascii.fullHexDigits.indexOf(code[0]) == -1)
+    throw new ConvException(cast(string) ("Invalid URL escaped code: " ~ code));
+  if (std.ascii.fullHexDigits.indexOf(code[1]) == -1)
+    throw new ConvException(cast(string) ("Invalid URL escaped code: " ~ code));
 
-/*
+  return cast(char) (hex_to_int(code[0])*16 + hex_to_int(code[1]));
+}
+
+/**
+ * Convert a character-encoded hex number to it's int value.
+ */
+int hex_to_int(char hex) {
+  if ((hex >= '0') && (hex <= '9')) {
+    return hex-'0';
+  } else if ((hex >= 'a') && (hex <= 'f')) {
+    return (hex-'a')+10;
+  } else if ((hex >= 'A') && (hex <= 'F')) {
+    return (hex-'A')+10;
+  } else {
+    throw new ConvException("Invalid hex character for conversion: " ~ hex);
+  }
+}
+
 unittest {
   writeln("Testing convert_url_escaped_char...");
   assert(convert_url_escaped_char("3D") == '=');
   assert(convert_url_escaped_char("00") == '\0');
-  assertThrown!ConvException(convert_url_escaped_char("000") == '\0');
-  assertThrown!ConvException(convert_url_escaped_char("00F") == '\0');
   assertThrown!ConvException(convert_url_escaped_char("0H") == '\0');
 }
 
 unittest {
   writeln("Testing replace_url_escaped_chars...");
-  assert(replace_url_escaped_chars("%3D") == "=");
-  assert(replace_url_escaped_chars("Testing %3D") == "Testing =");
-  assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more") == "Multiple ; replacements \0 and some % more");
-  assert(replace_url_escaped_chars("One after another %3D%3B%25") == "One after another =;%");
-  assert(replace_url_escaped_chars("One after another %3D0%3B%25") == "One after another =0;%");
-  assertThrown!ConvException(replace_url_escaped_chars("One after another %3H%3B%25") == "One after another =;%");
+  assert(replace_url_escaped_chars("%3D".dup) == "=");
+  assert(replace_url_escaped_chars("Testing %3D".dup) == "Testing =");
+  assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more".dup) == "Multiple ; replacements \0 and some % more");
+  assert(replace_url_escaped_chars("One after another %3D%3B%25".dup) == "One after another =;%");
+  assert(replace_url_escaped_chars("One after another %3D0%3B%25".dup) == "One after another =0;%");
+  assertThrown!ConvException(replace_url_escaped_chars("One after another %3H%3B%25".dup) == "One after another =;%");
 }
-*/
+
