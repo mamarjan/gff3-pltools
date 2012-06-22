@@ -27,7 +27,7 @@ class FeatureRange : RangeWithCache!Feature {
       feature = data.add_record(records.front);
       records.popFront();
     }
-    if (records.empty) {
+    if ((feature is null) && (records.empty)) {
       feature = data.remove_from_back();
     }
     return feature;
@@ -69,6 +69,8 @@ class FeatureCache {
         if (item.id_hash == record_hash) {
           if (item.feature.id == new_record.id) {
             item.feature.add_record(new_record);
+            dlist.remove(item);
+            dlist.insert_front(item);
             return null;
           }
         }
@@ -83,8 +85,8 @@ class FeatureCache {
       current_size++;
       result = null;
     } else {
-      auto feature = dlist.last.feature;
       FeatureCacheItem * item = dlist.remove_back();
+      auto feature = item.feature;
       *item = new_item;
       dlist.insert_front(item);
       result = feature;

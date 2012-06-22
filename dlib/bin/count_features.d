@@ -54,7 +54,7 @@ void main(string[] args) {
     }
   }
 
-  writeln("Found " ~ to!string(IDs.length + null_IDs) ~ " features");
+  writeln("Found " ~ to!string(id_counter + null_IDs) ~ " features");
 }
 
 struct ID {
