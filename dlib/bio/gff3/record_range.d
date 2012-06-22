@@ -2,7 +2,7 @@ module bio.gff3.record_range;
 
 import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
 import std.ascii;
-import bio.fasta, bio.exceptions, bio.gff3.record, bio.gff3.validation;
+import bio.fasta, bio.gff3.record, bio.gff3.validation;
 import bio.gff3.filtering;
 import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
@@ -37,8 +37,6 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     this.filename = filename;
   }
 
-  alias typeof(SourceRangeType.front()) Array;
-
   /**
    * Retrieve a range of FASTA sequences appended to
    * GFF3 data.
@@ -65,35 +63,33 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
   }
 
   /**
-   * Retrieve the next record, or Record.init if is there
-   * is no such record anymore in the data source. Cache
-   * the record in cache, and remove the line from the
-   * data source, except if the line is part of FASTA data.
+   * Retrieve the next record, or null if is there
+   * is no such record anymore in the data source.
+   * The line is removed form the data source, except
+   * when the line is part of FASTA data.
    */
   protected Record next_item() {
     if (fasta_mode)
       return null;
-    Array line = null;
+    string line = null;
     Record result;
     while (!data.empty) {
       line = data.front;
-      if (is_comment(line)) { dataPopFront(); continue; }
-      if (is_empty_line(line)) { dataPopFront(); continue; }
-      if (is_start_of_fasta(line)) {
+      if (is_comment(line)) {
+        // skip line
+      } else if (is_empty_line(line)) {
+        // skip line
+      } else if (is_start_of_fasta(line)) {
         fasta_mode = true;
         if (!is_fasta_header(line))
           dataPopFront(); // Remove ##FASTA line from data source
         break;
-      }
-      if (validate(filename, line_number, line)) {
+      } else if (validate(filename, line_number, line)) {
         // Found line with a valid record
         if (before_filter(line)) {
-          static if (is(Array == string)) {
-            result = new Record(line, replace_esc_chars);
-          } else {
-            result = new Record(to!string(line), replace_esc_chars);
-          }
+          result = new Record(line, replace_esc_chars);
           if (after_filter(result)) {
+            // Record passed all filters
             dataPopFront();
             break;
           } else {

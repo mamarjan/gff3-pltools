@@ -1,6 +1,6 @@
 module util.esc_char_conv;
 
-import std.string, std.exception, std.conv, std.stdio, std.ascii;
+import std.string, std.conv, std.ascii;
 
 /**
  * Converts the characters escaped using the URL escaping convention (%XX)
@@ -67,6 +67,8 @@ int hex_to_int(char hex) {
     throw new ConvException("Invalid hex character for conversion: " ~ hex);
   }
 }
+
+import std.stdio, std.exception;
 
 unittest {
   writeln("Testing convert_url_escaped_char...");
