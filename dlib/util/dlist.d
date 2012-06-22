@@ -20,7 +20,7 @@ class DList(T) {
   }
 
   /**
-   * Add item to the front the list.
+   * Add item to the front of the list.
    */
   void insert_front(T * new_item) {
     if (start is null) {
@@ -37,7 +37,7 @@ class DList(T) {
   }
 
   /**
-   * Remove add from the list, wherever it is.
+   * Remove item from the list, wherever it is.
    */
   void remove(T * item) {
     if (start == item) {
@@ -56,14 +56,15 @@ class DList(T) {
    * Remove and return the first item in the list.
    */
   T * remove_front() {
-    if (start == null)
-      return null;
-
-    auto item = start;
-    if (start == end) {
+    T * item;
+    if (start == null) {
+      item = null;
+    } else if (start == end) {
+      item = start;
       start = null;
       end = null;
     } else {
+      item = start;
       start = item.next;
       start.prev = null;
     }
@@ -74,14 +75,15 @@ class DList(T) {
    * Remove and return the last item in the list.
    */
   T * remove_back() {
-    if (end is null)
-      return null;
-
-    auto item = end;
-    if (start == end) {
+    T * item;
+    if (end is null) {
+      item = null;
+    } else if (start == end) {
+      item = end;
       start = null;
       end = null;
     } else {
+      item = end;
       end = item.prev;
       end.next = null;
     }
