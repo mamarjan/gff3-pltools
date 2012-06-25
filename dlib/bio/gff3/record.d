@@ -98,6 +98,46 @@ class Record {
       return false;
   }
 
+  /**
+   * Converts this object to a GFF3 line.
+   */
+  string toString() {
+    auto result = appender!(char[])();
+    result.put(prepare_field(seqname));
+    result.put('\t');
+    result.put(prepare_field(source));
+    result.put('\t');
+    result.put(prepare_field(feature));
+    result.put('\t');
+    result.put(prepare_field(start));
+    result.put('\t');
+    result.put(prepare_field(end));
+    result.put('\t');
+    result.put(prepare_field(score));
+    result.put('\t');
+    result.put(prepare_field(strand));
+    result.put('\t');
+    result.put(prepare_field(phase));
+    result.put('\t');
+
+    if (attributes.length == 0) {
+      result.put('.');
+    } else {
+      bool first_attr = true;
+      foreach(attr_name, attr_value; attributes) {
+        if (first_attr)
+          first_attr = false;
+        else
+          result.put(';');
+        result.put(attr_name);
+        result.put('=');
+        result.put(attr_value);
+      }
+    }
+
+    return cast(string)(result.data);
+  }
+
   private {
     static string[string] parse_attributes(string attributes_field) {
       string[string] attributes;
@@ -127,6 +167,13 @@ class Record {
         }
       }
       return attributes;
+    }
+
+    string prepare_field(string value) {
+      if (value.length == 0)
+        return ".";
+      else
+        return value;
     }
   }
 }
@@ -194,5 +241,15 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).parent is null);
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
+
+  // Test toString()
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert(((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).toString()
+          == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239") ||
+         ((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).toString()
+          == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tParent=TRAN00000017239;ID=EXON00000131935"));
+  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  record.score = null;
+  assert(record.toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
 }
 
