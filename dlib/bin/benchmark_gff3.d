@@ -1,7 +1,7 @@
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation;
 
-void main(string[] args) {
+int main(string[] args) {
   // Parse command line arguments
   bool replace_escaped_chars = false;
   bool validate = false;
@@ -20,14 +20,14 @@ void main(string[] args) {
     writeln(e.msg);
     writeln();
     print_usage();
-    return; // Exit the application
+    return 1; // Exit the application
   }
 
   // Only a filename should be left at this point
   auto filename = args[1];
   if (args.length != 2) {
     print_usage();
-    return; // Exit the application
+    return 2; // Exit the application
   }
 
   // Check if file exists
@@ -35,7 +35,7 @@ void main(string[] args) {
   if (!(to!array(filename).exists)) {
     writeln("Could not find file: " ~ filename ~ "\n");
     print_usage();
-    return;
+    return 3;
   }
 
   if (parse_features) {
@@ -57,10 +57,12 @@ void main(string[] args) {
     foreach(rec; records) { counter++; }
     writeln("Parsed " ~ to!string(counter) ~ " records");
   }
+
+  return 0;
 }
 
 void print_usage() {
-  writeln("Usage: benchmark-gff3 FILE");
+  writeln("Usage: benchmark-gff3 [OPTIONS] FILE");
   writeln("Parse FILE without any validation");
   writeln();
   writeln("  -v     turn on validation");
