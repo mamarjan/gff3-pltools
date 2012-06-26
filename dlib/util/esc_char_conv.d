@@ -68,6 +68,32 @@ int hex_to_int(char hex) {
   }
 }
 
+/**
+ * Converts a number to characters 0..9, A..F.
+ */
+char to_hex_digit(ubyte input) {
+  if (input < 10)
+    return cast(char)('0' + input);
+  else
+    return cast(char)('A' + (input-10));
+}
+
+/**
+ * Returns the hex representation of the upper 4bits of a char.
+ */
+char upper_4bits_to_hex(char character) {
+  return to_hex_digit(cast(ubyte)character >> 4);
+}
+
+
+/**
+ * Returns the hex representation of the lower 4bits of a char.
+ */
+char lower_4bits_to_hex(char character) {
+  return to_hex_digit(cast(ubyte)character & 0x0F);
+}
+
+
 import std.stdio, std.exception;
 
 unittest {

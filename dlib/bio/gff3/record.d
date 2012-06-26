@@ -105,24 +105,12 @@ class Record {
   string toString() {
     auto result = appender!(char[])();
 
-    void append_and_escape_chars(string field_value, InvalidCharProc is_invalid_char) {
-      char to_hex_char(ubyte input) {
-        if (input < 10)
-          return cast(char)('0' + input);
-        else
-          return cast(char)('A' + (input-10));
-      }
-      char get_first_hex(char character) {
-        return to_hex_char(cast(ubyte)character >> 4);
-      }
-      char get_second_hex(char character) {
-        return to_hex_char(cast(ubyte)character & 0x0F);
-      }
+    void append_and_escape_chars(string field_value, InvalidCharProc is_invalid) {
       foreach(character; field_value) {
-        if (is_invalid_char(character)) {
+        if (is_invalid(character)) {
           result.put('%');
-          result.put(get_first_hex(character));
-          result.put(get_second_hex(character));
+          result.put(upper_4bits_to_hex(character));
+          result.put(lower_4bits_to_hex(character));
         } else {
           result.put(character);
         }
@@ -138,14 +126,14 @@ class Record {
       result.put('\t');
     }
 
-    append_field(seqname, is_invalid_char_in_seqname);
-    append_field(source, is_invalid_char_in_any_field);
-    append_field(feature, is_invalid_char_in_any_field);
-    append_field(start, is_invalid_char_in_any_field);
-    append_field(end, is_invalid_char_in_any_field);
-    append_field(score, is_invalid_char_in_any_field);
-    append_field(strand, is_invalid_char_in_any_field);
-    append_field(phase, is_invalid_char_in_any_field);
+    append_field(seqname, is_invalid_in_seqname);
+    append_field(source, is_invalid_in_any_field);
+    append_field(feature, is_invalid_in_any_field);
+    append_field(start, is_invalid_in_any_field);
+    append_field(end, is_invalid_in_any_field);
+    append_field(score, is_invalid_in_any_field);
+    append_field(strand, is_invalid_in_any_field);
+    append_field(phase, is_invalid_in_any_field);
 
     if (attributes.length == 0) {
       result.put('.');
@@ -156,9 +144,9 @@ class Record {
           first_attr = false;
         else
           result.put(';');
-        result.put(attr_name);
+        append_and_escape_chars(attr_name, is_invalid_in_attribute);
         result.put('=');
-        result.put(attr_value);
+        append_and_escape_chars(attr_value, is_invalid_in_attribute);
       }
     }
 

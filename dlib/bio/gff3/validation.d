@@ -65,19 +65,36 @@ auto NO_VALIDATION = function bool(string filename, int line_number, string line
   return true;
 };
 
+/**
+ * A function which returns true if character is invalid and should be escaped.
+ */
 alias bool function(char) InvalidCharProc;
 
+/**
+ * A list of characters known to be allowed without escaping in the seqname
+ * field of a record in a GFF3 file.
+ */
 string valid_seqname_chars = cast(string)(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
 
-auto is_invalid_char_in_seqname = function bool(char character) {
+/**
+ * Returns true if the character should be escaped as part of a seqname field.
+ */
+auto is_invalid_in_seqname = function bool(char character) {
   return valid_seqname_chars.indexOf(character) == -1;
 };
 
-auto is_invalid_char_in_any_field = function bool(char character) {
+/**
+ * Returns true if the character should be escaped as part of any field.
+ */
+auto is_invalid_in_any_field = function bool(char character) {
   return std.ascii.isControl(character);
 };
 
-auto is_invalid_char_in_attribute = function bool(char character) {
+/**
+ * Return true if the character should be escaped as part of an attribte name
+ * or value part.
+ */
+auto is_invalid_in_attribute = function bool(char character) {
   return (std.ascii.isControl(character) ||
           (character == '=') ||
           (character == ';'));
@@ -112,7 +129,7 @@ string validate_seqname(string seqname) {
   auto error_msg = check_if_empty_field("seqname", seqname);
   if (error_msg is null) {
     foreach(character; seqname) {
-      if (is_invalid_char_in_seqname(character)) {
+      if (is_invalid_in_seqname(character)) {
         error_msg = "Invalid characters in seqname field";
         break;
       }
@@ -296,7 +313,7 @@ string check_if_empty_field(string field_name, string field) {
 
 string check_for_characters_invalid_in_any_field(string field_name, string field) {
   foreach(character; field) {
-    if (is_invalid_char_in_any_field(character))
+    if (is_invalid_in_any_field(character))
       return "Control characters not allowed in field " ~ field_name;
   }
   return null;
