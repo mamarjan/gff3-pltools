@@ -103,22 +103,20 @@ class Record {
    */
   string toString() {
     auto result = appender!(char[])();
-    result.put(prepare_field(seqname));
-    result.put('\t');
-    result.put(prepare_field(source));
-    result.put('\t');
-    result.put(prepare_field(feature));
-    result.put('\t');
-    result.put(prepare_field(start));
-    result.put('\t');
-    result.put(prepare_field(end));
-    result.put('\t');
-    result.put(prepare_field(score));
-    result.put('\t');
-    result.put(prepare_field(strand));
-    result.put('\t');
-    result.put(prepare_field(phase));
-    result.put('\t');
+
+    void append_field(string field_value) {
+      result.put((field_value.length == 0) ? "." : field_value);
+      result.put('\t');
+    }
+
+    append_field(seqname);
+    append_field(source);
+    append_field(feature);
+    append_field(start);
+    append_field(end);
+    append_field(score);
+    append_field(strand);
+    append_field(phase);
 
     if (attributes.length == 0) {
       result.put('.');
