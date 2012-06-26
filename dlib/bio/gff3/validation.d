@@ -65,6 +65,25 @@ auto NO_VALIDATION = function bool(string filename, int line_number, string line
   return true;
 };
 
+alias bool function(char) InvalidCharProc;
+
+string valid_seqname_chars = cast(string)(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
+
+auto is_invalid_char_in_seqname = function bool(char character) {
+  return valid_seqname_chars.indexOf(character) == -1;
+};
+
+auto is_invalid_char_in_any_field = function bool(char character) {
+  return std.ascii.isControl(character);
+};
+
+auto is_invalid_char_in_attribute = function bool(char character) {
+  return (std.ascii.isControl(character) ||
+          (character == '=') ||
+          (character == ';'));
+};
+
+
 private:
 
 string addFilenameAndLine(string filename, int line_number, string error_msg) {
@@ -89,13 +108,11 @@ string validate_gff3_line(string line) {
 
 // Validation of seqname
 
-string valid_seqname_chars = cast(string)(std.ascii.letters ~ std.ascii.digits ~ ".:^*$@!+_?-|%");
-
 string validate_seqname(string seqname) {
   auto error_msg = check_if_empty_field("seqname", seqname);
   if (error_msg is null) {
     foreach(character; seqname) {
-      if (valid_seqname_chars.indexOf(character) < 0) {
+      if (is_invalid_char_in_seqname(character)) {
         error_msg = "Invalid characters in seqname field";
         break;
       }
@@ -279,7 +296,7 @@ string check_if_empty_field(string field_name, string field) {
 
 string check_for_characters_invalid_in_any_field(string field_name, string field) {
   foreach(character; field) {
-    if (std.ascii.isControl(character))
+    if (is_invalid_char_in_any_field(character))
       return "Control characters not allowed in field " ~ field_name;
   }
   return null;

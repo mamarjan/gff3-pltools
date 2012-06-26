@@ -2,7 +2,8 @@ module bio.gff3.record;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, util.esc_char_conv, util.split_line;
+import bio.exceptions, bio.gff3.validation;
+import util.esc_char_conv, util.split_line;
 
 /**
  * Represents a parsed line in a GFF3 file.
@@ -104,19 +105,47 @@ class Record {
   string toString() {
     auto result = appender!(char[])();
 
-    void append_field(string field_value) {
-      result.put((field_value.length == 0) ? "." : field_value);
+    void append_and_escape_chars(string field_value, InvalidCharProc is_invalid_char) {
+      char to_hex_char(ubyte input) {
+        if (input < 10)
+          return cast(char)('0' + input);
+        else
+          return cast(char)('A' + (input-10));
+      }
+      char get_first_hex(char character) {
+        return to_hex_char(cast(ubyte)character >> 4);
+      }
+      char get_second_hex(char character) {
+        return to_hex_char(cast(ubyte)character & 0x0F);
+      }
+      foreach(character; field_value) {
+        if (is_invalid_char(character)) {
+          result.put('%');
+          result.put(get_first_hex(character));
+          result.put(get_second_hex(character));
+        } else {
+          result.put(character);
+        }
+      }
+    }
+
+    void append_field(string field_value, InvalidCharProc is_char_invalid) {
+      if (field_value.length == 0) {
+        result.put(".");
+      } else {
+        append_and_escape_chars(field_value, is_char_invalid);
+      }
       result.put('\t');
     }
 
-    append_field(seqname);
-    append_field(source);
-    append_field(feature);
-    append_field(start);
-    append_field(end);
-    append_field(score);
-    append_field(strand);
-    append_field(phase);
+    append_field(seqname, is_invalid_char_in_seqname);
+    append_field(source, is_invalid_char_in_any_field);
+    append_field(feature, is_invalid_char_in_any_field);
+    append_field(start, is_invalid_char_in_any_field);
+    append_field(end, is_invalid_char_in_any_field);
+    append_field(score, is_invalid_char_in_any_field);
+    append_field(strand, is_invalid_char_in_any_field);
+    append_field(phase, is_invalid_char_in_any_field);
 
     if (attributes.length == 0) {
       result.put('.');
@@ -165,13 +194,6 @@ class Record {
         }
       }
       return attributes;
-    }
-
-    string prepare_field(string value) {
-      if (value.length == 0)
-        return ".";
-      else
-        return value;
     }
   }
 }
@@ -249,5 +271,7 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
   record.score = null;
   assert(record.toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("%00%01\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00%01\t.\t.\t.\t.\t.\t.\t.\t.");
 }
 
