@@ -96,8 +96,11 @@ auto is_invalid_in_any_field = function bool(char character) {
  */
 auto is_invalid_in_attribute = function bool(char character) {
   return (std.ascii.isControl(character) ||
+          (character == '%') ||
           (character == '=') ||
-          (character == ';'));
+          (character == ';') ||
+          (character == '&') ||
+          (character == ','));
 };
 
 

@@ -106,13 +106,17 @@ class Record {
     auto result = appender!(char[])();
 
     void append_and_escape_chars(string field_value, InvalidCharProc is_invalid) {
-      foreach(character; field_value) {
-        if (is_invalid(character)) {
-          result.put('%');
-          result.put(upper_4bits_to_hex(character));
-          result.put(lower_4bits_to_hex(character));
-        } else {
-          result.put(character);
+      if (is_invalid is null) {
+        result.put(field_value);
+      } else {
+        foreach(character; field_value) {
+          if (is_invalid(character) || (character == '%')) {
+            result.put('%');
+            result.put(upper_4bits_to_hex(character));
+            result.put(lower_4bits_to_hex(character));
+          } else {
+            result.put(character);
+          }
         }
       }
     }
@@ -129,11 +133,11 @@ class Record {
     append_field(seqname, is_invalid_in_seqname);
     append_field(source, is_invalid_in_any_field);
     append_field(feature, is_invalid_in_any_field);
-    append_field(start, is_invalid_in_any_field);
-    append_field(end, is_invalid_in_any_field);
-    append_field(score, is_invalid_in_any_field);
-    append_field(strand, is_invalid_in_any_field);
-    append_field(phase, is_invalid_in_any_field);
+    append_field(start, null);
+    append_field(end, null);
+    append_field(score, null);
+    append_field(strand, null);
+    append_field(phase, null);
 
     if (attributes.length == 0) {
       result.put('.');
@@ -259,7 +263,29 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
   record.score = null;
   assert(record.toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
+
+  // Testing toString with escaping of characters
   assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
   assert((new Record("%00%01\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00%01\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record("%7F\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%7F\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record(".\t%7F\t.\t.\t.\t.\t.\t.\t.")).toString() == ".\t%7F\t.\t.\t.\t.\t.\t.\t.");
+  assert((new Record(".\t.\t%7F\t.\t.\t.\t.\t.\t.")).toString() == ".\t.\t%7F\t.\t.\t.\t.\t.\t.");
+
+  // The following fields should not contain any escaped characters, so to get
+  // maximum speed they're not even checked for escaped chars, that means they
+  // are stored as they are. toString() should not replace '%' with it's escaped
+  // value in those fields.
+  assert((new Record(".\t.\t.\t%7F\t.\t.\t.\t.\t.")).toString() == ".\t.\t.\t%7F\t.\t.\t.\t.\t.");
+  assert((new Record(".\t.\t.\t.\t%7F\t.\t.\t.\t.")).toString() == ".\t.\t.\t.\t%7F\t.\t.\t.\t.");
+  assert((new Record(".\t.\t.\t.\t.\t%7F\t.\t.\t.")).toString() == ".\t.\t.\t.\t.\t%7F\t.\t.\t.");
+  assert((new Record(".\t.\t.\t.\t.\t.\t%7F\t.\t.")).toString() == ".\t.\t.\t.\t.\t.\t%7F\t.\t.");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t%7F\t.")).toString() == ".\t.\t.\t.\t.\t.\t.\t%7F\t.");
+
+  // Test toString with escaping of characters in the attributes
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D");
 }
 
