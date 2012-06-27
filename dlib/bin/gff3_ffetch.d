@@ -9,33 +9,20 @@ import util.split_file;
  * you can use this utility to extract all CDS records from a file like
  * this:
  *
- *   gff3-ffetch --filter type:CDS path-to-file.gff3
+ *   gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
  *
- * The output can be parsed using a GFF3 parser library, for example.
- * Another use-case might be looking for records with a particular ID:
- *
- *   gff3-ffetch --filter attrib:ID:gene1 path-to-file.gff3
- *
- * The parser library is written in D and therefore very fast. In normal
- * mode it's not doing any validation, so in case there is a core fault
- * or similar, use the validator utility to check the file for errors.
- *
- * More complicated filtering is currently not supported, but some
- * of the functionality can be added by combining multiple instances
- * and chaining them into unix pipelines.
+ * See package README for more information.
  */
 
 int main(string[] args) {
   // Parse command line arguments
   string filter_string = null;
-  bool inverse_filter = false;
   string output_filename = null;
   ulong at_most = 0;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "filter|f", &filter_string,
-        "inverse|i", &inverse_filter,
         "output|o", &output_filename,
         "at-most|a", &at_most);
   } catch (Exception e) {
@@ -52,7 +39,7 @@ int main(string[] args) {
     return 2; // Exit the application
   }
 
-  // Check if file exists
+  // Check if file exists, if not stdin
   alias char[] array;
   if (filename != "-") {
     if (!(to!array(filename).exists)) {
@@ -62,11 +49,13 @@ int main(string[] args) {
     }
   }
 
+  // Prepare File object for output
   File output = stdout;
   if (output_filename !is null) {
     output = File(output_filename, "w");
   }
 
+  // Prepare for parsing
   RecordRange!SplitFile records;
   if (filename == "-") {
     records = GFF3File.parse_by_records(stdin,
@@ -82,6 +71,7 @@ int main(string[] args) {
                                         string_to_filter(filter_string));
   }
 
+  // Parsing, filtering and output
   ulong record_counter = 0;
   if (at_most == 0) {
     foreach(rec; records) {
@@ -108,7 +98,15 @@ void print_usage() {
   writeln();
   writeln("Options:");
   writeln("  -f, --filter   A filtering expresion. Only records which match the");
-  writeln("                 expression will be passed to stdout");
-  writeln("  -i, --inverse  Use inverse the filter expression");
+  writeln("                 expression will be passed to stdout or output file.");
+  writeln("  -o, --output   Instead of writing results to stdout, write them to");
+  writeln("                 this file.");
+  writeln("  -a, --at-most  At most this number of lines/records will be parsed.");
+  writeln("                 If there are more records a line with \"# ...\" will");
+  writeln("                 be appended at the end of the file.");
+  writeln();
+  writeln("See package README for more information on what filtering expressions");
+  writeln("are allowed.");
+  writeln();
 }
 

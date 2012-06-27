@@ -33,6 +33,97 @@ the net.
 The API doc is online. For more code examples see the test files in
 the source tree.
 
+### gff3-ffetch utility
+
+The gff3-ffetch utility can be built using the utilities rake task,
+like this:
+
+```sh
+    rake utilities
+```
+
+Currently this utility supports only filtering a file, based on a
+filtering expression. For example, you can use the following command
+to filter out records with a CDS feature from a GFF3 file:
+
+```sh
+    gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
+```
+
+The utility will use the fast (and soon parallel) D library to do the
+parsing and filtering. You can that parse the result using your
+programming language and library of choice.
+
+Currently supported predicates are "field", "attribute", "equals",
+"contains", "starts_with" and "not". You can combine them in a way
+that makes sense. First, the utility needs to know what field or
+attribute should be used for filtering. In the previous example,
+that's the "field:feature" part. Next, the utility needs to know
+what you want to do with it. In the example, that's the "equals"
+part. And then the last part in the example is a parameter to the
+"equals", which tells the utility to what the attribute or field
+should be compared.
+
+Parts of the expression are separated by a colon, ':', and if colon
+is suposed to be part of a field name or value, it can be escaped
+like "\:".
+
+Valid fields are: seqname, source, feature, start, end, score,
+strand and phase.
+
+A few more examples...
+
+```sh
+    gff3-ffetch --filter attribute:ID:equals:gene1 path-to-file.gff3
+```
+
+The previous example chooses records which have the ID attribute
+with the value gene1.
+
+Want to see which records have no ID value, or ID which is an empty
+string? Here's how it can be done:
+
+```sh
+    gff3-ffetch --filter attribute:ID:equals: path-to-file.gff3
+```
+
+And to get records which have the ID attribute defined, you can use
+this command:
+
+```sh
+    gff3-ffetch --filter attribute:ID:not:equals: path-to-file.gff3
+```
+
+or
+
+```sh
+    gff3-ffetch --filter not:attribute:ID:equals: path-to-file.gff3
+```
+
+There are a few more options available. In the examples above, the
+data was comming from a GFF3 file which was specified on the command
+line and the output was the screen. To use the standard input as the
+source of the data, use "-" instead of a filename.
+
+The default for output is the screen, or stdout. To redirect the
+output to a file, you can use the "--output" option. Here is an
+example:
+
+```sh
+    gff3-ffetch --filter not:attribute:ID:equals: - --output tmp.gff3
+```
+
+To limit the number of records in the results, you can use the
+"--at-most" option. For example:
+
+```sh
+    gff3-ffetch --filter not:attribute:ID:equals: - --at-most 1000
+```
+
+If there are more then a 1000 records in the results, after the
+1000th record printed, a line is appended with the following content:
+"# ..." and the utility terminates.
+
 ### GFF3 File validation
 
 The validation utility can be built using the "validator" rake task,
