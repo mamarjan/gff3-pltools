@@ -145,20 +145,6 @@ static this() {
   NO_AFTER_FILTER = get_NO_AFTER_FILTER();
 }
 
-
-private:
-
-string[] split_filter_string(string filter_string) {
-  string[] parts;
-  while(filter_string.length > 0) {
-    string current = get_and_skip_next_field(filter_string, ':');
-    while(current[$-1] == '\\')
-      current = current[0..$-1] ~ ':' ~ get_and_skip_next_field(filter_string, ':');
-    parts ~= current;
-  }
-  return parts;
-}
-
 RecordPredicate string_to_filter(string filter_string) {
   auto parts = split_filter_string(filter_string);
   string parameter;
@@ -199,6 +185,20 @@ RecordPredicate string_to_filter(string filter_string) {
     }
   }
   return last_record_predicate;
+}
+
+
+private:
+
+string[] split_filter_string(string filter_string) {
+  string[] parts;
+  while(filter_string.length > 0) {
+    string current = get_and_skip_next_field(filter_string, ':');
+    while(current[$-1] == '\\')
+      current = current[0..$-1] ~ ':' ~ get_and_skip_next_field(filter_string, ':');
+    parts ~= current;
+  }
+  return parts;
 }
 
 StringPredicate get_NO_BEFORE_FILTER() {

@@ -1,4 +1,5 @@
 import std.stdio, std.file, std.conv, std.getopt;
+import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
 
 /**
  * A utility for parsing GFF3 files. The only function supported for now is
@@ -29,7 +30,7 @@ int main(string[] args) {
   try {
     getopt(args,
         std.getopt.config.passThrough,
-        "filter", &filter_string,
+        "filter|f", &filter_string,
         "inverse|i", &inverse_filter);
   } catch (Exception e) {
     writeln(e.msg);
@@ -52,6 +53,15 @@ int main(string[] args) {
     print_usage();
     return 3;
   }
+
+  auto records = GFF3File.parse_by_records(filename,
+                                           NO_VALIDATION,
+                                           false,
+                                           NO_BEFORE_FILTER,
+                                           string_to_filter(filter_string));
+  foreach(rec; records) {
+    stdout.writeln(rec.toString());
+  }
  
   return 0;
 }
@@ -61,7 +71,7 @@ void print_usage() {
   writeln("Parse GFF3 file and write records to stdout");
   writeln();
   writeln("Options:");
-  writeln("  --filter       A filtering expresion. Only records which match the");
+  writeln("  -f, --filter   A filtering expresion. Only records which match the");
   writeln("                 expression will be passed to stdout");
   writeln("  -i, --inverse  Use inverse the filter expression");
 }

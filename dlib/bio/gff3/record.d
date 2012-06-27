@@ -14,6 +14,7 @@ class Record {
    * parser_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
+    this.replace_esc_chars = replace_esc_chars;
     if (replace_esc_chars && (line.indexOf('%') != -1))
       parse_line_and_replace_esc_chars(line);
     else
@@ -106,7 +107,7 @@ class Record {
     auto result = appender!(char[])();
 
     void append_and_escape_chars(string field_value, InvalidCharProc is_invalid) {
-      if (is_invalid is null) {
+      if ((is_invalid is null) || (!replace_esc_chars)) {
         result.put(field_value);
       } else {
         foreach(character; field_value) {
@@ -158,6 +159,8 @@ class Record {
   }
 
   private {
+    bool replace_esc_chars;
+
     static string[string] parse_attributes(string attributes_field) {
       string[string] attributes;
       if (attributes_field[0] != '.') {
