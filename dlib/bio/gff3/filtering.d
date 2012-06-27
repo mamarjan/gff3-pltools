@@ -2,6 +2,7 @@ module bio.gff3.filtering;
 
 import std.algorithm, std.string, std.conv;
 import bio.gff3.record;
+import util.split_line;
 
 /**
 Sample usage:
@@ -147,6 +148,59 @@ static this() {
 
 private:
 
+string[] split_filter_string(string filter_string) {
+  string[] parts;
+  while(filter_string.length > 0) {
+    string current = get_and_skip_next_field(filter_string, ':');
+    while(current[$-1] == '\\')
+      current = current[0..$-1] ~ ':' ~ get_and_skip_next_field(filter_string, ':');
+    parts ~= current;
+  }
+  return parts;
+}
+
+RecordPredicate string_to_filter(string filter_string) {
+  auto parts = split_filter_string(filter_string);
+  string parameter;
+  StringPredicate last_string_predicate;
+  RecordPredicate last_record_predicate;
+  foreach(value; parts.reverse) {
+    switch(value) {
+      case "equals":
+        last_string_predicate = EQUALS(parameter);
+        parameter = null;
+        break;
+      case "contains":
+        last_string_predicate = CONTAINS(parameter);
+        parameter = null;
+        break;
+      case "starts_with":
+        last_string_predicate = STARTS_WITH(parameter);
+        parameter = null;
+        break;
+      case "attribute":
+        last_record_predicate = ATTRIBUTE(parameter, last_string_predicate);
+        last_string_predicate = null;
+        parameter = null;
+        break;
+      case "field":
+        last_record_predicate = FIELD(parameter, last_string_predicate);
+        last_string_predicate = null;
+        parameter = null;
+        break;
+      case "not":
+        if (last_string_predicate !is null)
+          last_string_predicate = NOT(last_string_predicate);
+        else
+          last_record_predicate = NOT(last_record_predicate);
+        break;
+      default:
+        parameter = value;
+    }
+  }
+  return last_record_predicate;
+}
+
 StringPredicate get_NO_BEFORE_FILTER() {
  return delegate bool(string s) { return true; };
 }
@@ -276,3 +330,59 @@ unittest {
             FIELD(FIELD_SOURCE, EQUALS("2")),
             FIELD(FIELD_SEQNAME, EQUALS("3")))(test_record) == true);
 }
+
+unittest {
+  writeln("Testing split_filter_string()...");
+  auto parts = split_filter_string("attribute:ID:equals:1");
+  assert(parts.length == 4);
+  assert(parts[0] == "attribute");
+  assert(parts[1] == "ID");
+  assert(parts[2] == "equals");
+  assert(parts[3] == "1");
+
+  parts = split_filter_string("attribute:ID\\:1:equals\\:1");
+  assert(parts.length == 3);
+  assert(parts[0] == "attribute");
+  assert(parts[1] == "ID:1");
+  assert(parts[2] == "equals:1");
+
+  parts = split_filter_string("attribute\\:ID\\:1:equals\\:1");
+  assert(parts.length == 2);
+  assert(parts[0] == "attribute:ID:1");
+  assert(parts[1] == "equals:1");
+}
+
+unittest {
+  writeln("Testing string_to_filter()...");
+  
+  assert(string_to_filter("field:seqname:equals:1")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:seqname:equals:1bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:source:equals:2")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:source:equals:2bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:feature:equals:3")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:feature:equals:3bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:start:equals:4")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:start:equals:4bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:end:equals:5")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:end:equals:5bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:score:equals:6")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:score:equals:6bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:strand:equals:7")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:strand:equals:7bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:phase:equals:8")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:phase:equals:8bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("attribute:ID:equals:9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("attribute:ID:equals:9bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+
+  assert(string_to_filter("attribute:ID:starts_with:ab")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == true);
+  assert(string_to_filter("attribute:ID:starts_with:b")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == false);
+  assert(string_to_filter("field:seqname:starts_with:ab")(new Record("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:seqname:starts_with:c")(new Record("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field:seqname:contains:01")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:seqname:contains:12")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:seqname:contains:1")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field:seqname:contains:55")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("not:attribute:ID:equals:9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
+  assert(string_to_filter("not:attribute:ID:equals:9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+}
+
