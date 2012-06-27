@@ -30,12 +30,14 @@ int main(string[] args) {
   string filter_string = null;
   bool inverse_filter = false;
   string output_filename = null;
+  ulong at_most = 0;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "filter|f", &filter_string,
         "inverse|i", &inverse_filter,
-        "output|o", &output_file);
+        "output|o", &output_filename,
+        "at-most|a", &at_most);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
@@ -79,8 +81,22 @@ int main(string[] args) {
                                         NO_BEFORE_FILTER,
                                         string_to_filter(filter_string));
   }
-  foreach(rec; records) {
-    output.writeln(rec.toString());
+
+  ulong record_counter = 0;
+  if (at_most == 0) {
+    foreach(rec; records) {
+      output.writeln(rec.toString());
+    }
+  } else {
+    foreach(rec; records) {
+      if (record_counter >= at_most) {
+        output.write("# ...");
+        break;
+      } else {
+        output.writeln(rec.toString());
+        record_counter++;
+      }
+    }
   }
  
   return 0;
