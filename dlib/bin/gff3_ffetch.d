@@ -29,11 +29,13 @@ int main(string[] args) {
   // Parse command line arguments
   string filter_string = null;
   bool inverse_filter = false;
+  string output_filename = null;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "filter|f", &filter_string,
-        "inverse|i", &inverse_filter);
+        "inverse|i", &inverse_filter,
+        "output|o", &output_file);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
@@ -58,6 +60,11 @@ int main(string[] args) {
     }
   }
 
+  File output = stdout;
+  if (output_filename !is null) {
+    output = File(output_filename, "w");
+  }
+
   RecordRange!SplitFile records;
   if (filename == "-") {
     records = GFF3File.parse_by_records(stdin,
@@ -73,7 +80,7 @@ int main(string[] args) {
                                         string_to_filter(filter_string));
   }
   foreach(rec; records) {
-    stdout.writeln(rec.toString());
+    output.writeln(rec.toString());
   }
  
   return 0;
