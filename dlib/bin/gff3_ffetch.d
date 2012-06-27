@@ -1,5 +1,7 @@
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
+import bio.gff3.record_range;
+import util.split_file;
 
 /**
  * A utility for parsing GFF3 files. The only function supported for now is
@@ -48,17 +50,28 @@ int main(string[] args) {
 
   // Check if file exists
   alias char[] array;
-  if (!(to!array(filename).exists)) {
-    writeln("Could not find file: " ~ filename ~ "\n");
-    print_usage();
-    return 3;
+  if (filename != "-") {
+    if (!(to!array(filename).exists)) {
+      writeln("Could not find file: " ~ filename ~ "\n");
+      print_usage();
+      return 3;
+    }
   }
 
-  auto records = GFF3File.parse_by_records(filename,
-                                           NO_VALIDATION,
-                                           false,
-                                           NO_BEFORE_FILTER,
-                                           string_to_filter(filter_string));
+  RecordRange!SplitFile records;
+  if (filename == "-") {
+    records = GFF3File.parse_by_records(stdin,
+                                        NO_VALIDATION,
+                                        false,
+                                        NO_BEFORE_FILTER,
+                                        string_to_filter(filter_string));
+  } else {
+    records = GFF3File.parse_by_records(filename,
+                                        NO_VALIDATION,
+                                        false,
+                                        NO_BEFORE_FILTER,
+                                        string_to_filter(filter_string));
+  }
   foreach(rec; records) {
     stdout.writeln(rec.toString());
   }

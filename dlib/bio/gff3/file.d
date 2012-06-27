@@ -9,12 +9,18 @@ class GFF3File {
    * Parses a file with GFF3 data.
    * Returns: a range of records.
    */
-  static RecordRange!SplitFile parse_by_records(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+  static RecordRange!SplitFile parse_by_records(T)(T filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
           bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
           RecordPredicate after_filter = NO_AFTER_FILTER) {
-    auto records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
-                                               replace_esc_chars, before_filter, after_filter);
-    records.set_filename(filename);
+    RecordRange!SplitFile records;
+    static if (is(T == string)) {
+      records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
+                                                 replace_esc_chars, before_filter, after_filter);
+      records.set_filename(filename);
+    } else if (is(T == File)) {
+      records = new RecordRange!(SplitFile)(new SplitFile(filename), validator,
+                                                 replace_esc_chars, before_filter, after_filter);
+    }
     return records;
   }
 
@@ -22,7 +28,7 @@ class GFF3File {
    * Parses a file with GFF3 data.
    * Returns: a range of features.
    */
-  static FeatureRange parse_by_features(string filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
+  static FeatureRange parse_by_features(T)(T filename, RecordValidator validator = EXCEPTIONS_ON_ERROR,
           bool replace_esc_chars = true, size_t feature_cache_size = 1000,
           bool link_features = false, StringPredicate before_filter = NO_BEFORE_FILTER,
           RecordPredicate after_filter = NO_AFTER_FILTER) {
