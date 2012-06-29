@@ -290,5 +290,8 @@ unittest {
 
   // Test toString with escaping of characters in the attributes
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
 }
 
