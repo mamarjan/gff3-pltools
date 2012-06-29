@@ -56,7 +56,7 @@ class Record {
     phase = cast(string) get_and_skip_next_field(line);
     auto attributes_field = get_and_skip_next_field(line);
 
-    attributes = parse_attributes(attributes_field);
+    _attributes = parse_attributes(attributes_field);
   }
 
   string seqname;
@@ -67,14 +67,13 @@ class Record {
   string score;
   string strand;
   string phase;
-  string[string] attributes;
 
   /**
    * Returns the ID attribute from record attributes.
    */
   @property string id() {
-    if ("ID" in attributes)
-      return attributes["ID"];
+    if ("ID" in _attributes)
+      return _attributes["ID"].get_first();
     else
       return null;
   }
@@ -83,19 +82,30 @@ class Record {
    * Returns the Parent attribute from record attributes
    */
   @property string parent() {
-    if ("Parent" in attributes)
-      return attributes["Parent"];
+    if ("Parent" in _attributes)
+      return _attributes["Parent"].get_first();
     else
       return null;
   }
+
+  /**
+   * Returns all values in the Parent attribute
+   */
+  @property string[] parents() {
+    if ("Parent" in _attributes)
+      return _attributes["Parent"].get_all();
+    else
+      return null;
+  }
+
 
   /**
    * Returns true if the attribute Is_circular is true for
    * this record.
    */
   @property bool is_circular() {
-    if ("Is_circular" in attributes)
-      return attributes["Is_circular"] == "true";
+    if ("Is_circular" in _attributes)
+      return _attributes["Is_circular"] == "true";
     else
       return false;
   }
@@ -140,11 +150,11 @@ class Record {
     append_field(strand, null);
     append_field(phase, null);
 
-    if (attributes.length == 0) {
+    if (_attributes.length == 0) {
       result.put('.');
     } else {
       bool first_attr = true;
-      foreach(attr_name, attr_value; attributes) {
+      foreach(attr_name, attr_value; _attributes) {
         if (first_attr)
           first_attr = false;
         else
@@ -159,7 +169,49 @@ class Record {
   }
 
   private {
+    struct AttributeValue {
+      this(string raw_attr_value) {
+        this.raw_attr_value = raw_attr_value;
+        value_count = raw_attr_value.count(',');
+        if (value_count == 1) {
+          if (this.raw_attr_value.indexOf('%') != -1) {
+            this.raw_attr_value = replace_url_escaped_chars(cast(char[]) this.raw_attr_value);
+          }
+        }
+      }
+
+      bool is_multi() { value_count > 1; }
+
+      string get_first(string attr_name) {
+        if (is_multi()) {
+          return get_all[0];
+        } else {
+          return raw_attr_value;
+        }
+      }
+
+      string[] get_all() {
+        if (parsed_attr_values is null) {
+          if (value_count == 1) {
+            parsed_attr_values = [raw_attr_value];
+          } else {
+            foreach(i; 0..value_count) {
+              parsed_attr_values ~= replace_url_escaped_chars(cast(char[]) get_and_skip_next_field(raw_attr_value, ','))
+            }
+          }
+        }
+        return parsed_attr_values;
+      }
+
+      private {
+        int value_count;
+        string raw_attr_value;
+        string[] parsed_attr_values;
+      }
+    }
+
     bool replace_esc_chars;
+    AttributeValue[string] _attributes;
 
     static string[string] parse_attributes(string attributes_field) {
       string[string] attributes;
