@@ -69,6 +69,28 @@ int hex_to_int(char hex) {
 }
 
 /**
+ * A function which returns true if character is invalid and should be escaped.
+ */
+alias bool function(char) InvalidCharProc;
+
+/**
+ * The following function appends and escapes an array of characters
+ * to an appender, while escaping the characters using the url
+ * escaping conventions.
+ */
+void append_and_escape_chars(T)(Appender!T app, string field_value, InvalidCharProc is_invalid) {
+  foreach(character; field_value) {
+    if (is_invalid(character) || (character == '%')) {
+      app.put('%');
+      app.put(upper_4bits_to_hex(character));
+      app.put(lower_4bits_to_hex(character));
+    } else {
+      app.put(character);
+    }
+  }
+}
+
+/**
  * Converts a number to characters 0..9, A..F.
  */
 char to_hex_digit(ubyte input) {
@@ -93,28 +115,12 @@ char lower_4bits_to_hex(char character) {
   return to_hex_digit(cast(ubyte)character & 0x0F);
 }
 
-/**
- * A function which returns true if character is invalid and should be escaped.
- */
-alias bool function(char) InvalidCharProc;
-
-void append_and_escape_chars(T)(Appender!T app, string field_value, InvalidCharProc is_invalid) {
-  foreach(character; field_value) {
-    if (is_invalid(character) || (character == '%')) {
-      app.put('%');
-      app.put(upper_4bits_to_hex(character));
-      app.put(lower_4bits_to_hex(character));
-    } else {
-      app.put(character);
-    }
-  }
-}
-
 
 import std.stdio, std.exception;
 
 unittest {
   writeln("Testing convert_url_escaped_char...");
+
   assert(convert_url_escaped_char("3D") == '=');
   assert(convert_url_escaped_char("00") == '\0');
   assertThrown!ConvException(convert_url_escaped_char("0H") == '\0');
@@ -122,11 +128,34 @@ unittest {
 
 unittest {
   writeln("Testing replace_url_escaped_chars...");
+
   assert(replace_url_escaped_chars("%3D".dup) == "=");
   assert(replace_url_escaped_chars("Testing %3D".dup) == "Testing =");
   assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more".dup) == "Multiple ; replacements \0 and some % more");
   assert(replace_url_escaped_chars("One after another %3D%3B%25".dup) == "One after another =;%");
   assert(replace_url_escaped_chars("One after another %3D0%3B%25".dup) == "One after another =0;%");
   assertThrown!ConvException(replace_url_escaped_chars("One after another %3H%3B%25".dup) == "One after another =;%");
+}
+
+unittest {
+  writeln("Testing append_and_escape_chars()...");
+  
+  auto is_invalid_char = function bool(char character) {
+    return (std.ascii.isControl(character) ||
+            (character == '%') ||
+            (character == '=') ||
+            (character == ';') ||
+            (character == '&') ||
+            (character == ','));
+  };
+  auto app = appender!string();
+  append_and_escape_chars(app, "abc", is_invalid_char);
+  assert(app.data == "abc");
+  append_and_escape_chars(app, "\0\t", is_invalid_char);
+  assert(app.data == "abc%00%09");
+  append_and_escape_chars(app, "ab=,;", is_invalid_char);
+  assert(app.data == "abc%00%09ab%3D%2C%3B");
+  append_and_escape_chars(app, ">", is_invalid_char);
+  assert(app.data == "abc%00%09ab%3D%2C%3B>");
 }
 

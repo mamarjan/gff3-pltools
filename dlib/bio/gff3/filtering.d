@@ -57,12 +57,20 @@ RecordPredicate FIELD(string field_name, StringPredicate p) {
 
 auto ATTRIBUTE(string attribute_name, StringPredicate p) {
   return delegate bool(Record r) {
-    string attribute_value;
-    if (attribute_name in r.attributes)
-      attribute_value = r.attributes[attribute_name].first;
-    else
-      attribute_value = "";
-    return p(attribute_value);
+    if (attribute_name in r.attributes) {
+      auto attribute_value = r.attributes[attribute_name];
+      if (attribute_value.is_multi) {
+        foreach(value; attribute_value.all) {
+          if (p(value))
+            return true;
+        }
+        return false;
+      } else {
+        return p(attribute_value.first);
+      }
+    } else {
+      return p("");
+    }
   };
 }
  

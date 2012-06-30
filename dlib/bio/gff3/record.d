@@ -189,10 +189,18 @@ class Record {
   }
 }
 
+/**
+ * An attribute in a GFF3 record can have multiple values, separated by commas.
+ * This struct can represent both attribute values with a single value and
+ * multiple.
+ */
 struct AttributeValue {
+  /**
+   * This constructor doesn't do replacing of escaped characters.
+   */
   this(string raw_attr_value) {
     replace_esc_chars = false;
-    value_count = raw_attr_value.count(',');
+    value_count = count_values(raw_attr_value);
     this.raw_attr_value = raw_attr_value;
     if (is_multi) {
       parsed_attr_values = new string[value_count];
@@ -202,9 +210,12 @@ struct AttributeValue {
     }
   }
 
+  /**
+   * This constructo replaces escaped characters with their original char values.
+   */
   this(char[] raw_attr_value) {
     replace_esc_chars = true;
-    value_count = raw_attr_value.count(',');
+    value_count = count_values(raw_attr_value);
     if (!is_multi) {
       this.raw_attr_value = cast(string) replace_url_escaped_chars(raw_attr_value);
     } else {
@@ -215,18 +226,30 @@ struct AttributeValue {
     }
   }
 
+  /**
+   * Returns true if the attribute has multiple values.
+   */
   @property bool is_multi() { return (value_count > 1); }
 
+  /**
+   * Returns the first attribute value.
+   */
   @property string first() {
     return is_multi ? all[0] : raw_attr_value;
   }
 
+  /**
+   * Returns all attribute values as a list of strings.
+   */
   @property string[] all() {
     if (parsed_attr_values is null)
       parsed_attr_values = [raw_attr_value];
     return parsed_attr_values;
   }
 
+  /**
+   * Appends the attribute values to the Appender object app.
+   */
   void append_to_string(T)(Appender!T app) {
     if (is_multi) {
       if (replace_esc_chars) {
@@ -254,9 +277,62 @@ struct AttributeValue {
     int value_count;
     string raw_attr_value;
     string[] parsed_attr_values;
+
+    int count_values(T)(T attr_value) { 
+      return attr_value.count(',')+1;
+    }
   }
 }
 
+
+unittest {
+  writeln("Testing AttributeValue...");
+
+  auto value = AttributeValue("abc");
+  assert(value.is_multi == false);
+  assert(value.first == "abc");
+  assert(value.all == ["abc"]);
+
+  value = AttributeValue("abc%3Df".dup);
+  assert(value.is_multi == false);
+  assert(value.first == "abc=f");
+  assert(value.all == ["abc=f"]);
+  auto app = appender!string();
+  value.append_to_string(app);
+  assert(app.data == "abc%3Df");
+
+  value = AttributeValue("abc%3Df");
+  assert(value.is_multi == false);
+  assert(value.first == "abc%3Df");
+  assert(value.all == ["abc%3Df"]);
+  app = appender!string();
+  value.append_to_string(app);
+  assert(app.data == "abc%3Df");
+
+  value = AttributeValue("ab,cd,e");
+  assert(value.is_multi == true);
+  assert(value.first == "ab");
+  assert(value.all == ["ab", "cd", "e"]);
+  app = appender!string();
+  value.append_to_string(app);
+  assert(app.data == "ab,cd,e");
+
+  value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij".dup);
+  assert(value.is_multi == true);
+  assert(value.first == "a=b");
+  assert(value.all == ["a=b", "c;d", "e,f", "g&h", "ij"]);
+  app = appender!string();
+  value.append_to_string(app);
+  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+
+  value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+  assert(value.is_multi == true);
+  assert(value.first == "a%3Db");
+  assert(value.all == ["a%3Db", "c%3Bd", "e%2Cf", "g%26h", "ij"]);
+  app = appender!string();
+  value.append_to_string(app);
+  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+}
 
 unittest {
   writeln("Testing parseAttributes...");

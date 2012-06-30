@@ -100,6 +100,13 @@ or
     gff3-ffetch --filter not:attribute:ID:equals: path-to-file.gff3
 ```
 
+However, the two last options are not completely the same. In cases
+where an attribute can have multiple values, the Parent attribute for
+example, the "attribute" predicate first runs the contained predicate
+on all attribute's values and returns true when the contained
+predicate returns true for a value. That is, it has an implicit and
+operation built-in.
+
 There are a few more options available. In the examples above, the
 data was comming from a GFF3 file which was specified on the command
 line and the output was the screen. To use the standard input as the
