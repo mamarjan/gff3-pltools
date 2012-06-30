@@ -3,6 +3,10 @@ module BioHPC
     # Runs the gff3-ffetch utility with the specified parameters.
     # Options include :output and :at_most.
     def self.filter_file filename, filter_string, options = {}
+      if !File.exists?(filename)
+        raise Exception("No such file - #{filename}")
+      end
+
       output_option = nil
       output = nil
       if !options[:output].nil?
