@@ -66,11 +66,6 @@ auto NO_VALIDATION = function bool(string filename, int line_number, string line
 };
 
 /**
- * A function which returns true if character is invalid and should be escaped.
- */
-alias bool function(char) InvalidCharProc;
-
-/**
  * A list of characters known to be allowed without escaping in the seqname
  * field of a record in a GFF3 file.
  */

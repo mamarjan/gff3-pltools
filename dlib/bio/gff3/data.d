@@ -51,7 +51,14 @@ unittest {
   with(record1) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
-    assert(attributes == [ "ID" : "ENSRNOG00000019422", "Dbxref" : "taxon:10116", "organism" : "Rattus norvegicus", "chromosome" : "18", "name" : "EGR1_RAT", "source" : "UniProtKB/Swiss-Prot", "Is_circular" : "true"]);
+    assert(attributes.length == 7);
+    assert(attributes["ID"].all == ["ENSRNOG00000019422"]);
+    assert(attributes["Dbxref"].all == ["taxon:10116"]);
+    assert(attributes["organism"].all == ["Rattus norvegicus"]);
+    assert(attributes["chromosome"].all == ["18"]);
+    assert(attributes["name"].all == ["EGR1_RAT"]);
+    assert(attributes["source"].all == ["UniProtKB/Swiss-Prot"]);
+    assert(attributes["Is_circular"].all == ["true"]);
   }
   with(record2) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
@@ -61,7 +68,8 @@ unittest {
   with(record3) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
-    assert(attributes == ["ID" : "EXON=00000131935", "Parent" : "TRAN;00000017239"]);
+    assert(attributes["ID"].all == ["EXON=00000131935"]);
+    assert(attributes["Parent"].all == ["TRAN;00000017239"]);
   }
 
   // Test scrolling to FASTA data

@@ -59,7 +59,7 @@ auto ATTRIBUTE(string attribute_name, StringPredicate p) {
   return delegate bool(Record r) {
     string attribute_value;
     if (attribute_name in r.attributes)
-      attribute_value = r.attributes[attribute_name];
+      attribute_value = r.attributes[attribute_name].first;
     else
       attribute_value = "";
     return p(attribute_value);

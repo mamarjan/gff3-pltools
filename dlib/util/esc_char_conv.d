@@ -1,6 +1,6 @@
 module util.esc_char_conv;
 
-import std.string, std.conv, std.ascii;
+import std.string, std.conv, std.ascii, std.array;
 
 /**
  * Converts the characters escaped using the URL escaping convention (%XX)
@@ -91,6 +91,23 @@ char upper_4bits_to_hex(char character) {
  */
 char lower_4bits_to_hex(char character) {
   return to_hex_digit(cast(ubyte)character & 0x0F);
+}
+
+/**
+ * A function which returns true if character is invalid and should be escaped.
+ */
+alias bool function(char) InvalidCharProc;
+
+void append_and_escape_chars(T)(Appender!T app, string field_value, InvalidCharProc is_invalid) {
+  foreach(character; field_value) {
+    if (is_invalid(character) || (character == '%')) {
+      app.put('%');
+      app.put(upper_4bits_to_hex(character));
+      app.put(lower_4bits_to_hex(character));
+    } else {
+      app.put(character);
+    }
+  }
 }
 
 
