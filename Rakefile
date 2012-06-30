@@ -1,34 +1,6 @@
 # encoding: utf-8
 
-# To be able to load the D library in our tests,
-# we need to add it's path to this env var:
-
 require 'rake/clean'
-
-ENV["LD_LIBRARY_PATH"] = File.dirname(__FILE__)
-
-rule ".o" => [".d"] do |t|
-  sh "dmd -c -m32 -g #{t.source} -of#{t.name} -fPIC"
-end
-
-directory "builddir"
-CLEAN.include("builddir")
-
-task :compiledebug => ["builddir"] do
-  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/bio/gff3.d -ofbuilddir/gff3.o -fPIC"
-  sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
-  sh "mv bio-hpc-dlib.so lib/"
-end
-
-task :compile => ["builddir"] do
-  sh "dmd -c -m32 -g dlib/lib_init.d -ofbuilddir/lib_init.o -fPIC"
-  sh "dmd -c -m32 -g dlib/bio/gff3.d -ofbuilddir/gff3.o -fPIC"
-  sh "dmd -g -m32 builddir/*.o -ofbio-hpc-dlib.so -shared -fPIC"
-  sh "mv bio-hpc-dlib.so lib/"
-end
-
-CLEAN.include("lib/*.so")
 
 DFILES = ["dlib/bio/gff3/file.d",
           "dlib/bio/gff3/data.d",
@@ -59,29 +31,19 @@ end
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
-desc "Compile the validate-gff3 utility"
-task :validator do
-  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofvalidate-gff3"
-end
-CLEAN.include("validate-gff3")
-CLEAN.include("validate-gff3.o")
-
-desc "Compile the benchmark-gff3 utility"
-task :benchmark do
-  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbenchmark-gff3"
-end
-CLEAN.include("benchmark-gff3")
-CLEAN.include("benchmark-gff3.o")
-
 desc "Compile utilities"
 task :utilities do
+  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbenchmark-gff3"
+  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofvalidate-gff3"
   sh "dmd -O -release -m32 dlib/bin/count_features.d #{DFILES} -Idlib -ofcount-features"
   sh "dmd -O -release -m32 dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofgff3-ffetch"
+  rm_f Dir.glob("*.o")
 end
+CLEAN.include("*.o")
+CLEAN.include("benchmark-gff3")
+CLEAN.include("validate-gff3")
 CLEAN.include("count-features")
-CLEAN.include("count-features.o")
 CLEAN.include("gff3-ffetch")
-CLEAN.include("gff3-ffetch.o")
 
 require 'rubygems'
 require 'bundler'

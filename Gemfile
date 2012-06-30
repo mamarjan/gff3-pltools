@@ -12,9 +12,6 @@ group :development do
   gem "cucumber", ">= 0"
   gem "bundler", "~> 1.1.3"
   gem "jeweler", "~> 1.8.3"
-  gem "bio", ">= 1.4.2"
   gem "rdoc", "~> 3.12"
 end
-
-gem "ffi", "~> 1.0.11"
 
