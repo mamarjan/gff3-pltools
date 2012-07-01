@@ -14,7 +14,7 @@ When /^set the output to be a string$/ do
 end
 
 When /^run the filter$/ do
-  @result = BioHPC::GFF3.filter_file @filename, @filter_string, output: @output_filename
+  @result = BioHPC::GFF3.filter_file @filename, @filter_string, output: @output_filename, at_most: @at_most
 end
 
 Then /^I should receive a string with lines which have that ID$/ do

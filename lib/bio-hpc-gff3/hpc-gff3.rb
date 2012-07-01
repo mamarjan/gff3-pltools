@@ -12,7 +12,10 @@ module BioHPC
       if !options[:output].nil?
         output_option = "--output #{options[:output]}"
       end
-      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} #{filename} #{output_option}")
+      if !options[:at_most].nil?
+        at_most_option = "--at-most #{options[:at_most]}"
+      end
+      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} #{filename} #{output_option} #{at_most_option}")
       if output_option.nil?
         output = gff3_ffetch.read
       end
@@ -28,7 +31,10 @@ module BioHPC
       if !options[:output].nil?
         output_option = "--output #{options[:output]}"
       end
-      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} - #{output_option}", "r+")
+      if !options[:at_most].nil?
+        at_most_option = "--at-most #{options[:at_most]}"
+      end
+      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} - #{output_option} #{at_most_option}", "r+")
       gff3_ffetch.write data
       gff3_ffetch.close_write
       if output_option.nil?
