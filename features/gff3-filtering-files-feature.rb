@@ -23,7 +23,7 @@ Then /^I should receive a string with lines which have that ID$/ do
   lambda { lines.next }.should raise_error(StopIteration)
 end
 
-When /^set the output to be a different file$/ do
+When /^set the output to be a file$/ do
   @tmpdir = Dir.mktmpdir("gff3")
   @output_filename = File.join(@tmpdir, "test_file.gff3")
 end

@@ -1,7 +1,7 @@
 module BioHPC
   module GFF3
-    # Runs the gff3-ffetch utility with the specified parameters.
-    # Options include :output and :at_most.
+    # Runs the gff3-ffetch utility with the specified parameters on
+    # an external file. Options include :output and :at_most.
     def self.filter_file filename, filter_string, options = {}
       if !File.exists?(filename)
         raise Exception("No such file - #{filename}")
@@ -12,11 +12,29 @@ module BioHPC
       if !options[:output].nil?
         output_option = "--output #{options[:output]}"
       end
-      f = IO.popen("./gff3-ffetch --filter #{filter_string} #{filename} #{output_option}")
-      if output.nil?
-        output = f.read
+      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} #{filename} #{output_option}")
+      if output_option.nil?
+        output = gff3_ffetch.read
       end
-      f.close
+      gff3_ffetch.close
+      output
+    end
+
+    # Runs the gff3-ffetch utility with the specified parameters while
+    # passing data to its stdin. Options include :output and :at_most.
+    def self.filter_data data, filter_string, options = {}
+      output_option = nil
+      output = nil
+      if !options[:output].nil?
+        output_option = "--output #{options[:output]}"
+      end
+      gff3_ffetch = IO.popen("./gff3-ffetch --filter #{filter_string} - #{output_option}", "r+")
+      gff3_ffetch.write data
+      gff3_ffetch.close_write
+      if output_option.nil?
+        output = gff3_ffetch.read
+      end
+      gff3_ffetch.close
       output
     end
   end

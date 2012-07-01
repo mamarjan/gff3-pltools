@@ -18,10 +18,10 @@ Feature: Filtering GFF3 files using gff3-ffetch tool
     And run the filter
     Then I should receive a string with lines which have that ID
 
-  Scenario: filtering a GFF3 file to a different file
+  Scenario: filtering a GFF3 file to a file
     Given I have a GFF3 file
     When I set up the filter to leave only records with a particular ID
-    And set the output to be a different file
+    And set the output to be a file
     And run the filter
     Then that file should be filled with lines which have that ID
 
