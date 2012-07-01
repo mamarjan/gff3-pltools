@@ -27,7 +27,6 @@ task :unittests do
   sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
   sh "./unittests"
 end
-
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
@@ -59,10 +58,10 @@ require 'rake'
 require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
-  gem.name = "bio-hpc-gff3"
-  gem.homepage = "http://github.com/mamarjan/bioruby-hpc-gff3"
+  gem.name = "bio-gff3-pltools"
+  gem.homepage = "http://github.com/mamarjan/gff3-pltools"
   gem.license = "MIT"
-  gem.summary = %Q{Fast parallized GFF3 parser}
+  gem.summary = %Q{Fast parallized GFF3 tools}
   gem.description = %Q{}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]

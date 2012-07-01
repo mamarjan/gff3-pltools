@@ -8,6 +8,6 @@ rescue Bundler::BundlerError => e
 end
 
 $LOAD_PATH.unshift(File.dirname(__FILE__) + '/../../lib')
-require 'bio-hpc-gff3'
+require 'bio-gff3-pltools'
 
 require 'rspec/expectations'

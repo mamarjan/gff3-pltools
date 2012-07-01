@@ -8,5 +8,5 @@
 #
 # In this file only require other files. Avoid other source code.
 
-require 'bio-hpc-gff3/hpc-gff3.rb'
+require 'bio-gff3-pltools/filtering.rb'
 

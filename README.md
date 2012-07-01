@@ -1,12 +1,12 @@
-# bio-hpc-gff3
+# gff3-pltools
 
-[![Build Status](https://secure.travis-ci.org/mamarjan/bioruby-hpc-gff3.png)](http://travis-ci.org/mamarjan/bioruby-hpc-gff3)
+[![Build Status](https://secure.travis-ci.org/mamarjan/gff3-pltools.png)](http://travis-ci.org/mamarjan/gff3-pltools)
 
 Note: this software is under active development!
 
-This is currently an early work in progress to create a parallel GFF3
-and GTF parser library for D and a Ruby gem which would take advantage
-of that library.
+This is currently an early work in progress to create parallel GFF3
+and GTF parallel tools for D and a Ruby gem which would let Ruby
+programmers use those tools from Ruby.
 
 ## Installation
 
@@ -24,7 +24,7 @@ Currently only D unit tests are working. You can run them using the
 ## Usage
 
 ```ruby
-    require 'bio-hpc-gff3'
+    require 'bio-gff3-pltools'
 ```
 
 TODO: Generate API docs and find a nice place for them somewhere on
@@ -178,7 +178,7 @@ line options:
 Information on the source tree, documentation, examples, issues and
 how to contribute, see
 
-  http://github.com/mamarjan/bioruby-hpc-gff3
+  http://github.com/mamarjan/gff3-pltools
 
 The BioRuby community is on IRC server: irc.freenode.org, channel: #bioruby.
 
@@ -191,7 +191,7 @@ If you use this software, please cite one of
 
 ## Biogems.info
 
-This Biogem is published at [#bio-hpc-gff3](http://biogems.info/index.html)
+This Biogem is published at [#bio-gff3-pltools](http://biogems.info/index.html)
 
 ## Copyright
 
