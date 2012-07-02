@@ -5,6 +5,9 @@ require 'rake/clean'
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
 puts ENV["PATH"]
 
+directory "bin"
+CLEAN.include("bin")
+
 DFILES = ["dlib/bio/gff3/file.d",
           "dlib/bio/gff3/data.d",
           "dlib/bio/gff3/record.d",
@@ -34,7 +37,7 @@ CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
 desc "Compile utilities"
-task :utilities do
+task :utilities => :bin do
   sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
   sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
   sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
@@ -72,6 +75,8 @@ Jeweler::Tasks.new do |gem|
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
+
+task :build => :utilities
 
 require 'cucumber/rake/task'
 Cucumber::Rake::Task.new(:features)
