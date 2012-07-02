@@ -2,6 +2,9 @@
 
 require 'rake/clean'
 
+ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
+puts ENV["PATH"]
+
 DFILES = ["dlib/bio/gff3/file.d",
           "dlib/bio/gff3/data.d",
           "dlib/bio/gff3/record.d",
@@ -32,17 +35,17 @@ CLEAN.include("unittests.o")
 
 desc "Compile utilities"
 task :utilities do
-  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbenchmark-gff3"
-  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofvalidate-gff3"
-  sh "dmd -O -release -m32 dlib/bin/count_features.d #{DFILES} -Idlib -ofcount-features"
-  sh "dmd -O -release -m32 dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofgff3-ffetch"
-  rm_f Dir.glob("*.o")
+  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
+  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
+  sh "dmd -O -release -m32 dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
+  sh "dmd -O -release -m32 dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/gff3-ffetch"
+  rm_f Dir.glob("bin/*.o")
 end
-CLEAN.include("*.o")
-CLEAN.include("benchmark-gff3")
-CLEAN.include("validate-gff3")
-CLEAN.include("count-features")
-CLEAN.include("gff3-ffetch")
+CLEAN.include("bin/*.o")
+CLEAN.include("bin/benchmark-gff3")
+CLEAN.include("bin/validate-gff3")
+CLEAN.include("bin/count-features")
+CLEAN.include("bin/gff3-ffetch")
 
 require 'rubygems'
 require 'bundler'
@@ -65,20 +68,10 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]
+  gem.executables = ["gff3-ffetch", "benchmark-gff3", "validate-gff3", "count-features"]
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
-
-require 'rspec/core'
-require 'rspec/core/rake_task'
-RSpec::Core::RakeTask.new(:spec) do |spec|
-  spec.pattern = FileList['spec/**/*_spec.rb']
-end
-
-RSpec::Core::RakeTask.new(:rcov) do |spec|
-  spec.pattern = 'spec/**/*_spec.rb'
-  spec.rcov = true
-end
 
 require 'cucumber/rake/task'
 Cucumber::Rake::Task.new(:features)
