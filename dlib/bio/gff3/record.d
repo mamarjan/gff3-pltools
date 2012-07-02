@@ -279,7 +279,7 @@ struct AttributeValue {
     string[] parsed_attr_values;
 
     int count_values(T)(T attr_value) { 
-      return attr_value.count(',')+1;
+      return cast(int)(attr_value.count(',')+1);
     }
   }
 }

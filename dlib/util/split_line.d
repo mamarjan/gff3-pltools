@@ -9,7 +9,7 @@ import std.string;
  */
 T get_and_skip_next_field(T)(ref T line, char delim = '\t') {
   T field;
-  int next_tab = line.indexOf(delim);
+  auto next_tab = line.indexOf(delim);
   if (next_tab != -1) {
     field = line[0..next_tab];
     line = line[next_tab+1..$];

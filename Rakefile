@@ -27,7 +27,7 @@ DFILES = ["dlib/bio/gff3/file.d",
 
 desc "Compile and run D unit tests"
 task :unittests do
-  sh "dmd -g -m32 -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
+  sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
   sh "./unittests"
 end
 CLEAN.include("unittests")
@@ -35,10 +35,10 @@ CLEAN.include("unittests.o")
 
 desc "Compile utilities"
 task :utilities do
-  sh "dmd -O -release -m32 dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
-  sh "dmd -O -release -m32 dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
-  sh "dmd -O -release -m32 dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
-  sh "dmd -O -release -m32 dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/gff3-ffetch"
+  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
+  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
+  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
+  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
 end
 CLEAN.include("bin/*.o")
