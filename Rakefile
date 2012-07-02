@@ -6,7 +6,7 @@ ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
 puts ENV["PATH"]
 
 directory "bin"
-CLEAN.include("bin")
+CLEAN.include("bin/")
 
 DFILES = ["dlib/bio/gff3/file.d",
           "dlib/bio/gff3/data.d",
@@ -37,18 +37,26 @@ CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
 desc "Compile utilities"
-task :utilities => :bin do
+task :utilities do
   sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
   sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
   sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
   sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
 end
-CLEAN.include("bin/*.o")
-CLEAN.include("bin/benchmark-gff3")
-CLEAN.include("bin/validate-gff3")
-CLEAN.include("bin/count-features")
-CLEAN.include("bin/gff3-ffetch")
+
+desc "Compile utilities"
+task :utilities_and_wrappers do
+  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/_benchmark-gff3"
+  cp "scripts/wrapper-script.rb", "bin/benchmark-gff3"
+  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/_validate-gff3"
+  cp "scripts/wrapper-script.rb", "bin/validate-gff3"
+  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/_count-features"
+  cp "scripts/wrapper-script.rb", "bin/count-features"
+  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/_gff3-ffetch"
+  cp "scripts/wrapper-script.rb", "bin/gff3-ffetch"
+  rm_f Dir.glob("bin/*.o")
+end
 
 require 'rubygems'
 require 'bundler'
