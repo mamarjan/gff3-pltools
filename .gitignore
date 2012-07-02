@@ -1,3 +1,8 @@
+# binaries
+bin
+unittests
+*.o
+
 # rcov generated
 coverage
 coverage.data

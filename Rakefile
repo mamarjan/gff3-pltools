@@ -36,8 +36,8 @@ end
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
-desc "Compile utilities"
-task :utilities do
+desc "Compile D utilities for standalone usage"
+task :utilities => :bin do
   sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
   sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
   sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
@@ -45,8 +45,8 @@ task :utilities do
   rm_f Dir.glob("bin/*.o")
 end
 
-desc "Compile utilities"
-task :utilities_and_wrappers do
+desc "Compile D utilities and generate wrappers for inclusion in gems"
+task :utilities_and_wrappers => :bin do
   sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/_benchmark-gff3"
   cp "scripts/wrapper-script.rb", "bin/benchmark-gff3"
   sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/_validate-gff3"
@@ -75,21 +75,25 @@ Jeweler::Tasks.new do |gem|
   gem.name = "bio-gff3-pltools"
   gem.homepage = "http://github.com/mamarjan/gff3-pltools"
   gem.license = "MIT"
-  gem.summary = %Q{Fast parallized GFF3 tools}
-  gem.description = %Q{}
+  gem.summary = %Q{Fast parallel GFF3 tools}
+  gem.description = %Q{Fast parallel GFF3 tools, still in early development phase.}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]
   gem.executables = ["gff3-ffetch", "benchmark-gff3", "validate-gff3", "count-features"]
+  gem.files.clear
+  gem.files.include 'bin/_*'
+  gem.files.include 'lib/**/**.rb'
+  gem.files.include 'VERSION'
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
 
-task :build => :utilities
+task :build => :utilities_and_wrappers
 
 require 'cucumber/rake/task'
 Cucumber::Rake::Task.new(:features)
 
-task :default => :spec
+task :default => :unittests
 
 require 'yard'
 YARD::Rake::YardocTask.new
