@@ -10,18 +10,65 @@ programmers use those tools from Ruby.
 
 ## Installation
 
-TODO: Write scripts for installation.
+### Requirements
+
+The binary builds are self-contained.
+
+To build the tools from source, you'll need the DMDv2 compiler in
+your path. You can check here if there is a build of DMD available
+for your platform:
+
+  http://dlang.org/download.html
+
+Also, the rake utility is necessary to run the automated build
+scripts.
+
+### Build and install instructions
+
+Users of 32-bit and 64-bit Linux can download pre-build binary gems
+and install them using the gem command:
+
+```sh
+    gem install bio-gff3-pltools-linux32-X.Y.Z.gem
+```
+
+Users of other plaforms can download the source package, and build
+it themselves given the DMD compiler is available for their platform.
+
+To build and install a gem for your platform, use the following steps:
+
+```sh
+    tar -zxvf bio-gff3-pltools-X.Y.Z.tar.gz
+    cd bio-gff3-pltools-X.Y.Z
+    rake install
+```
+
+To build a gem without installing, use the rake task "build" instead
+of install in the previous example.
+
+To build the binary tools without building a gem or a Ruby library,
+invoke the "utilities" rake task instead and copy the binaries from
+the "bin/" directory to your PATH.
 
 ### Run tests
 
-Currently only D unit tests are working. You can run them using the
-"unittests" rake task, like this:
+You can use the "unittests" rake task to run D unittests, like this:
 
 ```sh
     rake unittests
 ```
 
+To run tests for the Ruby library, first build the D utilities and
+then start the "features" rake task, like this:
+
+```sh
+    rake utilities
+    rake features
+```
+
 ## Usage
+
+### Ruby library
 
 ```ruby
     require 'bio-gff3-pltools'
@@ -35,13 +82,6 @@ the source tree.
 
 ### gff3-ffetch utility
 
-The gff3-ffetch utility can be built using the utilities rake task,
-like this:
-
-```sh
-    rake utilities
-```
-
 Currently this utility supports only filtering a file, based on a
 filtering expression. For example, you can use the following command
 to filter out records with a CDS feature from a GFF3 file:
@@ -51,7 +91,7 @@ to filter out records with a CDS feature from a GFF3 file:
 ```
 
 The utility will use the fast (and soon parallel) D library to do the
-parsing and filtering. You can that parse the result using your
+parsing and filtering. You can then parse the result using your
 programming language and library of choice.
 
 Currently supported predicates are "field", "attribute", "equals",
@@ -61,14 +101,14 @@ attribute should be used for filtering. In the previous example,
 that's the "field:feature" part. Next, the utility needs to know
 what you want to do with it. In the example, that's the "equals"
 part. And then the last part in the example is a parameter to the
-"equals", which tells the utility to what the attribute or field
-should be compared.
+"equals", which tells the utility what the attribute or field
+should be compared to.
 
 Parts of the expression are separated by a colon, ':', and if colon
 is suposed to be part of a field name or value, it can be escaped
-like "\:".
+like this: "\:".
 
-Valid fields are: seqname, source, feature, start, end, score,
+Valid field names are: seqname, source, feature, start, end, score,
 strand and phase.
 
 A few more examples...
@@ -80,8 +120,8 @@ A few more examples...
 The previous example chooses records which have the ID attribute
 with the value gene1.
 
-Want to see which records have no ID value, or ID which is an empty
-string? Here's how it can be done:
+To see which records have no ID value, or ID which is an empty
+string, use the following command:
 
 ```sh
     gff3-ffetch --filter attribute:ID:equals: path-to-file.gff3
@@ -101,10 +141,10 @@ or
 ```
 
 However, the two last options are not completely the same. In cases
-where an attribute can have multiple values, the Parent attribute for
+where an attribute has multiple values, the Parent attribute for
 example, the "attribute" predicate first runs the contained predicate
-on all attribute's values and returns true when the contained
-predicate returns true for a value. That is, it has an implicit and
+on all attribute's values and returns true when an operation
+returns true for a parent value. That is, it has an implicit and
 operation built-in.
 
 There are a few more options available. In the examples above, the
@@ -133,29 +173,18 @@ If there are more then a 1000 records in the results, after the
 
 ### GFF3 File validation
 
-The validation utility can be built using the "validator" rake task,
-like this:
-
-```sh
-    rake validator
-```
-
-The result will be in the root directory, and can be used like this:
+The validation utility can be used like this:
 
 ```sh
     ./validate-gff3 path/to/file.gff3
 ```
 
+It will output any errors it finds to standard output.
+
 ### Benchmarking utility
 
-There is a small D application for performance benchmarking, you can
-build it using:
-
-```sh
-    rake benchmark
-```
-
-And then run it like this:
+There is a small D application for performance benchmarking.
+You can run it like this:
 
 ```sh
     ./benchmark-gff3 path/to/file.gff3
@@ -175,7 +204,7 @@ line options:
         
 ## Project home page
 
-Information on the source tree, documentation, examples, issues and
+For information on the source tree, documentation, examples, issues and
 how to contribute, see
 
   http://github.com/mamarjan/gff3-pltools
