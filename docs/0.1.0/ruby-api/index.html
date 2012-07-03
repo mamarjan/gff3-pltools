@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>
+  File: README
+  
+    &mdash; Documentation by YARD 0.7.5
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" media="screen" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  relpath = '';
+  if (relpath != '') relpath += '/';
+</script>
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <script type="text/javascript" charset="utf-8">
+      if (window.top.frames.main) document.body.className = 'frames';
+    </script>
+    
+    <div id="header">
+      <div id="menu">
+  
+    <a href="_index.html" title="Index">Index</a> &raquo; 
+    <span class="title">File: README</span>
+  
+  
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a id="class_list_link" href="#">Class List</a>
+  
+    <a id="method_list_link" href="#">Method List</a>
+  
+    <a id="file_list_link" href="#">File List</a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+    
+    <iframe id="search_frame"></iframe>
+    
+    <div id="content"><div id='filecontents'><h1>gff3-pltools</h1>
+
+<p><a href="http://travis-ci.org/mamarjan/gff3-pltools"><img src="https://secure.travis-ci.org/mamarjan/gff3-pltools.png" alt="Build Status"></a></p>
+
+<p>Note: this software is under active development!</p>
+
+<p>This is currently an early work in progress to create parallel GFF3
+and GTF parallel tools for D and a Ruby gem which would let Ruby
+programmers use those tools from Ruby.</p>
+
+<h2>Installation</h2>
+
+<h3>Requirements</h3>
+
+<p>The binary builds are self-contained.</p>
+
+<p>To build the tools from source, you&#39;ll need the DMDv2 compiler in
+your path. You can check here if there is a build of DMD available
+for your platform:</p>
+
+<p><a href="http://dlang.org/download.html">http://dlang.org/download.html</a></p>
+
+<p>Also, the rake utility is necessary to run the automated build
+scripts.</p>
+
+<h3>Build and install instructions</h3>
+
+<p>Users of 32-bit and 64-bit Linux can download pre-build binary gems
+and install them using the gem command:</p>
+
+<pre class="code sh"><code>    gem install bio-gff3-pltools-linux32-X.Y.Z.gem
+</code></pre>
+
+<p>Users of other plaforms can download the source package, and build
+it themselves given the DMD compiler is available for their platform.</p>
+
+<p>To build and install a gem for your platform, use the following steps:</p>
+
+<pre class="code sh"><code>    tar -zxvf bio-gff3-pltools-X.Y.Z.tar.gz
+    cd bio-gff3-pltools-X.Y.Z
+    rake install
+</code></pre>
+
+<p>To build a gem without installing, use the rake task &quot;build&quot; instead
+of install in the previous example.</p>
+
+<p>To build the binary tools without building a gem or a Ruby library,
+invoke the &quot;utilities&quot; rake task instead and copy the binaries from
+the &quot;bin/&quot; directory to your PATH.</p>
+
+<h3>Run tests</h3>
+
+<p>You can use the &quot;unittests&quot; rake task to run D unittests, like this:</p>
+
+<pre class="code sh"><code>    rake unittests
+</code></pre>
+
+<p>To run tests for the Ruby library, first build the D utilities and
+then start the &quot;features&quot; rake task, like this:</p>
+
+<pre class="code sh"><code>    rake utilities
+    rake features
+</code></pre>
+
+<h2>Usage</h2>
+
+<h3>Ruby library</h3>
+
+<pre class="code ruby"><code>    <span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>'</span><span class='tstring_content'>bio-gff3-pltools</span><span class='tstring_end'>'</span></span>
+</code></pre>
+
+<p>TODO: Generate API docs and find a nice place for them somewhere on
+the net.</p>
+
+<p>The API doc is online. For more code examples see the test files in
+the source tree.</p>
+
+<h3>gff3-ffetch utility</h3>
+
+<p>Currently this utility supports only filtering a file, based on a
+filtering expression. For example, you can use the following command
+to filter out records with a CDS feature from a GFF3 file:</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
+</code></pre>
+
+<p>The utility will use the fast (and soon parallel) D library to do the
+parsing and filtering. You can then parse the result using your
+programming language and library of choice.</p>
+
+<p>Currently supported predicates are &quot;field&quot;, &quot;attribute&quot;, &quot;equals&quot;,
+&quot;contains&quot;, &quot;starts_with&quot; and &quot;not&quot;. You can combine them in a way
+that makes sense. First, the utility needs to know what field or
+attribute should be used for filtering. In the previous example,
+that&#39;s the &quot;field:feature&quot; part. Next, the utility needs to know
+what you want to do with it. In the example, that&#39;s the &quot;equals&quot;
+part. And then the last part in the example is a parameter to the
+&quot;equals&quot;, which tells the utility what the attribute or field
+should be compared to.</p>
+
+<p>Parts of the expression are separated by a colon, &#39;:&#39;, and if colon
+is suposed to be part of a field name or value, it can be escaped
+like this: &quot;:&quot;.</p>
+
+<p>Valid field names are: seqname, source, feature, start, end, score,
+strand and phase.</p>
+
+<p>A few more examples...</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter attribute:ID:equals:gene1 path-to-file.gff3
+</code></pre>
+
+<p>The previous example chooses records which have the ID attribute
+with the value gene1.</p>
+
+<p>To see which records have no ID value, or ID which is an empty
+string, use the following command:</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter attribute:ID:equals: path-to-file.gff3
+</code></pre>
+
+<p>And to get records which have the ID attribute defined, you can use
+this command:</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter attribute:ID:not:equals: path-to-file.gff3
+</code></pre>
+
+<p>or</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter not:attribute:ID:equals: path-to-file.gff3
+</code></pre>
+
+<p>However, the two last options are not completely the same. In cases
+where an attribute has multiple values, the Parent attribute for
+example, the &quot;attribute&quot; predicate first runs the contained predicate
+on all attribute&#39;s values and returns true when an operation
+returns true for a parent value. That is, it has an implicit and
+operation built-in.</p>
+
+<p>There are a few more options available. In the examples above, the
+data was comming from a GFF3 file which was specified on the command
+line and the output was the screen. To use the standard input as the
+source of the data, use &quot;-&quot; instead of a filename.</p>
+
+<p>The default for output is the screen, or stdout. To redirect the
+output to a file, you can use the &quot;--output&quot; option. Here is an
+example:</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter not:attribute:ID:equals: - --output tmp.gff3
+</code></pre>
+
+<p>To limit the number of records in the results, you can use the
+&quot;--at-most&quot; option. For example:</p>
+
+<pre class="code sh"><code>    gff3-ffetch --filter not:attribute:ID:equals: - --at-most 1000
+</code></pre>
+
+<p>If there are more then a 1000 records in the results, after the
+1000th record printed, a line is appended with the following content:
+&quot;# ...&quot; and the utility terminates.</p>
+
+<h3>GFF3 File validation</h3>
+
+<p>The validation utility can be used like this:</p>
+
+<pre class="code sh"><code>    ./gff3-validate path/to/file.gff3
+</code></pre>
+
+<p>It will output any errors it finds to standard output.</p>
+
+<h3>Benchmarking utility</h3>
+
+<p>There is a D application for performance benchmarking.
+You can run it like this:</p>
+
+<pre class="code sh"><code>    ./gff3-benchmark path/to/file.gff3
+</code></pre>
+
+<p>The most basic case for the banchmarking utility is to parse the
+file into records. More functionality is available using command
+line options:</p>
+
+<pre class="code ruby"><code>  -v     turn on validation
+  -r     turn on replacement of escaped characters
+  -f     merge records into features
+  -c N   feature cache size (how many features to keep in memory), default=1000
+  -l     link feature into parent-child relationships
+</code></pre>
+
+<h3>Counting features</h3>
+
+<p>The gff3-ffetch utility keeps only a small part of records in memory
+while combining them into features. To check if the cache size is
+correct, the &quot;gff3-count-features&quot; utility can be used to get the
+correct number of features in a file. It gets all the IDs into
+memory first, and the devises the correct number of features.</p>
+
+<p>To get the correct number of features in a file, use the following
+command:</p>
+
+<pre class="code sh"><code>    ./gff3-count-features path/to/file.gff3
+</code></pre>
+
+<h2>Project home page</h2>
+
+<p>For information on the source tree, documentation, examples, issues and
+how to contribute, see</p>
+
+<p><a href="http://github.com/mamarjan/gff3-pltools">http://github.com/mamarjan/gff3-pltools</a></p>
+
+<p>The BioRuby community is on IRC server: irc.freenode.org, channel: #bioruby.</p>
+
+<h2>Cite</h2>
+
+<p>If you use this software, please cite one of</p>
+
+<ul>
+<li><a href="http://dx.doi.org/10.1093/bioinformatics/btq475">BioRuby: bioinformatics software for the Ruby programming language</a></li>
+<li><a href="http://dx.doi.org/10.1093/bioinformatics/bts080">Biogem: an effective tool-based approach for scaling up open source software development in bioinformatics</a></li>
+</ul>
+
+<h2>Biogems.info</h2>
+
+<p>This Biogem is published at <a href="http://biogems.info/index.html">#bio-gff3-pltools</a></p>
+
+<h2>Copyright</h2>
+
+<p>Copyright (c) 2012 Marjan Povolni. See LICENSE.txt for further details.</p>
+</div></div>
+    
+    <div id="footer">
+  Generated on Tue Jul  3 17:50:38 2012 by 
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.7.5 (ruby-1.9.3).
+</div>
+
+  </body>
+</html>

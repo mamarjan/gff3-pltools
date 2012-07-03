@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>
+  File: filtering-files
+  
+    &mdash; Documentation by YARD 0.7.5
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" media="screen" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  relpath = '';
+  if (relpath != '') relpath += '/';
+</script>
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <script type="text/javascript" charset="utf-8">
+      if (window.top.frames.main) document.body.className = 'frames';
+    </script>
+    
+    <div id="header">
+      <div id="menu">
+  
+    <a href="_index.html" title="Index">Index</a> &raquo; 
+    <span class="title">File: filtering-files</span>
+  
+  
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a id="class_list_link" href="#">Class List</a>
+  
+    <a id="method_list_link" href="#">Method List</a>
+  
+    <a id="file_list_link" href="#">File List</a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+    
+    <iframe id="search_frame"></iframe>
+    
+    <div id="content"><div id='filecontents'>
+<p>Feature: Filtering GFF3 files using gff3-ffetch tool</p>
+
+<pre class="code ruby"><code>The average size of a GFF3 file is growing, and even the
+current files around 1GB in size are too much for most
+parsers. The gff3-ffetch tool has the --filter option
+which makes it possible to select only part of the
+lines in a GFF3 file using a filter expression.
+
+The goal of this feature is to make this functionality
+available to Ruby, so that the programmer can filter an
+external file and then parse the result using his parser
+of choice.
+
+Scenario: filtering a GFF3 file to a string
+  Given I have a GFF3 file
+  When I set up the filter to leave only records with a particular ID
+  And set the output to be a string
+  And run the filter
+  Then I should receive a string with lines which have that ID
+
+Scenario: filtering a GFF3 file to a file
+  Given I have a GFF3 file
+  When I set up the filter to leave only records with a particular ID
+  And set the output to be a file
+  And run the filter
+  Then that file should be filled with lines which have that ID</code></pre>
+</div></div>
+    
+    <div id="footer">
+  Generated on Tue Jul  3 17:50:38 2012 by 
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.7.5 (ruby-1.9.3).
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>
+  File: filtering-at-most-option
+  
+    &mdash; Documentation by YARD 0.7.5
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" media="screen" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  relpath = '';
+  if (relpath != '') relpath += '/';
+</script>
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <script type="text/javascript" charset="utf-8">
+      if (window.top.frames.main) document.body.className = 'frames';
+    </script>
+    
+    <div id="header">
+      <div id="menu">
+  
+    <a href="_index.html" title="Index">Index</a> &raquo; 
+    <span class="title">File: filtering-at-most-option</span>
+  
+  
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a id="class_list_link" href="#">Class List</a>
+  
+    <a id="method_list_link" href="#">Method List</a>
+  
+    <a id="file_list_link" href="#">File List</a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+    
+    <iframe id="search_frame"></iframe>
+    
+    <div id="content"><div id='filecontents'>
+<p>Feature: Limiting the result of gff3-ffetch tool to a certain number of
+lines</p>
+
+<pre class="code ruby"><code>The goal of this feature is to make this functionality
+
+Scenario: limiting output while filtering a file
+  Given I have a GFF3 file
+  When I set up the filter to leave most records after filtering
+  And set the output to be a string
+  And set the at_most option to 3 lines
+  And run the filter
+  Then I should receive a string with 4 lines
+  And the last line should contain &quot;...&quot;
+
+Scenario: limiting output while filtering a string
+  Given I have some GFF3 data
+    &quot;&quot;&quot;
+    ##gff-version 3
+    chr17	UCSC	mRNA	62467934	62469545	.	-	.	ID=A00469;Dbxref=AFFX-U133:205840_x_at,Locuslink:2688,Genbank-mRNA:A00469,Swissprot:P01241,PFAM:PF00103,AFFX-U95:1332_f_at,Swissprot:SOMA_HUMAN;Note=growth%20hormone%201;Alias=GH1
+    chr17	UCSC	three_prime_UTR	62467934	62468038	.	-	.	Parent=A00469
+    chr17	UCSC	CDS	62468039	62468236	.	-	1	Parent=A00469
+    chr9	UCSC	mRNA	90517946	90527968	.	-	.	ID=AB000114;Ontology_term=GO:0007155,GO:0005194;Ontology_term=GO:0005578;Dbxref=AFFX-U95:41031_at,Genbank-protein:BAA19055,Unigene:Hs.94070,AFFX-U133:205907_s_at,Genbank-mRNA:AB000114,Locuslink:4958,Swissprot:Q99983,Swissprot:OMD_HUMAN,Refseq-mRNA:NM_005014,Refseq-protein:NP_005005,PFAM:PF01462,PFAM:00560;Note=osteomodulin;Alias=OMD;
+    #.	UCSC	protein	.	.	.	.	.	ID=BAA19055;Parent=AB000114
+    chr9	UCSC	three_prime_UTR	90517946	90518841	.	-	.	Parent=AB000114
+    chr9	UCSC	CDS	90518842	90519167	.	-	1	Parent=AB000114
+    chr9	UCSC	CDS	90520309	90521248	.	-	0	Parent=AB000114
+    &quot;&quot;&quot;
+  When I set up the filter to leave most records after filtering
+  And set the output to be a string
+  And set the at_most option to 3 lines
+  And run the function for filtering data
+  Then I should receive a string with 4 lines
+  And the last line should contain &quot;...&quot;</code></pre>
+</div></div>
+    
+    <div id="footer">
+  Generated on Tue Jul  3 17:50:38 2012 by 
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.7.5 (ruby-1.9.3).
+</div>
+
+  </body>
+</html>
