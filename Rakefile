@@ -26,6 +26,7 @@ DFILES = ["dlib/bio/gff3/file.d",
           "dlib/util/split_line.d",
           "dlib/util/dlist.d",
           "dlib/util/string_hash.d",
+          "dlib/util/version_helper.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"
@@ -38,22 +39,22 @@ CLEAN.include("unittests.o")
 
 desc "Compile D utilities for standalone usage"
 task :utilities => :bin do
-  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/benchmark-gff3"
-  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/validate-gff3"
-  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/count-features"
-  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/gff3-ffetch"
+  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -J. -ofbin/benchmark-gff3"
+  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -J. -ofbin/validate-gff3"
+  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -J. -ofbin/count-features"
+  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
 end
 
 desc "Compile D utilities and generate wrappers for inclusion in gems"
 task :utilities_and_wrappers => :bin do
-  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -ofbin/_benchmark-gff3"
+  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -J. -ofbin/_benchmark-gff3"
   cp "scripts/wrapper-script.rb", "bin/benchmark-gff3"
-  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -ofbin/_validate-gff3"
+  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -J. -ofbin/_validate-gff3"
   cp "scripts/wrapper-script.rb", "bin/validate-gff3"
-  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -ofbin/_count-features"
+  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -J. -ofbin/_count-features"
   cp "scripts/wrapper-script.rb", "bin/count-features"
-  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -ofbin/_gff3-ffetch"
+  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/_gff3-ffetch"
   cp "scripts/wrapper-script.rb", "bin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
 end

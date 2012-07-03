@@ -1,5 +1,6 @@
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation;
+import util.version_helper;
 
 int main(string[] args) {
   // Parse command line arguments
@@ -8,6 +9,7 @@ int main(string[] args) {
   bool parse_features = false;
   uint feature_cache_size = 1000;
   bool link_features = false;
+  bool show_version = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
@@ -15,12 +17,18 @@ int main(string[] args) {
         "v", &validate,
         "f", &parse_features,
         "c", &feature_cache_size,
-        "l", &link_features);
+        "l", &link_features,
+        "version", &show_version);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
     print_usage();
     return 1; // Exit the application
+  }
+
+  if (show_version) {
+    writeln("benchmark-gff3 (gff3-pltools) " ~ fetch_version());
+    return 0;
   }
 
   // Only a filename should be left at this point
@@ -70,6 +78,7 @@ void print_usage() {
   writeln("  -f     merge records into features");
   writeln("  -c N   feature cache size (how many features to keep in memory), default=1000");
   writeln("  -l     link feature into parent-child relationships");
+  writeln("  --version      Output version information and exit.");
   writeln();
 }
 

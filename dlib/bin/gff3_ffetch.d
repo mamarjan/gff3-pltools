@@ -1,7 +1,7 @@
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
 import bio.gff3.record_range;
-import util.split_file;
+import util.split_file, util.version_helper;
 
 /**
  * A utility for parsing GFF3 files. The only function supported for now is
@@ -19,17 +19,24 @@ int main(string[] args) {
   string filter_string = null;
   string output_filename = null;
   ulong at_most = 0;
+  bool show_version = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "filter|f", &filter_string,
         "output|o", &output_filename,
-        "at-most|a", &at_most);
+        "at-most|a", &at_most,
+        "version", &show_version);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
     print_usage();
     return 1; // Exit the application
+  }
+
+  if (show_version) {
+    writeln("gff3-ffetch (gff3-pltools) " ~ fetch_version());
+    return 0;
   }
 
   // Only a filename should be left at this point
@@ -104,6 +111,7 @@ void print_usage() {
   writeln("  -a, --at-most  At most this number of lines/records will be parsed.");
   writeln("                 If there are more records a line with \"# ...\" will");
   writeln("                 be appended at the end of the file.");
+  writeln("  --version      Output version information and exit.");
   writeln();
   writeln("See package README for more information on what filtering expressions");
   writeln("are allowed.");
