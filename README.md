@@ -176,18 +176,18 @@ If there are more then a 1000 records in the results, after the
 The validation utility can be used like this:
 
 ```sh
-    ./validate-gff3 path/to/file.gff3
+    ./gff3-validate path/to/file.gff3
 ```
 
 It will output any errors it finds to standard output.
 
 ### Benchmarking utility
 
-There is a small D application for performance benchmarking.
+There is a D application for performance benchmarking.
 You can run it like this:
 
 ```sh
-    ./benchmark-gff3 path/to/file.gff3
+    ./gff3-benchmark path/to/file.gff3
 ```
 
 The most basic case for the banchmarking utility is to parse the
@@ -201,7 +201,22 @@ line options:
   -c N   feature cache size (how many features to keep in memory), default=1000
   -l     link feature into parent-child relationships
 ```
-        
+
+### Counting features
+
+The gff3-ffetch utility keeps only a small part of records in memory
+while combining them into features. To check if the cache size is
+correct, the "gff3-count-features" utility can be used to get the
+correct number of features in a file. It gets all the IDs into
+memory first, and the devises the correct number of features.
+
+To get the correct number of features in a file, use the following
+command:
+
+```sh
+    ./gff3-count-features path/to/file.gff3
+```
+
 ## Project home page
 
 For information on the source tree, documentation, examples, issues and

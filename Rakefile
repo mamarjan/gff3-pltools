@@ -39,21 +39,21 @@ CLEAN.include("unittests.o")
 
 desc "Compile D utilities for standalone usage"
 task :utilities => :bin do
-  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -J. -ofbin/benchmark-gff3"
-  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -J. -ofbin/validate-gff3"
-  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -J. -ofbin/count-features"
+  sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
+  sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
+  sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
   sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
 end
 
 desc "Compile D utilities and generate wrappers for inclusion in gems"
 task :utilities_and_wrappers => :bin do
-  sh "dmd -O -release dlib/bin/benchmark_gff3.d #{DFILES} -Idlib -J. -ofbin/_benchmark-gff3"
-  cp "scripts/wrapper-script.rb", "bin/benchmark-gff3"
-  sh "dmd -O -release dlib/bin/validate_gff3.d #{DFILES} -Idlib -J. -ofbin/_validate-gff3"
-  cp "scripts/wrapper-script.rb", "bin/validate-gff3"
-  sh "dmd -O -release dlib/bin/count_features.d #{DFILES} -Idlib -J. -ofbin/_count-features"
-  cp "scripts/wrapper-script.rb", "bin/count-features"
+  sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/_gff3-benchmark"
+  cp "scripts/wrapper-script.rb", "bin/gff3-benchmark"
+  sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/_gff3-validate"
+  cp "scripts/wrapper-script.rb", "bin/gff3-validate"
+  sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/_gff3-count-features"
+  cp "scripts/wrapper-script.rb", "bin/gff3-count-features"
   sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/_gff3-ffetch"
   cp "scripts/wrapper-script.rb", "bin/gff3-ffetch"
   rm_f Dir.glob("bin/*.o")
@@ -80,7 +80,7 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{Fast parallel GFF3 tools, still in early development phase.}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]
-  gem.executables = ["gff3-ffetch", "benchmark-gff3", "validate-gff3", "count-features"]
+  gem.executables = ["gff3-ffetch", "gff3-benchmark", "gff3-validate", "gff3-count-features"]
   gem.files.clear
   gem.files.include 'bin/_*'
   gem.files.include 'lib/**/**.rb'
@@ -98,4 +98,6 @@ task :default => :unittests
 
 require 'yard'
 YARD::Rake::YardocTask.new
+CLEAN.include("doc")
+CLEAN.include(".yardoc")
 
