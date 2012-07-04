@@ -31,7 +31,7 @@ DFILES = ["dlib/bio/gff3/file.d",
 
 desc "Compile and run D unit tests"
 task :unittests do
-  sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -ofunittests"
+  sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -J. -ofunittests"
   sh "./unittests"
 end
 CLEAN.include("unittests")
