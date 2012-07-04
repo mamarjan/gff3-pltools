@@ -109,7 +109,7 @@ should be compared to.
 
 Parts of the expression are separated by a colon, ':', and if colon
 is suposed to be part of a field name or value, it can be escaped
-like this: "\:".
+like this: "\\:".
 
 Valid field names are: seqname, source, feature, start, end, score,
 strand and phase.
@@ -143,11 +143,11 @@ or
     gff3-ffetch --filter not:attribute:ID:equals: path-to-file.gff3
 ```
 
-However, the two last options are not completely the same. In cases
+However, the last two commands are not completely the same. In cases
 where an attribute has multiple values, the Parent attribute for
 example, the "attribute" predicate first runs the contained predicate
 on all attribute's values and returns true when an operation
-returns true for a parent value. That is, it has an implicit and
+returns true for a parent value. That is, it has an implicit "and"
 operation built-in.
 
 There are a few more options available. In the examples above, the
@@ -182,7 +182,12 @@ The validation utility can be used like this:
     ./gff3-validate path/to/file.gff3
 ```
 
-It will output any errors it finds to standard output.
+It will output any errors it finds to standard output. However, the
+validation utility is currently very basic, and checks only for a few
+cases: the number of columns, characters that should have been
+escaped, are the start and stop coordinates integers and if the end
+is greater then start, whether score is a float, valid values for
+strand and phase, and the format of attributes.
 
 ### Benchmarking utility
 
@@ -205,13 +210,16 @@ line options:
   -l     link feature into parent-child relationships
 ```
 
+Before exiting the utility prints the number of records or features
+it parsed.
+
 ### Counting features
 
 The gff3-ffetch utility keeps only a small part of records in memory
 while combining them into features. To check if the cache size is
 correct, the "gff3-count-features" utility can be used to get the
 correct number of features in a file. It gets all the IDs into
-memory first, and the devises the correct number of features.
+memory first, and then devises the correct number of features.
 
 To get the correct number of features in a file, use the following
 command:
