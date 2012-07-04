@@ -70,15 +70,18 @@ then start the "features" rake task, like this:
 
 ### Ruby library
 
+To use the library in your code, after installing the gem, simply
+require the library:
+
 ```ruby
     require 'bio-gff3-pltools'
 ```
 
-TODO: Generate API docs and find a nice place for them somewhere on
-the net.
+The API docs are online:
 
-The API doc is online. For more code examples see the test files in
-the source tree.
+  http://mamarjan.github.com/gff3-pltools/docs/0.1.0/ruby-api/ 
+
+For more code examples see the test files in the source tree.
 
 ### gff3-ffetch utility
 
@@ -219,7 +222,11 @@ command:
 
 ## Project home page
 
-For information on the source tree, documentation, examples, issues and
+Project home page can be found at the following location:
+
+  http://mamarjan.github.com/gff3-pltools/
+
+For information on the source tree, issues and
 how to contribute, see
 
   http://github.com/mamarjan/gff3-pltools
