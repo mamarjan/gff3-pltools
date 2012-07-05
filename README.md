@@ -20,6 +20,12 @@ for your platform:
 
   http://dlang.org/download.html
 
+OS X users can install DMD using homebrew:
+
+```sh
+    brew install dmd
+```
+
 Also, the rake utility is necessary to run the automated build
 scripts.
 
@@ -52,7 +58,8 @@ the "bin/" directory to your PATH.
 
 ### Run tests
 
-You can use the "unittests" rake task to run D unittests, like this:
+The DMD compiler and rake utility are required to run the tests. You
+can use the "unittests" rake task to run D unittests, like this:
 
 ```sh
     rake unittests
