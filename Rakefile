@@ -74,15 +74,15 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "bio-gff3-pltools"
-  gem.homepage = "http://github.com/mamarjan/gff3-pltools"
+  gem.homepage = "http://mamarjan.github.com/gff3-pltools/"
   gem.license = "MIT"
-  gem.summary = %Q{Fast parallel GFF3 tools}
-  gem.description = %Q{Fast parallel GFF3 tools, still in early development phase.}
+  gem.summary = %Q{Ruby wrapper for the gff3-pltools.}
+  gem.description = %Q{Ruby wrapper for the gff3-pltools.}
   gem.email = "marian.povolny@gmail.com"
   gem.authors = ["Marjan Povolni"]
-  gem.executables = ["gff3-ffetch", "gff3-benchmark", "gff3-validate", "gff3-count-features"]
+#  gem.executables = ["gff3-ffetch", "gff3-benchmark", "gff3-validate", "gff3-count-features"]
   gem.files.clear
-  gem.files.include 'bin/_*'
+#  gem.files.include 'bin/_*'
   gem.files.include 'lib/**/**.rb'
   gem.files.include 'VERSION'
   # dependencies defined in Gemfile
