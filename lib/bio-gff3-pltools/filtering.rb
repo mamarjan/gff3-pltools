@@ -5,7 +5,7 @@ module Bio
       # an external file. Options include :output and :at_most.
       def self.filter_file filename, filter_string, options = {}
         if !File.exists?(filename)
-          raise Exception("No such file - #{filename}")
+          raise Exception.new("No such file - #{filename}")
         end
 
         output_option = nil
