@@ -19,6 +19,7 @@ class FeatureRange : RangeWithCache!Feature {
   this(RangeWithCache!Record records, size_t feature_cache_size = 1000, bool link_features = false) {
     this.records = records;
     this.data = new FeatureCache(feature_cache_size, link_features);
+    this.link_features = link_features;
   }
 
   protected Feature next_item() {
@@ -36,6 +37,7 @@ class FeatureRange : RangeWithCache!Feature {
   private {
     RangeWithCache!Record records;
     FeatureCache data;
+    bool link_features = false;
   }
 }
 
@@ -54,6 +56,25 @@ class FeatureCache {
     this.list = new FeatureCacheItem[max_size];
   }
 
+  FeatureCacheItem * find(string id) {
+    int id_hash = 0;
+    if (id != null) {
+      id_hash = hash(id);
+      FeatureCacheItem * item = dlist.first;
+      while(item !is null) {
+        if (item.id_hash == id_hash) {
+          // Hashes are the same, make sure the IDs are too
+          if (item.feature.id == id) {
+            return item;
+          }
+        }
+        item = item.next;
+      }
+    }
+    return null;
+  }
+
+
   /**
    * If the feature with the same ID is already in the cache, this method
    * adds the new record to that feature and returns null. Otherwise it
@@ -61,35 +82,19 @@ class FeatureCache {
    * feature in the cache.
    */
   Feature add_record(Record new_record) {
-    int record_hash = 0;
-    if (new_record.id != null) {
-      record_hash = hash(new_record.id);
-      FeatureCacheItem * item = dlist.first;
-      while(item !is null) {
-        if (item.id_hash == record_hash) {
-          if (item.feature.id == new_record.id) {
-            item.feature.add_record(new_record);
-            dlist.remove(item);
-            dlist.insert_front(item);
-            return null;
-          }
-        }
-        item = item.next;
-      }
+    FeatureCacheItem * item = find(new_record.id);
+    if (item !is null) {
+      item.feature.add_record(new_record);
+      dlist.move_to_front(item);
+      return null;
     }
-    auto new_item = FeatureCacheItem(record_hash, hash(new_record.parent), new Feature(new_record), null, null);
+    auto new_item = FeatureCacheItem(hash(new_record.id), hash(new_record.parent), new Feature(new_record), null, null);
     Feature result;
-    if (current_size != max_size) {
-      list[current_size] = new_item;
-      dlist.insert_front(&(list[current_size]));
-      current_size++;
+    if (!cache_full) {
+      add_new_item(new_item);
       result = null;
     } else {
-      FeatureCacheItem * item = dlist.remove_back();
-      auto feature = item.feature;
-      *item = new_item;
-      dlist.insert_front(item);
-      result = feature;
+      result = replace_and_return_oldest(new_item);
     }
     if (link_features) {
       check_for_children_and_parents(result);
@@ -114,6 +119,22 @@ class FeatureCache {
   }
 
   private {
+    void add_new_item(FeatureCacheItem new_item) {
+      list[current_size] = new_item;
+      dlist.insert_front(&(list[current_size]));
+      current_size++;
+    }
+
+    Feature replace_and_return_oldest(FeatureCacheItem new_item) {
+      auto item = dlist.remove_back();
+      auto feature = item.feature;
+      *item = new_item;
+      dlist.insert_front(item);
+      return feature;
+    }
+
+    @property bool cache_full() { return current_size == max_size; }
+
     void check_for_children_and_parents(Feature feature) {
       if (feature !is null) {
         bool search_for_parent = ((feature.parent_feature is null) &&

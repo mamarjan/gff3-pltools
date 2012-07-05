@@ -72,6 +72,14 @@ class DList(T) {
   }
 
   /**
+   * Moves the item to the front of this list.
+   */
+  void move_to_front(T * item) {
+    remove(item);
+    insert_front(item);
+  }
+
+  /**
    * Remove and return the last item in the list.
    */
   T * remove_back() {
