@@ -18,7 +18,7 @@ class FeatureRange : RangeWithCache!Feature {
    */
   this(RangeWithCache!Record records, size_t feature_cache_size = 1000, bool link_features = false) {
     this.records = records;
-    this.data = new FeatureCache(feature_cache_size, link_features);
+    this.data = new FeatureQueue(feature_cache_size, link_features);
     this.link_features = link_features;
   }
 
@@ -36,7 +36,7 @@ class FeatureRange : RangeWithCache!Feature {
 
   private {
     RangeWithCache!Record records;
-    FeatureCache data;
+    FeatureQueue data;
     bool link_features = false;
   }
 }
@@ -48,19 +48,19 @@ private:
  * some buffer space for records which are at most max_size records
  * far from the last record which is part of the same feature.
  */
-class FeatureCache {
+class FeatureQueue {
     this(size_t max_size = 1000, bool link_features = false) {
     this.max_size = max_size;
     this.link_features = link_features;
-    this.dlist = new DList!FeatureCacheItem();
-    this.list = new FeatureCacheItem[max_size];
+    this.dlist = new DList!FeatureQueueItem();
+    this.list = new FeatureQueueItem[max_size];
   }
 
-  FeatureCacheItem * find(string id) {
+  FeatureQueueItem * find(string id) {
     int id_hash = 0;
     if (id != null) {
       id_hash = hash(id);
-      FeatureCacheItem * item = dlist.first;
+      FeatureQueueItem * item = dlist.first;
       while(item !is null) {
         if (item.id_hash == id_hash) {
           // Hashes are the same, make sure the IDs are too
@@ -82,13 +82,13 @@ class FeatureCache {
    * feature in the cache.
    */
   Feature add_record(Record new_record) {
-    FeatureCacheItem * item = find(new_record.id);
+    FeatureQueueItem * item = find(new_record.id);
     if (item !is null) {
       item.feature.add_record(new_record);
       dlist.move_to_front(item);
       return null;
     }
-    auto new_item = FeatureCacheItem(hash(new_record.id), hash(new_record.parent), new Feature(new_record), null, null);
+    auto new_item = FeatureQueueItem(hash(new_record.id), hash(new_record.parent), new Feature(new_record), null, null);
     Feature result;
     if (!cache_full) {
       add_new_item(new_item);
@@ -119,13 +119,13 @@ class FeatureCache {
   }
 
   private {
-    void add_new_item(FeatureCacheItem new_item) {
+    void add_new_item(FeatureQueueItem new_item) {
       list[current_size] = new_item;
       dlist.insert_front(&(list[current_size]));
       current_size++;
     }
 
-    Feature replace_and_return_oldest(FeatureCacheItem new_item) {
+    Feature replace_and_return_oldest(FeatureQueueItem new_item) {
       auto item = dlist.remove_back();
       auto feature = item.feature;
       *item = new_item;
@@ -144,7 +144,7 @@ class FeatureCache {
         if (search_for_parent || search_for_children) {
           int feature_hash = hash(feature.id);
           int parent_hash = hash(feature.parent);
-          FeatureCacheItem * item = dlist.first;
+          FeatureQueueItem * item = dlist.first;
           while((item !is null) && (search_for_parent || search_for_children)) {
             if (search_for_parent) {
               if (item.id_hash == parent_hash) {
@@ -169,8 +169,8 @@ class FeatureCache {
       }
     }
 
-    DList!FeatureCacheItem dlist;
-    FeatureCacheItem[] list;
+    DList!FeatureQueueItem dlist;
+    FeatureQueueItem[] list;
 
     size_t max_size;
     bool link_features = false;
@@ -178,13 +178,13 @@ class FeatureCache {
   }
 }
 
-struct FeatureCacheItem {
+struct FeatureQueueItem {
   int id_hash;
   int parent_hash;
   Feature feature;
 
-  FeatureCacheItem * prev;
-  FeatureCacheItem * next;
+  FeatureQueueItem * prev;
+  FeatureQueueItem * next;
 }
 
 import std.stdio, std.conv;
