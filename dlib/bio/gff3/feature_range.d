@@ -57,19 +57,9 @@ class FeatureQueue {
   }
 
   FeatureQueueItem * find(string id) {
-    int id_hash = 0;
     if (id != null) {
-      id_hash = hash(id);
-      FeatureQueueItem * item = dlist.first;
-      while(item !is null) {
-        if (item.id_hash == id_hash) {
-          // Hashes are the same, make sure the IDs are too
-          if (item.feature.id == id) {
-            return item;
-          }
-        }
-        item = item.next;
-      }
+      if (id in lookup_list)
+        return lookup_list[id];
     }
     return null;
   }
@@ -88,7 +78,7 @@ class FeatureQueue {
       dlist.move_to_front(item);
       return null;
     }
-    auto new_item = FeatureQueueItem(hash(new_record.id), hash(new_record.parent), new Feature(new_record), null, null);
+    auto new_item = FeatureQueueItem(hash(new_record.parent), new Feature(new_record), null, null);
     Feature result;
     if (!cache_full) {
       add_new_item(new_item);
@@ -109,6 +99,7 @@ class FeatureQueue {
   Feature remove_from_back() {
     auto item = dlist.remove_back();
     if (item !is null) {
+      lookup_list.remove(item.feature.id);
       if (link_features) {
         check_for_children_and_parents(item.feature);
       }
@@ -122,6 +113,7 @@ class FeatureQueue {
     void add_new_item(FeatureQueueItem new_item) {
       list[current_size] = new_item;
       dlist.insert_front(&(list[current_size]));
+      lookup_list[new_item.feature.id] = &(list[current_size]);
       current_size++;
     }
 
@@ -130,6 +122,8 @@ class FeatureQueue {
       auto feature = item.feature;
       *item = new_item;
       dlist.insert_front(item);
+      lookup_list.remove(feature.id);
+      lookup_list[new_item.feature.id] = item;
       return feature;
     }
 
@@ -141,20 +135,15 @@ class FeatureQueue {
                                   (feature.parent !is null));
         bool search_for_children = feature.id !is null;
         // Search for parents or children
-        if (search_for_parent || search_for_children) {
+        if (search_for_parent) {
+          if (feature.parent in lookup_list)
+            feature.set_parent_feature(lookup_list[feature.parent].feature);
+        }
+        if (search_for_children) {
           int feature_hash = hash(feature.id);
           int parent_hash = hash(feature.parent);
           FeatureQueueItem * item = dlist.first;
-          while((item !is null) && (search_for_parent || search_for_children)) {
-            if (search_for_parent) {
-              if (item.id_hash == parent_hash) {
-                if (item.feature.id == feature.parent) {
-                  feature.set_parent_feature(item.feature);
-                  item.feature.add_child(feature);
-                  search_for_parent = false;
-                }
-              }
-            }
+          while((item !is null) && search_for_children) {
             if (search_for_children) {
               if (item.parent_hash == feature_hash) {
                 if (item.feature.parent == feature.id) {
@@ -171,6 +160,7 @@ class FeatureQueue {
 
     DList!FeatureQueueItem dlist;
     FeatureQueueItem[] list;
+    FeatureQueueItem*[string] lookup_list;
 
     size_t max_size;
     bool link_features = false;
@@ -179,7 +169,6 @@ class FeatureQueue {
 }
 
 struct FeatureQueueItem {
-  int id_hash;
   int parent_hash;
   Feature feature;
 
