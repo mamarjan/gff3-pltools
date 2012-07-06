@@ -181,6 +181,10 @@ If there are more then a 1000 records in the results, after the
 1000th record printed, a line is appended with the following content:
 "# ..." and the utility terminates.
 
+To pass through the FASTA data contained in a GFF3 file, you can use
+the "--pass-fasta-through" option. If there is FASTA data in it, it
+will be copies to output after the GFF3 records.
+
 ### GFF3 File validation
 
 The validation utility can be used like this:

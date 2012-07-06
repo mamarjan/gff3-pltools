@@ -18,15 +18,17 @@ int main(string[] args) {
   // Parse command line arguments
   string filter_string = null;
   string output_filename = null;
-  ulong at_most = 0;
+  ulong at_most = -1;
   bool show_version = false;
+  bool pass_fasta_through = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "filter|f", &filter_string,
         "output|o", &output_filename,
         "at-most|a", &at_most,
-        "version", &show_version);
+        "version", &show_version,
+        "pass-fasta-through", &pass_fasta_through);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
@@ -80,18 +82,30 @@ int main(string[] args) {
 
   // Parsing, filtering and output
   ulong record_counter = 0;
-  if (at_most == 0) {
+  if (at_most < 0) {
     foreach(rec; records) {
       output.writeln(rec.toString());
     }
   } else {
     foreach(rec; records) {
-      if (record_counter >= at_most) {
+      if (record_counter == at_most) {
         output.write("# ...");
         break;
       } else {
         output.writeln(rec.toString());
         record_counter++;
+      }
+    }
+  }
+
+  // Print FASTA data if there is any and if the
+  // line output limit has not been reached
+  if (record_counter != at_most) {
+    if (pass_fasta_through) {
+      auto fasta_data = records.get_fasta_data();
+      if (fasta_data !is null) {
+        output.writeln("##FASTA");
+        output.write(fasta_data);
       }
     }
   }
@@ -111,6 +125,8 @@ void print_usage() {
   writeln("  -a, --at-most  At most this number of lines/records will be parsed.");
   writeln("                 If there are more records a line with \"# ...\" will");
   writeln("                 be appended at the end of the file.");
+  writeln("  --pass-fasta-through");
+  writeln("                 Copy the FASTA data at the end of the file to output");
   writeln("  --version      Output version information and exit.");
   writeln();
   writeln("See package README for more information on what filtering expressions");
