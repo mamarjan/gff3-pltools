@@ -2,7 +2,7 @@ require 'tmpdir'
 
 Given /^I have a GFF3 file$/ do
   @filename = "./test/data/knownGene.gff3"
-  File.exists?(@filename)
+  File.exists?(@filename).should be_true
 end
 
 When /^I set up the filter to leave only records with a particular ID$/ do
@@ -14,7 +14,10 @@ When /^set the output to be a string$/ do
 end
 
 When /^run the filter$/ do
-  @result = Bio::PL::GFF3.filter_file @filename, @filter_string, output: @output_filename, at_most: @at_most
+  @result = Bio::PL::GFF3.filter_file @filename, @filter_string,
+                                      output: @output_filename,
+                                      at_most: @at_most,
+                                      pass_fasta_through: @pass_fasta_through
 end
 
 Then /^I should receive a string with lines which have that ID$/ do

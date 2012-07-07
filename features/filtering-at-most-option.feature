@@ -1,6 +1,7 @@
 Feature: Limiting the result of gff3-ffetch tool to a certain number of lines
 
-  The goal of this feature is to make this functionality
+  The goal of this feature is to let the users
+  limit the number of lines in the output of gff3-ffetch.
 
   Scenario: limiting output while filtering a file
     Given I have a GFF3 file
