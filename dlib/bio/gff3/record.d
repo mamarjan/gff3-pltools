@@ -111,22 +111,20 @@ class Record {
   }
 
   /**
-   * Converts this object to a GFF3 line.
+   * Appends the record to an Appender object, in the format
+   * of a line in a GFF3 file.
    */
-  string toString() {
-    auto result = appender!(char[])();
-
-
+  void append_to(Appender!(char[]) app) {
     void append_field(string field_value, InvalidCharProc is_char_invalid) {
       if (field_value.length == 0) {
-        result.put(".");
+        app.put(".");
       } else {
         if ((!replace_esc_chars) || (is_char_invalid is null))
-          result.put(field_value);
+          app.put(field_value);
         else
-          append_and_escape_chars(result, field_value, is_char_invalid);
+          append_and_escape_chars(app, field_value, is_char_invalid);
       }
-      result.put('\t');
+      app.put('\t');
     }
 
     append_field(seqname, is_invalid_in_seqname);
@@ -139,19 +137,27 @@ class Record {
     append_field(phase, null);
 
     if (attributes.length == 0) {
-      result.put('.');
+      app.put('.');
     } else {
       bool first_attr = true;
       foreach(attr_name, attr_value; attributes) {
         if (first_attr)
           first_attr = false;
         else
-          result.put(';');
-        append_and_escape_chars(result, attr_name, is_invalid_in_attribute);
-        result.put('=');
-        attr_value.append_to_string(result);
+          app.put(';');
+        append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+        app.put('=');
+        attr_value.append_to_string(app);
       }
     }
+  }
+
+  /**
+   * Converts this object to a GFF3 line.
+   */
+  string toString() {
+    auto result = appender!(char[])();
+    append_to(result);
 
     return cast(string)(result.data);
   }
