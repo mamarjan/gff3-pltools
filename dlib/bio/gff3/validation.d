@@ -110,11 +110,15 @@ string validate_gff3_line(string line) {
 
   if (error_msg is null) error_msg = validate_seqname(get_and_skip_next_field(line));
   if (error_msg is null) error_msg = validate_source(get_and_skip_next_field(line));
-  if (error_msg is null) error_msg = validate_feature(get_and_skip_next_field(line));
+  string feature;
+  if (error_msg is null) {
+    feature = get_and_skip_next_field(line);
+    error_msg = validate_feature(feature);
+  }
   if (error_msg is null) error_msg = validate_coordinates(get_and_skip_next_field(line), get_and_skip_next_field(line));
   if (error_msg is null) error_msg = validate_score(get_and_skip_next_field(line));
   if (error_msg is null) error_msg = validate_strand(get_and_skip_next_field(line));
-  if (error_msg is null) error_msg = validate_phase(get_and_skip_next_field(line));
+  if (error_msg is null) error_msg = validate_phase(get_and_skip_next_field(line), feature);
 
   if (error_msg is null) error_msg = validate_attributes(get_and_skip_next_field(line));
 
@@ -226,7 +230,7 @@ string validate_strand(string strand) {
 
 // Validation of phase
 
-string validate_phase(string phase) {
+string validate_phase(string phase, string feature) {
   auto error_msg = check_if_empty_field("phase", phase);
   if (error_msg is null) {
     switch(phase) {
@@ -236,6 +240,11 @@ string validate_phase(string phase) {
         error_msg = "Invalid phase field";
         break;
     }
+  }
+  if (error_msg is null) {
+    if (feature == "CDS")
+      if (phase == ".")
+        error_msg = "Phase field can't be undefined for CDS features";
   }
   return error_msg;
 }
@@ -399,6 +408,8 @@ unittest {
   // Test for phase field with invalid values
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\ta\t.") !is null);
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t12\t.") !is null);
+  // Test for CDS feature with an undefined value for phase
+  assert(validate_gff3_line(".\t.\tCDS\t.\t.\t.\t.\t.\t.") !is null);
   // Test for invalid values in Is_circular
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=invalid") !is null);
 }
