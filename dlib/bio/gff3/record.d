@@ -70,45 +70,20 @@ class Record {
   AttributeValue[string] attributes;
 
   /**
-   * Returns the ID attribute from record attributes.
+   * Accessor methods for most important attributes:
    */
-  @property string id() {
-    if ("ID" in attributes)
-      return attributes["ID"].first;
-    else
-      return null;
-  }
-
-  /**
-   * Returns the first value of the Parent attribute
-   */
-  @property string parent() {
-    if ("Parent" in attributes)
-      return attributes["Parent"].first;
-    else
-      return null;
-  }
-
-  /**
-   * Returns all values in the Parent attribute
-   */
-  @property string[] parents() {
-    if ("Parent" in attributes)
-      return attributes["Parent"].all;
-    else
-      return null;
-  }
-
-  /**
-   * Returns true if the attribute Is_circular is true for
-   * this record.
-   */
-  @property bool is_circular() {
-    if ("Is_circular" in attributes)
-      return attributes["Is_circular"].first == "true";
-    else
-      return false;
-  }
+  @property string   id()            { return ("ID" in attributes)            ? attributes["ID"].first                      : null;  }
+  @property string   name()          { return ("Name" in attributes)          ? attributes["Name"].first                    : null;  }
+  @property string   alias_attr()    { return ("Alias" in attributes)         ? attributes["Alias"].first                   : null;  }
+  @property string   parent()        { return ("Parent" in attributes)        ? attributes["Parent"].first                  : null;  }
+  @property string[] parents()       { return ("Parent" in attributes)        ? attributes["Parent"].all                    : null;  }
+  @property string   target()        { return ("Target" in attributes)        ? attributes["Target"].first                  : null;  }
+  @property string   gap()           { return ("Gap" in attributes)           ? attributes["Gap"].first                     : null;  }
+  @property string   derives_from()  { return ("Derives_from" in attributes)  ? attributes["Derives_from"].first            : null;  }
+  @property string   note()          { return ("Note" in attributes)          ? attributes["Note"].first                    : null;  }
+  @property string   dbxref()        { return ("Dbxref" in attributes)        ? attributes["Dbxref"].first                  : null;  }
+  @property string   ontology_term() { return ("Ontology_term" in attributes) ? attributes["Ontology_term"].first           : null;  }
+  @property bool     is_circular()   { return ("Is_circular" in attributes)   ? (attributes["Is_circular"].first == "true") : false; }
 
   /**
    * Appends the record to an Appender object, in the format
@@ -413,6 +388,11 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")).id == "1");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=")).id == "");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).id is null);
+
+  // Test name() method/property
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tName=my_name")).name == "my_name");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tName=")).name == "");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).name is null);
 
   // Test isCircular() method/property
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).is_circular == false);
