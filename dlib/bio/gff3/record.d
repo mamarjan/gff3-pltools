@@ -114,7 +114,7 @@ class Record {
    * Appends the record to an Appender object, in the format
    * of a line in a GFF3 file.
    */
-  void append_to(Appender!(char[]) app) {
+  void append_to(Appender!(char[]) app, bool add_newline = false) {
     void append_field(string field_value, InvalidCharProc is_char_invalid) {
       if (field_value.length == 0) {
         app.put(".");
@@ -150,6 +150,9 @@ class Record {
         attr_value.append_to_string(app);
       }
     }
+
+    if (add_newline)
+      app.put('\n');
   }
 
   /**
