@@ -3,7 +3,6 @@
 require 'rake/clean'
 
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
-puts ENV["PATH"]
 
 directory "bin"
 CLEAN.include("bin/")
