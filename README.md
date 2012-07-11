@@ -5,8 +5,7 @@
 Note: this software is under active development!
 
 This is currently an early work in progress to create parallel GFF3
-and GTF parallel tools for D and a Ruby gem which would let Ruby
-programmers use those tools from Ruby.
+and GTF parser library and tools in D.
 
 ## Installation
 
@@ -31,30 +30,20 @@ scripts.
 
 ### Build and install instructions
 
-Users of 32-bit and 64-bit Linux can download pre-build binary gems
-and install them using the gem command:
-
-```sh
-    gem install bio-gff3-pltools-linux32-X.Y.Z.gem
-```
+Users of 32-bit and 64-bit Linux can download pre-build binar packages
+and install them by copying the binaries to somewhere in the PATH.
 
 Users of other plaforms can download the source package, and build
 it themselves given the DMD compiler is available for their platform.
 
-To build and install a gem for your platform, use the following steps:
+To build the binaries, download the source and use the "utilities"
+task:
 
 ```sh
-    tar -zxvf bio-gff3-pltools-X.Y.Z.tar.gz
-    cd bio-gff3-pltools-X.Y.Z
-    rake install
+    tar -zxvf gff3-pltools-X.Y.Z.tar.gz
+    cd gff3-pltools-X.Y.Z
+    rake utilities
 ```
-
-To build a gem without installing, use the rake task "build" instead
-of install in the previous example.
-
-To build the binary tools without building a gem or a Ruby library,
-invoke the "utilities" rake task instead and copy the binaries from
-the "bin/" directory to your PATH.
 
 ### Run tests
 
@@ -65,30 +54,7 @@ can use the "unittests" rake task to run D unittests, like this:
     rake unittests
 ```
 
-To run tests for the Ruby library, first build the D utilities and
-then start the "features" rake task, like this:
-
-```sh
-    rake utilities
-    rake features
-```
-
 ## Usage
-
-### Ruby library
-
-To use the library in your code, after installing the gem, simply
-require the library:
-
-```ruby
-    require 'bio-gff3-pltools'
-```
-
-The API docs are online:
-
-  http://mamarjan.github.com/gff3-pltools/docs/0.1.0/ruby-api/ 
-
-For more code examples see the test files in the source tree.
 
 ### gff3-ffetch utility
 
@@ -249,19 +215,6 @@ For information on the source tree, issues and
 how to contribute, see
 
   http://github.com/mamarjan/gff3-pltools
-
-The BioRuby community is on IRC server: irc.freenode.org, channel: #bioruby.
-
-## Cite
-
-If you use this software, please cite one of
-  
-* [BioRuby: bioinformatics software for the Ruby programming language](http://dx.doi.org/10.1093/bioinformatics/btq475)
-* [Biogem: an effective tool-based approach for scaling up open source software development in bioinformatics](http://dx.doi.org/10.1093/bioinformatics/bts080)
-
-## Biogems.info
-
-This Biogem is published at [#bio-gff3-pltools](http://biogems.info/index.html)
 
 ## Copyright
 
