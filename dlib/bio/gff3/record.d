@@ -9,16 +9,31 @@ import util.esc_char_conv, util.split_line;
  * Represents a parsed line in a GFF3 file.
  */
 class Record {
+  enum RecordType {
+    REGULAR,
+    COMMENT,
+    PRAGMA
+  }
+
   /**
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
-    this.replace_esc_chars = replace_esc_chars;
-    if (replace_esc_chars && (line.indexOf('%') != -1))
-      parse_line_and_replace_esc_chars(line);
-    else
-      parse_line(line);
+    if (line_is_pragma()) {
+      record_type = RecordType.PRAGMA;
+      comment_or_pragma = line;
+    } else if (line_is_comment(line)) {
+      record_type = RecordType.COMMENT;
+      comment_or_pragma = line;
+    } else {
+      record_type = RecordType.REGULAR;
+      this.replace_esc_chars = replace_esc_chars;
+      if (replace_esc_chars && (line.indexOf('%') != -1))
+        parse_line_and_replace_esc_chars(line);
+      else
+        parse_line(line);
+    }
   }
 
   /**
@@ -89,6 +104,10 @@ class Record {
   @property string[] ontology_terms() { return ("Ontology_term" in attributes) ? attributes["Ontology_term"].all             : null;  }
   @property bool     is_circular()    { return ("Is_circular" in attributes)   ? (attributes["Is_circular"].first == "true") : false; }
 
+  @property bool is_regular() { return record_type == RecordType.REGULAR; }
+  @property bool is_comment() { return record_type == RecordType.COMMENT; }
+  @property bool is_pragma() { return record_type == RecordType.PRAGMA; }
+
   /**
    * Appends the record to an Appender object, in the format
    * of a line in a GFF3 file.
@@ -146,6 +165,8 @@ class Record {
 
   private {
     bool replace_esc_chars;
+    RecordType record_type = RecordType.REGULAR;
+    string comment_or_pragma;
 
     static AttributeValue[string] parse_attributes(string attributes_field) {
       AttributeValue[string] attributes;
@@ -272,6 +293,15 @@ struct AttributeValue {
   }
 }
 
+private {
+  bool line_is_pragma(T)(T[] line) {
+    return line[0..2] == "##";
+  }
+
+  bool line_is_comment(T)(T[] line) {
+    return (line[0] == '#') && (line[1] != '#');
+  }
+}
 
 unittest {
   writeln("Testing AttributeValue...");
@@ -444,5 +474,18 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
+}
+
+unittest {
+  writeln("Testing line_is_comment...");
+  assert(line_is_comment("# test") == true);
+  assert(line_is_comment("     # test") == true);
+  assert(line_is_comment("# test\n") == true);
+
+  writeln("Testing line_is_pragma...");
+  assert(line_is_pragma("# test") == false);
+  assert(line_is_pragma("## test") == true);
+  assert(line_is_pragma("test") == false);
+  assert(line_is_pragma("### test") == true);
 }
 

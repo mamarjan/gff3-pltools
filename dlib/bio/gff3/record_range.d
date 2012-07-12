@@ -75,9 +75,7 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     Record result;
     while (!data.empty) {
       line = data.front;
-      if (is_comment(line)) {
-        // skip line
-      } else if (is_empty_line(line)) {
+      if (line_is_empty(line)) {
         // skip line
       } else if (is_start_of_fasta(line)) {
         fasta_mode = true;
@@ -146,12 +144,8 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
 
 private {
 
-  bool is_empty_line(T)(T[] line) {
+  bool line_is_empty(T)(T[] line) {
     return line.strip() == "";
-  }
-
-  bool is_comment(T)(T[] line) {
-    return indexOf(line, '#') != -1;
   }
 
   bool is_start_of_fasta(T)(T[] line) {
@@ -160,15 +154,10 @@ private {
 }
 
 unittest {
-  writeln("Testing is_comment...");
-  assert(is_comment("# test") == true);
-  assert(is_comment("     # test") == true);
-  assert(is_comment("# test\n") == true);
-
-  writeln("Testing is_empty_line...");
-  assert(is_empty_line("") == true);
-  assert(is_empty_line("    ") == true);
-  assert(is_empty_line("\n") == true);
+  writeln("Testing line_is_empty...");
+  assert(line_is_empty("") == true);
+  assert(line_is_empty("    ") == true);
+  assert(line_is_empty("\n") == true);
 
   writeln("Testing is_start_of_fasta...");
   assert(is_start_of_fasta("##FASTA") == true);
