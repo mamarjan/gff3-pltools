@@ -147,28 +147,28 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
 private {
 
   bool is_empty_line(T)(T[] line) {
-    return line.strip() == "";
+    //return line.strip() == "";
+    return (line.length == 0) || (line[0] == ' ') || (line[0] == '\t');
   }
 
   bool is_comment(T)(T[] line) {
-    return indexOf(line, '#') != -1;
+    return (line.length > 0) && (line[0] == '#');
   }
 
   bool is_start_of_fasta(T)(T[] line) {
-    return (line.length >= 1) ? (line.startsWith("##FASTA") || is_fasta_header(line)) : false;
+    return (((line.length >= 7) && (line[0..7] == "##FASTA")) ||
+            ((line.length >= 1) && is_fasta_header(line)));
   }
 }
 
 unittest {
   writeln("Testing is_comment...");
   assert(is_comment("# test") == true);
-  assert(is_comment("     # test") == true);
   assert(is_comment("# test\n") == true);
 
   writeln("Testing is_empty_line...");
   assert(is_empty_line("") == true);
   assert(is_empty_line("    ") == true);
-  assert(is_empty_line("\n") == true);
 
   writeln("Testing is_start_of_fasta...");
   assert(is_start_of_fasta("##FASTA") == true);
