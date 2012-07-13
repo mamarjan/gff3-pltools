@@ -21,6 +21,9 @@ int main(string[] args) {
   ulong at_most = -1;
   bool show_version = false;
   bool pass_fasta_through = false;
+  bool keep_comments = false;
+  bool keep_pragmas = false;
+  bool help = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
@@ -28,12 +31,20 @@ int main(string[] args) {
         "output|o", &output_filename,
         "at-most|a", &at_most,
         "version", &show_version,
-        "pass-fasta-through", &pass_fasta_through);
+        "pass-fasta-through", &pass_fasta_through,
+        "keep-comments", &keep_comments,
+        "keep-pragmas", &keep_pragmas,
+        "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
     writeln();
     print_usage();
     return 1; // Exit the application
+  }
+
+  if (help) {
+    print_usage();
+    return 0;
   }
 
   if (show_version) {
@@ -80,6 +91,9 @@ int main(string[] args) {
                                         string_to_filter(filter_string));
   }
 
+  records.set_keep_comments(keep_comments);
+  records.set_keep_pragmas(keep_pragmas);
+
   // Parsing, filtering and output
   ulong record_counter = 0;
   if (at_most < 0) {
@@ -118,16 +132,19 @@ void print_usage() {
   writeln("Parse GFF3 file and write records to stdout");
   writeln();
   writeln("Options:");
-  writeln("  -f, --filter   A filtering expresion. Only records which match the");
-  writeln("                 expression will be passed to stdout or output file.");
-  writeln("  -o, --output   Instead of writing results to stdout, write them to");
-  writeln("                 this file.");
-  writeln("  -a, --at-most  At most this number of lines/records will be parsed.");
-  writeln("                 If there are more records a line with \"# ...\" will");
-  writeln("                 be appended at the end of the file.");
+  writeln("  -f, --filter    A filtering expresion. Only records which match the");
+  writeln("                  expression will be passed to stdout or output file.");
+  writeln("  -o, --output    Instead of writing results to stdout, write them to");
+  writeln("                  this file.");
+  writeln("  -a, --at-most   At most this number of lines/records will be parsed.");
+  writeln("                  If there are more records a line with \"# ...\" will");
+  writeln("                  be appended at the end of the file.");
   writeln("  --pass-fasta-through");
-  writeln("                 Copy the FASTA data at the end of the file to output");
-  writeln("  --version      Output version information and exit.");
+  writeln("                  Copy the FASTA data at the end of the file to output");
+  writeln("  --keep-comments Copy comments in GFF3 file to output");
+  writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
+  writeln("  --version       Output version information and exit.");
+  writeln("  --help          Print this information and exit.");
   writeln();
   writeln("See package README for more information on what filtering expressions");
   writeln("are allowed.");
