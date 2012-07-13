@@ -38,6 +38,24 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
   }
 
   /**
+   * The range will include records which represent comments in the original
+   * GFF3 file, if set to true.
+   */
+  auto set_keep_comments(bool keep = true) {
+    this.keep_comments = keep;
+    return this;
+  }
+
+  /**
+   * The range will include records which represent pragmas in the original
+   * GFF3 file, if set to true.
+   */
+  auto set_keep_pragmas(bool keep = true) {
+    this.keep_pragmas = keep;
+    return this;
+  }
+
+  /**
    * Retrieve a range of FASTA sequences appended to
    * GFF3 data.
    */
@@ -82,6 +100,16 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
         if (!is_fasta_header(line))
           dataPopFront(); // Remove ##FASTA line from data source
         break;
+      } else if (line_is_pragma(line)) {
+        if (keep_pragmas) {
+          result = new Record(line);
+          break;
+        }
+      } else if (line_is_comment(line)) {
+        if (keep_comments) {
+          result = new Record(line);
+          break;
+        }
       } else if (validate(filename, line_number, line)) {
         // Found line with a valid record
         if (before_filter(line)) {
@@ -111,6 +139,9 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
 
     string filename;
     int line_number = 1;
+
+    bool keep_comments = false;
+    bool keep_pragmas = false;
 
     /**
      * Skips all the GFF3 records until it gets to the start of

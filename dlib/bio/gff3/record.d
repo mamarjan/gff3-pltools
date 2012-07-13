@@ -20,7 +20,7 @@ class Record {
    * parser_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
-    if (line_is_pragma()) {
+    if (line_is_pragma(line)) {
       record_type = RecordType.PRAGMA;
       comment_or_pragma = line;
     } else if (line_is_comment(line)) {
@@ -293,7 +293,7 @@ struct AttributeValue {
   }
 }
 
-private {
+package {
   bool line_is_pragma(T)(T[] line) {
     return line[0..2] == "##";
   }
@@ -479,7 +479,6 @@ unittest {
 unittest {
   writeln("Testing line_is_comment...");
   assert(line_is_comment("# test") == true);
-  assert(line_is_comment("     # test") == true);
   assert(line_is_comment("# test\n") == true);
 
   writeln("Testing line_is_pragma...");
