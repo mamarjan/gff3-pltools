@@ -103,11 +103,13 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
       } else if (line_is_pragma(line)) {
         if (keep_pragmas) {
           result = new Record(line);
+          dataPopFront();
           break;
         }
       } else if (line_is_comment(line)) {
         if (keep_comments) {
           result = new Record(line);
+          dataPopFront();
           break;
         }
       } else if (validate(filename, line_number, line)) {
@@ -194,5 +196,116 @@ unittest {
   assert(is_start_of_fasta("##FASTA") == true);
   assert(is_start_of_fasta(">ctg123") == true);
   assert(is_start_of_fasta("Test 123") == false);
+}
+
+unittest {
+  writeln("Testing RecordRange...");
+  string test_data = q"EOS
+# example data set
+##gff-version 3
+chr17	UCSC	mRNA	62467934	62469545	.	-	.	ID=A00469;Dbxref=AFFX-U133:205840_x_at,Locuslink:2688,Genbank-mRNA:A00469,Swissprot:P01241,PFAM:PF00103,AFFX-U95:1332_f_at,Swissprot:SOMA_HUMAN;Note=growth%20hormone%201;Alias=GH1
+chr17	UCSC	CDS	62468039	62468236	.	-	1	Parent=A00469
+# This is the first comment
+chr17	UCSC	CDS	62468490	62468654	.	-	2	Parent=A00469
+chr17	UCSC	CDS	62468747	62468866	.	-	1	Parent=A00469
+## A pragma
+chr17	UCSC	CDS	62469497	62469506	.	-	0	Parent=A00469
+##FASTA
+>A00469
+GATTACA
+GATTACA
+EOS";
+
+  // Test with comments
+  auto range = new RecordRange!SplitIntoLines(new SplitIntoLines(test_data));
+  range.set_keep_comments();
+  assert(range.front.is_comment == true);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "# example data set");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == true);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "# This is the first comment");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.empty == true);
+
+  // Test with both comments and pragmas
+  range = new RecordRange!SplitIntoLines(new SplitIntoLines(test_data));
+  range.set_keep_comments();
+  range.set_keep_pragmas();
+  assert(range.front.is_comment == true);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "# example data set");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == true);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "##gff-version 3");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == true);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "# This is the first comment");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == true);
+  assert(range.front.is_regular == false);
+  assert(range.front.toString == "## A pragma");
+  range.popFront();
+  assert(range.front.is_comment == false);
+  assert(range.front.is_pragma == false);
+  assert(range.front.is_regular == true);
+  assert(range.front.toString.startsWith("chr17"));
+  range.popFront();
+  assert(range.empty == true);
+
 }
 
