@@ -113,40 +113,44 @@ class Record {
    * of a line in a GFF3 file.
    */
   void append_to(Appender!(char[]) app, bool add_newline = false) {
-    void append_field(string field_value, InvalidCharProc is_char_invalid) {
-      if (field_value.length == 0) {
-        app.put(".");
+    if (is_regular) {
+      void append_field(string field_value, InvalidCharProc is_char_invalid) {
+        if (field_value.length == 0) {
+          app.put(".");
+        } else {
+          if ((!replace_esc_chars) || (is_char_invalid is null))
+            app.put(field_value);
+          else
+            append_and_escape_chars(app, field_value, is_char_invalid);
+        }
+        app.put('\t');
+      }
+
+      append_field(seqname, is_invalid_in_seqname);
+      append_field(source, is_invalid_in_any_field);
+      append_field(feature, is_invalid_in_any_field);
+      append_field(start, null);
+      append_field(end, null);
+      append_field(score, null);
+      append_field(strand, null);
+      append_field(phase, null);
+
+      if (attributes.length == 0) {
+        app.put('.');
       } else {
-        if ((!replace_esc_chars) || (is_char_invalid is null))
-          app.put(field_value);
-        else
-          append_and_escape_chars(app, field_value, is_char_invalid);
+        bool first_attr = true;
+        foreach(attr_name, attr_value; attributes) {
+          if (first_attr)
+            first_attr = false;
+          else
+            app.put(';');
+          append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+          app.put('=');
+          attr_value.append_to_string(app);
+        }
       }
-      app.put('\t');
-    }
-
-    append_field(seqname, is_invalid_in_seqname);
-    append_field(source, is_invalid_in_any_field);
-    append_field(feature, is_invalid_in_any_field);
-    append_field(start, null);
-    append_field(end, null);
-    append_field(score, null);
-    append_field(strand, null);
-    append_field(phase, null);
-
-    if (attributes.length == 0) {
-      app.put('.');
     } else {
-      bool first_attr = true;
-      foreach(attr_name, attr_value; attributes) {
-        if (first_attr)
-          first_attr = false;
-        else
-          app.put(';');
-        append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
-        app.put('=');
-        attr_value.append_to_string(app);
-      }
+      app.put(comment_or_pragma);
     }
 
     if (add_newline)
@@ -157,10 +161,13 @@ class Record {
    * Converts this object to a GFF3 line.
    */
   string toString() {
-    auto result = appender!(char[])();
-    append_to(result);
-
-    return cast(string)(result.data);
+    if (is_regular()) {
+      auto result = appender!(char[])();
+      append_to(result);
+      return cast(string)(result.data);
+    } else {
+      return comment_or_pragma;
+    }
   }
 
   private {
@@ -474,6 +481,23 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
+
+  // Test comments
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);
+  assert((new Record("# test")).is_comment == true);
+  assert((new Record("## test")).is_comment == false);
+  assert((new Record("# test")).toString == "# test");
+
+  // Test pragmas
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_pragma == false);
+  assert((new Record("# test")).is_pragma == false);
+  assert((new Record("## test")).is_pragma == true);
+  assert((new Record("## test")).toString == "## test");
+
+  // Test is_regular
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_regular == true);
+  assert((new Record("# test")).is_regular == false);
+  assert((new Record("## test")).is_regular == false);
 }
 
 unittest {
