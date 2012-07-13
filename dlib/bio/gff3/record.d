@@ -9,16 +9,31 @@ import util.esc_char_conv, util.split_line;
  * Represents a parsed line in a GFF3 file.
  */
 class Record {
+  enum RecordType {
+    REGULAR,
+    COMMENT,
+    PRAGMA
+  }
+
   /**
    * Constructor for the Record object, arguments are passed to the
    * parser_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
-    this.replace_esc_chars = replace_esc_chars;
-    if (replace_esc_chars && (line.indexOf('%') != -1))
-      parse_line_and_replace_esc_chars(line);
-    else
-      parse_line(line);
+    if (line_is_pragma(line)) {
+      record_type = RecordType.PRAGMA;
+      comment_or_pragma = line;
+    } else if (line_is_comment(line)) {
+      record_type = RecordType.COMMENT;
+      comment_or_pragma = line;
+    } else {
+      record_type = RecordType.REGULAR;
+      this.replace_esc_chars = replace_esc_chars;
+      if (replace_esc_chars && (line.indexOf('%') != -1))
+        parse_line_and_replace_esc_chars(line);
+      else
+        parse_line(line);
+    }
   }
 
   /**
@@ -89,45 +104,53 @@ class Record {
   @property string[] ontology_terms() { return ("Ontology_term" in attributes) ? attributes["Ontology_term"].all             : null;  }
   @property bool     is_circular()    { return ("Is_circular" in attributes)   ? (attributes["Is_circular"].first == "true") : false; }
 
+  @property bool is_regular() { return record_type == RecordType.REGULAR; }
+  @property bool is_comment() { return record_type == RecordType.COMMENT; }
+  @property bool is_pragma() { return record_type == RecordType.PRAGMA; }
+
   /**
    * Appends the record to an Appender object, in the format
    * of a line in a GFF3 file.
    */
   void append_to(Appender!(char[]) app, bool add_newline = false) {
-    void append_field(string field_value, InvalidCharProc is_char_invalid) {
-      if (field_value.length == 0) {
-        app.put(".");
+    if (is_regular) {
+      void append_field(string field_value, InvalidCharProc is_char_invalid) {
+        if (field_value.length == 0) {
+          app.put(".");
+        } else {
+          if ((!replace_esc_chars) || (is_char_invalid is null))
+            app.put(field_value);
+          else
+            append_and_escape_chars(app, field_value, is_char_invalid);
+        }
+        app.put('\t');
+      }
+
+      append_field(seqname, is_invalid_in_seqname);
+      append_field(source, is_invalid_in_any_field);
+      append_field(feature, is_invalid_in_any_field);
+      append_field(start, null);
+      append_field(end, null);
+      append_field(score, null);
+      append_field(strand, null);
+      append_field(phase, null);
+
+      if (attributes.length == 0) {
+        app.put('.');
       } else {
-        if ((!replace_esc_chars) || (is_char_invalid is null))
-          app.put(field_value);
-        else
-          append_and_escape_chars(app, field_value, is_char_invalid);
+        bool first_attr = true;
+        foreach(attr_name, attr_value; attributes) {
+          if (first_attr)
+            first_attr = false;
+          else
+            app.put(';');
+          append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+          app.put('=');
+          attr_value.append_to_string(app);
+        }
       }
-      app.put('\t');
-    }
-
-    append_field(seqname, is_invalid_in_seqname);
-    append_field(source, is_invalid_in_any_field);
-    append_field(feature, is_invalid_in_any_field);
-    append_field(start, null);
-    append_field(end, null);
-    append_field(score, null);
-    append_field(strand, null);
-    append_field(phase, null);
-
-    if (attributes.length == 0) {
-      app.put('.');
     } else {
-      bool first_attr = true;
-      foreach(attr_name, attr_value; attributes) {
-        if (first_attr)
-          first_attr = false;
-        else
-          app.put(';');
-        append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
-        app.put('=');
-        attr_value.append_to_string(app);
-      }
+      app.put(comment_or_pragma);
     }
 
     if (add_newline)
@@ -138,14 +161,19 @@ class Record {
    * Converts this object to a GFF3 line.
    */
   string toString() {
-    auto result = appender!(char[])();
-    append_to(result);
-
-    return cast(string)(result.data);
+    if (is_regular()) {
+      auto result = appender!(char[])();
+      append_to(result);
+      return cast(string)(result.data);
+    } else {
+      return comment_or_pragma;
+    }
   }
 
   private {
     bool replace_esc_chars;
+    RecordType record_type = RecordType.REGULAR;
+    string comment_or_pragma;
 
     static AttributeValue[string] parse_attributes(string attributes_field) {
       AttributeValue[string] attributes;
@@ -272,6 +300,16 @@ struct AttributeValue {
   }
 }
 
+package {
+  bool line_is_pragma(T)(T[] line) {
+    return (line.length >= 2) && (line[0..2] == "##");
+  }
+
+  bool line_is_comment(T)(T[] line) {
+    return (line.length >= 1) && (line[0] == '#') &&
+           ((line.length == 1) || (line[1] != '#'));
+  }
+}
 
 unittest {
   writeln("Testing AttributeValue...");
@@ -444,5 +482,34 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
+
+  // Test comments
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);
+  assert((new Record("# test")).is_comment == true);
+  assert((new Record("## test")).is_comment == false);
+  assert((new Record("# test")).toString == "# test");
+
+  // Test pragmas
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_pragma == false);
+  assert((new Record("# test")).is_pragma == false);
+  assert((new Record("## test")).is_pragma == true);
+  assert((new Record("## test")).toString == "## test");
+
+  // Test is_regular
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_regular == true);
+  assert((new Record("# test")).is_regular == false);
+  assert((new Record("## test")).is_regular == false);
+}
+
+unittest {
+  writeln("Testing line_is_comment...");
+  assert(line_is_comment("# test") == true);
+  assert(line_is_comment("# test\n") == true);
+
+  writeln("Testing line_is_pragma...");
+  assert(line_is_pragma("# test") == false);
+  assert(line_is_pragma("## test") == true);
+  assert(line_is_pragma("test") == false);
+  assert(line_is_pragma("### test") == true);
 }
 

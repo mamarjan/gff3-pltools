@@ -173,6 +173,9 @@ To pass through the FASTA data contained in a GFF3 file, you can use
 the "--pass-fasta-through" option. If there is FASTA data in it, it
 will be copies to output after the GFF3 records.
 
+To keep the comments and/or pragmas in the output, you can use the
+--keep-comments/--keep-pragmas command line options.
+
 ### GFF3 File validation
 
 The validation utility can be used like this:
