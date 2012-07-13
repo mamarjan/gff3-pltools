@@ -28,6 +28,11 @@ OS X users can install DMD using homebrew:
 Also, the rake utility is necessary to run the automated build
 scripts.
 
+There is also some support for the GDC compiler. There seems currently
+to be a bug with this compiler on 64-bit Linux, because of which the
+unit tests fail with a segmentation fault in the garbage collector.
+However, the utilities seem to be working properly.
+
 ### Build and install instructions
 
 Users of 32-bit and 64-bit Linux can download pre-build binar packages
@@ -36,7 +41,7 @@ and install them by copying the binaries to somewhere in the PATH.
 Users of other plaforms can download the source package, and build
 it themselves given the DMD compiler is available for their platform.
 
-To build the binaries, download the source and use the "utilities"
+To build the binaries using DMD, download the source and use the "utilities"
 task:
 
 ```sh
@@ -44,6 +49,23 @@ task:
     cd gff3-pltools-X.Y.Z
     rake utilities
 ```
+
+Given a recent version of the GDC compiler is installed, the utilities
+can be build with it by setting the DC env. variable to "gdc":
+
+```sh
+    DC="gdc" rake utilities
+```
+
+or
+
+```sh
+    export DC="gdc"
+    rake utilities
+```
+
+The binaries built with GDC currently work twice as fast, when compared
+to binaries built with DMD.
 
 ### Run tests
 

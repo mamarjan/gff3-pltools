@@ -4,6 +4,9 @@ require 'rake/clean'
 
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
 
+dc = ENV["DC"]
+dc = "dmd" if dc.nil?
+
 directory "bin"
 CLEAN.include("bin/")
 
@@ -30,7 +33,11 @@ DFILES = ["dlib/bio/gff3/file.d",
 
 desc "Compile and run D unit tests"
 task :unittests do
-  sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -J. -ofunittests"
+  if dc == "dmd"
+    sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -J. -ofunittests"
+  elsif dc == "gdc"
+    sh "gdc #{DFILES} -O0 -funittest -o unittests -lpthread -fdebug -fversion=serial -J. dlib/unittests.d"
+  end
   sh "./unittests"
 end
 CLEAN.include("unittests")
@@ -38,10 +45,17 @@ CLEAN.include("unittests.o")
 
 desc "Compile GFF3 utilities"
 task :utilities => :bin do
-  sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
-  sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
-  sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
-  sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
+  if dc == "dmd"
+    sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
+    sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
+    sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
+    sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
+  elsif dc == "gdc"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_count_features.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-count-features"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
+  end
   rm_f Dir.glob("bin/*.o")
 end
 
