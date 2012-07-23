@@ -167,25 +167,27 @@ string validate_coordinates(string start, string end) {
   error_msg = check_if_empty_field("end", end);
   if (!(error_msg is null)) return error_msg;
 
+  long start_value = -1;
+  long end_value = -1;
   if (start != ".") {
     foreach(character; start) {
       if (!(character.isDigit()))
         return "Only a dot or digits are allowed in field start";
     }
-    if (to!long(start) < 1)
+    start_value = to!long(start);
+    if (start_value < 1)
       return "Start field can't be a number less then 1";
   }
   if (end != ".") {
-    foreach(character; start) {
+    foreach(character; end) {
       if (!(character.isDigit()))
         return "Only a dot or digits are allowed in field end";
     }
-    if (to!long(end) < 1)
+    end_value = to!long(end);
+    if (end_value < 1)
       return "End field can't be a number less then 1";
   }
   if ((start != ".") && (end != ".")) {
-    auto start_value = to!long(start);
-    auto end_value = to!long(end);
     if (start_value > end_value)
       return "End can't be less then start field";
   }
