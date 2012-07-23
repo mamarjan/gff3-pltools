@@ -4,28 +4,6 @@ import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
 import bio.exceptions, util.split_line, util.is_float;
 
-string replace_url_escaped_chars(string original) {
-  auto index = indexOf(original, '%');
-  if (index < 0) {
-    return original;
-  } else {
-    return original[0..index] ~
-           convert_url_escaped_char(original[index+1..index+3]) ~
-           replace_url_escaped_chars(original[index+3..$]);
-  }
-}
-
-char convert_url_escaped_char(string code) {
-   // First check if code valid
-  if (code.length != 2)
-    throw new ConvException("Invalid URL escaped code: " ~ code);
-  foreach(character; code)
-    if (std.ascii.fullHexDigits.indexOf(character) == -1)
-      throw new ConvException("Invalid URL escaped code: " ~ code);
-
-  uint numeric = to!int(code, 16);
-  return cast(char) numeric;
-}
 
 /**
  * A validator function. It should accept a line in a string value,
@@ -112,6 +90,7 @@ string validate_gff3_line(string line) {
   if (error_msg is null) error_msg = validate_source(get_and_skip_next_field(line));
   string feature;
   if (error_msg is null) {
+    // Feature is required for phase validation, so store it locally
     feature = get_and_skip_next_field(line);
     error_msg = validate_feature(feature);
   }
@@ -263,11 +242,10 @@ string validate_attributes(string attributes_field) {
       if (attribute == "") continue;
       error_msg = check_if_attribute_has_two_parts(attribute);
       if (!(error_msg is null)) return error_msg;
-      auto attribute_name = replace_url_escaped_chars( get_and_skip_next_field(attribute, '=') );
-      auto attribute_value = replace_url_escaped_chars(attribute);
+      auto attribute_name = get_and_skip_next_field(attribute, '=');
       error_msg = validate_attribute_name(attribute_name);
       if (!(error_msg is null)) return error_msg;
-      attributes[attribute_name] = attribute_value;
+      attributes[attribute_name] = attribute;
     }
     error_msg = check_for_invalid_is_circular_value(attributes);
     if (!(error_msg is null)) return error_msg;
