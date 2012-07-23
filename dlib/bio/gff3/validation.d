@@ -2,7 +2,7 @@ module bio.gff3.validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, util.split_line;
+import bio.exceptions, util.split_line, util.is_float;
 
 string replace_url_escaped_chars(string original) {
   auto index = indexOf(original, '%');
@@ -202,9 +202,7 @@ string validate_score(string score) {
   error_msg = check_for_characters_invalid_in_any_field("score", score);
   if (error_msg is null) {
     if (score != ".") {
-      try {
-        to!double(score);
-      } catch (ConvException e) {
+      if (!is_float(score)) {
         error_msg = "Score field should contain a float value";
       }
     }

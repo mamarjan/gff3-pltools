@@ -29,6 +29,7 @@ DFILES = ["dlib/bio/gff3/file.d",
           "dlib/util/dlist.d",
           "dlib/util/string_hash.d",
           "dlib/util/version_helper.d",
+          "dlib/util/is_float.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Compile and run D unit tests"
