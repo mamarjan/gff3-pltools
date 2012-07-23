@@ -85,6 +85,7 @@ string addFilenameAndLine(string filename, int line_number, string error_msg) {
 
 string validate_gff3_line(string line) {
   auto error_msg = check_if_nine_columns_present(line);
+  if (error_msg is null) error_msg = validate_escaped_chars(line);
 
   if (error_msg is null) error_msg = validate_seqname(get_and_skip_next_field(line));
   if (error_msg is null) error_msg = validate_source(get_and_skip_next_field(line));
@@ -282,6 +283,32 @@ string check_for_invalid_is_circular_value(string[string] attributes) {
 
 // Helper functions
 
+string validate_escaped_chars(string line) {
+  bool bad_escaped_char = false;
+  while (line.length > 0) {
+    if (line[0] == '%') {
+      if (line.length >= 3) {
+        if (!isHexDigit(line[1])) {
+          bad_escaped_char = true;
+          break;
+        } else if (!isHexDigit(line[2])) {
+          bad_escaped_char = true;
+          break;
+        } else {
+          line = line[3..$];
+        }
+      } else {
+        bad_escaped_char = true;
+        break;
+      }
+    } else {
+      line = line[1..$];
+    }
+  }
+
+  return bad_escaped_char ? "After % two hexadecimal digits should follow" : null;
+}
+
 string check_if_nine_columns_present(string line) {
   if (line.count('\t') < 8)
     return "A record with invalid number of columns";
@@ -329,6 +356,14 @@ unittest {
   assert(validate_gff3_line("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true") is null);
   // Test parsing lines with escaped characters
   assert(validate_gff3_line("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239") is null);
+  // Test parsing lines with badly escaped characters
+  assert(validate_gff3_line("EXON%GH00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239") !is null);
+  assert(validate_gff3_line("EXON%3H00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239") !is null);
+  assert(validate_gff3_line("EXON%GD00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239") !is null);
+  assert(validate_gff3_line("EXON%GD00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D1723%9") !is null);
+  assert(validate_gff3_line("EXON%GD00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239%") !is null);
+  assert(validate_gff3_line("%EXON%GD00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239%") !is null);
+
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tParent=test") is null);
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;") is null);
 
