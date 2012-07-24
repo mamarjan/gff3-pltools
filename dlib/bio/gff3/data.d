@@ -12,8 +12,12 @@ class GFF3Data {
   static RecordRange!SplitIntoLines parse_by_records(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
            bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
            RecordPredicate after_filter = NO_AFTER_FILTER) {
-    return new RecordRange!(SplitIntoLines)(new SplitIntoLines(data), validator,
-                                            replace_esc_chars, before_filter, after_filter);
+    auto records = new RecordRange!SplitIntoLines(new SplitIntoLines(data));
+    records.set_validate(validator);
+    records.set_replace_esc_chars(replace_esc_chars);
+    records.set_before_filter(before_filter);
+    records.set_after_filter(after_filter);
+    return records;
   }
 
   /**

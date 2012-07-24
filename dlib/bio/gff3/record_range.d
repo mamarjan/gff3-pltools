@@ -20,14 +20,11 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * be any range of lines without newlines and with front, popFront()
    * and empty defined.
    */
-  this(SourceRangeType data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-       bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
-       RecordPredicate after_filter = NO_AFTER_FILTER) {
+  this(SourceRangeType data) {
     this.data = data;
-    this.validate = validator;
-    this.replace_esc_chars = replace_esc_chars;
-    this.before_filter = before_filter;
-    this.after_filter = after_filter;
+    this.validate = EXCEPTIONS_ON_ERROR;
+    this.before_filter = NO_BEFORE_FILTER;
+    this.after_filter = NO_AFTER_FILTER;
   }
 
   /**
@@ -35,6 +32,22 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    */
   void set_filename(string filename) {
     this.filename = filename;
+  }
+
+  auto set_validate(RecordValidator validate) {
+    this.validate = validate; return this;
+  }
+
+  auto set_replace_esc_chars(bool replace) {
+    this.replace_esc_chars = replace; return this;
+  }
+
+  auto set_before_filter(StringPredicate before_filter) {
+    this.before_filter = before_filter; return this;
+  }
+
+  auto set_after_filter(RecordPredicate after_filter) {
+    this.after_filter = after_filter; return this;
   }
 
   /**
@@ -134,7 +147,7 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
     RecordValidator validate;
     SourceRangeType data;
     bool fasta_mode = false;
-    bool replace_esc_chars;
+    bool replace_esc_chars = true;
 
     StringPredicate before_filter;
     RecordPredicate after_filter;

@@ -14,12 +14,18 @@ class GFF3File {
           RecordPredicate after_filter = NO_AFTER_FILTER) {
     RecordRange!SplitFile records;
     static if (is(T == string)) {
-      records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")), validator,
-                                                 replace_esc_chars, before_filter, after_filter);
+      records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")));
+      records.set_validate(validator);
+      records.set_replace_esc_chars(replace_esc_chars);
+      records.set_before_filter(before_filter);
+      records.set_after_filter(after_filter);
       records.set_filename(filename);
     } else if (is(T == File)) {
-      records = new RecordRange!(SplitFile)(new SplitFile(filename), validator,
-                                                 replace_esc_chars, before_filter, after_filter);
+      records = new RecordRange!(SplitFile)(new SplitFile(filename));
+      records.set_validate(validator);
+      records.set_replace_esc_chars(replace_esc_chars);
+      records.set_before_filter(before_filter);
+      records.set_after_filter(after_filter);
     }
     return records;
   }
@@ -32,7 +38,11 @@ class GFF3File {
           bool replace_esc_chars = true, size_t feature_cache_size = 1000,
           bool link_features = false, StringPredicate before_filter = NO_BEFORE_FILTER,
           RecordPredicate after_filter = NO_AFTER_FILTER) {
-    auto records = parse_by_records(filename, validator, replace_esc_chars, before_filter, after_filter);
+    auto records = parse_by_records(filename);
+    records.set_validate(validator);
+    records.set_replace_esc_chars(replace_esc_chars);
+    records.set_before_filter(before_filter);
+    records.set_after_filter(after_filter);
     return new FeatureRange(records, feature_cache_size, link_features);
   }
 }
