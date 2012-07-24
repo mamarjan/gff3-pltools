@@ -33,6 +33,15 @@ class GFF3File {
 }
 
 class GTFFile {
+  /**
+   * Parses a file with GTF data.
+   * Returns: a range of records.
+   */
+  static RecordRange!SplitFile parse_by_records(T)(T filename) {
+    auto records = GFF3File.parse_by_records(filename);
+    records.set_data_format(DataFormat.GTF);
+    return records;
+  }
 }
 
 import std.stdio;
