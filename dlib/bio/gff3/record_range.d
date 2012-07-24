@@ -7,6 +7,8 @@ import bio.gff3.filtering;
 import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
 
+public import bio.gff3.data_formats;
+
 class GenericRecordRange : RangeWithCache!Record {
   this() {
     this.validate = EXCEPTIONS_ON_ERROR;
@@ -53,6 +55,10 @@ class GenericRecordRange : RangeWithCache!Record {
     this.keep_pragmas = keep; return this;
   }
 
+  auto set_data_format(DataFormat format) {
+    this.data_format = format; return this;
+  }
+
   private {
     RecordValidator validate;
     bool replace_esc_chars = true;
@@ -63,6 +69,8 @@ class GenericRecordRange : RangeWithCache!Record {
 
     bool keep_comments = false;
     bool keep_pragmas = false;
+
+    DataFormat data_format = DataFormat.GFF3;
   }
 }
 
@@ -143,7 +151,7 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
       } else if (validate(filename, line_number, line)) {
         // Found line with a valid record
         if (before_filter(line)) {
-          result = new Record(line, replace_esc_chars);
+          result = new Record(line, replace_esc_chars, data_format);
           if (after_filter(result)) {
             // Record passed all filters
             dataPopFront();

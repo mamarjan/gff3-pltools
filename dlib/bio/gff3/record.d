@@ -5,6 +5,8 @@ import std.ascii;
 import bio.exceptions, bio.gff3.validation;
 import util.esc_char_conv, util.split_line;
 
+public import bio.gff3.data_formats;
+
 /**
  * Represents a parsed line in a GFF3 file.
  */
@@ -19,7 +21,9 @@ class Record {
    * Constructor for the Record object, arguments are passed to the
    * parse_line() method.
    */
-  this(string line, bool replace_esc_chars = true) {
+  this(string line, bool replace_esc_chars = true, DataFormat format = DataFormat.GFF3) {
+    this.data_format = format;
+
     if (line_is_pragma(line)) {
       record_type = RecordType.PRAGMA;
       comment_or_pragma = line;
@@ -55,7 +59,10 @@ class Record {
     phase = get_and_skip_next_field(line);
     auto attributes_field = get_and_skip_next_field(line);
 
-    attributes = parse_attributes(attributes_field);
+    if (data_format == DataFormat.GFF3)
+      attributes = parse_attributes(attributes_field);
+    else
+      attributes = parse_gtf_attributes(attributes_field);
   }
 
   void parse_line_and_replace_esc_chars(string original_line) {
@@ -71,7 +78,10 @@ class Record {
     phase = cast(string) get_and_skip_next_field(line);
     auto attributes_field = get_and_skip_next_field(line);
 
-    attributes = parse_attributes(attributes_field);
+    if (data_format == DataFormat.GFF3)
+      attributes = parse_attributes(attributes_field);
+    else
+      attributes = parse_gtf_attributes(attributes_field);
   }
 
   string seqname;
@@ -103,6 +113,12 @@ class Record {
   @property string   ontology_term()  { return ("Ontology_term" in attributes) ? attributes["Ontology_term"].first           : null;  }
   @property string[] ontology_terms() { return ("Ontology_term" in attributes) ? attributes["Ontology_term"].all             : null;  }
   @property bool     is_circular()    { return ("Is_circular" in attributes)   ? (attributes["Is_circular"].first == "true") : false; }
+
+  /**
+   * Accessor methods for GTF attributes:
+   */
+  @property string   gene_id()        { return ("gene_id" in attributes)       ? attributes["gene_id"].first                 : null;  }
+  @property string   transcript_id()  { return ("transcript_id" in attributes) ? attributes["transcript_id"].first           : null;  }
 
   @property bool is_regular() { return record_type == RecordType.REGULAR; }
   @property bool is_comment() { return record_type == RecordType.COMMENT; }
@@ -173,6 +189,7 @@ class Record {
   private {
     bool replace_esc_chars;
     RecordType record_type = RecordType.REGULAR;
+    DataFormat data_format = DataFormat.GFF3;
     string comment_or_pragma;
 
     static AttributeValue[string] parse_attributes(string attributes_field) {
@@ -202,6 +219,48 @@ class Record {
       }
       return attributes;
     }
+
+    static AttributeValue[string] parse_gtf_attributes(string attributes_field) {
+      AttributeValue[string] attributes;
+      if (attributes_field[0] != '.') {
+        string attribute = attributes_field; // Required for the next while loop to start
+        while(attributes_field.length != 0) {
+          attribute = get_and_skip_next_field(attributes_field, ';');
+          if (attribute == "") continue;
+          if (attribute[0] == ' ')
+            attribute = attribute[1..$];
+          auto attribute_name = get_and_skip_next_field( attribute, ' ');
+          if (attribute[0] == '"')
+            attribute = attribute[1..$];
+          if (attribute[$-1] == '"')
+            attribute = attribute[0..$-1];
+          attributes[attribute_name] = AttributeValue(attribute);
+        }
+      }
+      return attributes;
+    }
+
+    static AttributeValue[string] parse_gtf_attributes(char[] attributes_field) {
+      AttributeValue[string] attributes;
+      if (attributes_field[0] != '.') {
+        char[] attribute = attributes_field; // Required for the next while loop to start
+        while(attributes_field.length != 0) {
+          attribute = get_and_skip_next_field(attributes_field, ';');
+          if (attribute == "") continue;
+          auto attribute_name = cast(string) replace_url_escaped_chars( get_and_skip_next_field( attribute, ' ') );
+          if (attribute_name[0] == ' ')
+            attribute_name = attribute_name[1..$];
+          if (attribute[0] == '"')
+            attribute = attribute[1..$];
+          if (attribute[1] == '"')
+            attribute = attribute[0..$-1];
+          attributes[attribute_name] = AttributeValue(attribute);
+        }
+      }
+      return attributes;
+    }
+
+
   }
 }
 
@@ -389,6 +448,15 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=;");
   assert(record.attributes.length == 1);
   assert(record.attributes["ID"].all == [""]);
+}
+
+unittest {
+  writeln("Testing parse_gtf_attributes...");
+  
+  auto record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", false, DataFormat.GTF);
+  assert(record.attributes.length == 2);
+  assert(record.gene_id == "abc");
+  assert(record.transcript_id == "def");
 }
 
 unittest {
