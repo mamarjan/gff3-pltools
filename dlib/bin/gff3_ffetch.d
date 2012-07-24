@@ -78,21 +78,16 @@ int main(string[] args) {
   // Prepare for parsing
   RecordRange!SplitFile records;
   if (filename == "-") {
-    records = GFF3File.parse_by_records(stdin,
-                                        NO_VALIDATION,
-                                        false,
-                                        NO_BEFORE_FILTER,
-                                        string_to_filter(filter_string));
+    records = GFF3File.parse_by_records(stdin);
   } else {
-    records = GFF3File.parse_by_records(filename,
-                                        NO_VALIDATION,
-                                        false,
-                                        NO_BEFORE_FILTER,
-                                        string_to_filter(filter_string));
+    records = GFF3File.parse_by_records(filename);
   }
 
-  records.set_keep_comments(keep_comments);
-  records.set_keep_pragmas(keep_pragmas);
+  records.set_validate(NO_VALIDATION)
+         .set_replace_esc_chars(false)
+         .set_after_filter(string_to_filter(filter_string))
+         .set_keep_comments(keep_comments)
+         .set_keep_pragmas(keep_pragmas);
 
   // Parsing, filtering and output
   ulong record_counter = 0;

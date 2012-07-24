@@ -49,18 +49,18 @@ int main(string[] args) {
   if (parse_features) {
     // Open file and loop over all features
     auto features = GFF3File.parse_by_features(filename,
-                                               validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                               replace_escaped_chars,
                                                feature_cache_size,
                                                link_features);
+    features.set_validate(validate ? WARNINGS_ON_ERROR : NO_VALIDATION)
+            .set_replace_esc_chars(replace_escaped_chars);
     size_t counter = 0;
     foreach(feature; features) { counter++; }
     writeln("Parsed " ~ to!string(counter) ~ " features");
   } else {
     // Open file and loop over all records
-    auto records = GFF3File.parse_by_records(filename,
-                                             validate ? WARNINGS_ON_ERROR : NO_VALIDATION,
-                                             replace_escaped_chars);
+    auto records = GFF3File.parse_by_records(filename);
+    records.set_validate(validate ? WARNINGS_ON_ERROR : NO_VALIDATION)
+           .set_replace_esc_chars(replace_escaped_chars);
     size_t counter = 0;
     foreach(rec; records) { counter++; }
     writeln("Parsed " ~ to!string(counter) ~ " records");

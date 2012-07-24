@@ -38,9 +38,9 @@ int main(string[] args) {
 
   }
 
-  auto records = GFF3File.parse_by_records(filename,
-                                           NO_VALIDATION,
-                                           false);
+  auto records = GFF3File.parse_by_records(filename)
+                         .set_validate(NO_VALIDATION)
+                         .set_replace_esc_chars(false);
   bool[string] IDs;
   size_t null_IDs = 0;
   foreach(rec; records) {

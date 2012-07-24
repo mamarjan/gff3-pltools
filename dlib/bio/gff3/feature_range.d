@@ -1,6 +1,7 @@
 module bio.gff3.feature_range;
 
 import bio.gff3.feature, bio.gff3.record, bio.gff3.validation;
+import bio.gff3.filtering;
 import util.range_with_cache, util.dlist, util.string_hash;
 
 /**
@@ -16,9 +17,25 @@ class FeatureRange : RangeWithCache!Feature {
    *     link_features =       The parser will link features into parent-child relationships
    *                           if this parameter is true.
    */
-  this(RangeWithCache!Record records, size_t feature_cache_size = 1000, bool link_features = false) {
+  this(GenericRecordRange records, size_t feature_cache_size = 1000, bool link_features = false) {
     this.records = records;
     this.data = new FeatureCache(feature_cache_size, link_features);
+  }
+
+  auto set_validate(RecordValidator validate) {
+    records.set_validate(validate); return this;
+  }
+
+  auto set_replace_esc_chars(bool replace) {
+    records.set_replace_esc_chars(replace); return this;
+  }
+
+  auto set_before_filter(StringPredicate before_filter) {
+    records.set_before_filter(before_filter); return this;
+  }
+
+  auto set_after_filter(RecordPredicate after_filter) {
+    records.set_after_filter(after_filter); return this;
   }
 
   protected Feature next_item() {
@@ -34,7 +51,7 @@ class FeatureRange : RangeWithCache!Feature {
   }
 
   private {
-    RangeWithCache!Record records;
+    GenericRecordRange records;
     FeatureCache data;
   }
 }

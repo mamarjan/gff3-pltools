@@ -17,7 +17,7 @@ class Record {
 
   /**
    * Constructor for the Record object, arguments are passed to the
-   * parser_line() method.
+   * parse_line() method.
    */
   this(string line, bool replace_esc_chars = true) {
     if (line_is_pragma(line)) {

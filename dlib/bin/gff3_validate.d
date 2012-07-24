@@ -38,7 +38,7 @@ int main(string[] args) {
   }
 
   // Open file and loop over all records, while printing error messages
-  foreach(rec; GFF3File.parse_by_records(filename, WARNINGS_ON_ERROR)) {}
+  foreach(rec; GFF3File.parse_by_records(filename).set_validate(WARNINGS_ON_ERROR)) {}
 
   return 0;
 }

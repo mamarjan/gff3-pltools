@@ -7,21 +7,8 @@ import bio.gff3.filtering;
 import util.join_lines, util.split_into_lines, util.read_file;
 import util.range_with_cache, util.split_file;
 
-/**
- * Represents a range of GFF3 records derived from a range of lines.
- * The class takes a type parameter, which is the class or the struct
- * which is used as a data source. It's enough for the data source to
- * support front, popFront() and empty methods to be used by this
- * class.
- */
-class RecordRange(SourceRangeType) : RangeWithCache!Record {
-  /**
-   * Creates a record range with data as the _data source. data can
-   * be any range of lines without newlines and with front, popFront()
-   * and empty defined.
-   */
-  this(SourceRangeType data) {
-    this.data = data;
+class GenericRecordRange : RangeWithCache!Record {
+  this() {
     this.validate = EXCEPTIONS_ON_ERROR;
     this.before_filter = NO_BEFORE_FILTER;
     this.after_filter = NO_AFTER_FILTER;
@@ -55,8 +42,7 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * GFF3 file, if set to true.
    */
   auto set_keep_comments(bool keep = true) {
-    this.keep_comments = keep;
-    return this;
+    this.keep_comments = keep; return this;
   }
 
   /**
@@ -64,8 +50,37 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
    * GFF3 file, if set to true.
    */
   auto set_keep_pragmas(bool keep = true) {
-    this.keep_pragmas = keep;
-    return this;
+    this.keep_pragmas = keep; return this;
+  }
+
+  private {
+    RecordValidator validate;
+    bool replace_esc_chars = true;
+
+    StringPredicate before_filter;
+    RecordPredicate after_filter;
+    string filename;
+
+    bool keep_comments = false;
+    bool keep_pragmas = false;
+  }
+}
+
+/**
+ * Represents a range of GFF3 records derived from a range of lines.
+ * The class takes a type parameter, which is the class or the struct
+ * which is used as a data source. It's enough for the data source to
+ * support front, popFront() and empty methods to be used by this
+ * class.
+ */
+class RecordRange(SourceRangeType) : GenericRecordRange {
+  /**
+   * Creates a record range with data as the _data source. data can
+   * be any range of lines without newlines and with front, popFront()
+   * and empty defined.
+   */
+  this(SourceRangeType data) {
+    this.data = data;
   }
 
   /**
@@ -144,19 +159,10 @@ class RecordRange(SourceRangeType) : RangeWithCache!Record {
   }
 
   private {
-    RecordValidator validate;
     SourceRangeType data;
     bool fasta_mode = false;
-    bool replace_esc_chars = true;
 
-    StringPredicate before_filter;
-    RecordPredicate after_filter;
-
-    string filename;
     int line_number = 1;
-
-    bool keep_comments = false;
-    bool keep_pragmas = false;
 
     /**
      * Skips all the GFF3 records until it gets to the start of

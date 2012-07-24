@@ -9,14 +9,8 @@ class GFF3Data {
    * Parses a string of GFF3 data.
    * Returns: a range of records.
    */
-  static RecordRange!SplitIntoLines parse_by_records(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true, StringPredicate before_filter = NO_BEFORE_FILTER,
-           RecordPredicate after_filter = NO_AFTER_FILTER) {
+  static RecordRange!SplitIntoLines parse_by_records(string data) {
     auto records = new RecordRange!SplitIntoLines(new SplitIntoLines(data));
-    records.set_validate(validator);
-    records.set_replace_esc_chars(replace_esc_chars);
-    records.set_before_filter(before_filter);
-    records.set_after_filter(after_filter);
     return records;
   }
 
@@ -24,11 +18,10 @@ class GFF3Data {
    * Parses a string of GFF3 data.
    * Returns: a range of features.
    */
-  static FeatureRange parse_by_features(string data, RecordValidator validator = EXCEPTIONS_ON_ERROR,
-           bool replace_esc_chars = true, size_t features_cache_size = 1000,
-           bool link_features = false, StringPredicate before_filter = NO_BEFORE_FILTER,
-           RecordPredicate after_filter = NO_AFTER_FILTER) {
-    auto records = parse_by_records(data, validator, replace_esc_chars, before_filter, after_filter);
+  static FeatureRange parse_by_features(string data,
+          size_t features_cache_size = 1000,
+          bool link_features = false) {
+    auto records = parse_by_records(data);
     return new FeatureRange(records, features_cache_size, link_features);
   }
 }
