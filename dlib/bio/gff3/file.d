@@ -37,6 +37,9 @@ class GFF3File {
   }
 }
 
+class GTFFile {
+}
+
 import std.stdio;
 
 unittest {

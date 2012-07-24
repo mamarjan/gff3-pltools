@@ -29,6 +29,9 @@ class GFF3Data {
   }
 }
 
+class GTFData {
+}
+
 import std.stdio;
 import util.read_file;
 
