@@ -59,6 +59,8 @@ task :utilities => :bin do
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
   end
   rm_f Dir.glob("bin/*.o")
+  sh "ln -s gff3-benchmark bin/gtf-benchmark"
+  sh "ln -s gff3-ffetch bin/gtf-ffetch"
 end
 
 task :default => :unittests

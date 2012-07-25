@@ -1,4 +1,4 @@
-import std.stdio, std.file, std.conv, std.getopt;
+import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
 import bio.gff3.record_range;
 import util.split_file, util.version_helper;
@@ -25,6 +25,10 @@ int main(string[] args) {
   bool keep_pragmas = false;
   bool gtf_input = false;
   bool gtf_output = false;
+  if (args[0].indexOf("gtf-ffetch") != -1) {
+    gtf_input = true;
+    gtf_output = true;
+  }
   bool help = false;
   try {
     getopt(args,

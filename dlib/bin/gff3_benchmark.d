@@ -1,4 +1,4 @@
-import std.stdio, std.file, std.conv, std.getopt;
+import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation;
 import util.version_helper;
 
@@ -10,6 +10,9 @@ int main(string[] args) {
   uint feature_cache_size = 1000;
   bool link_features = false;
   bool gtf_input = false;
+  if (args[0].indexOf("gtf-benchmark") != -1) {
+    gtf_input = true;
+  }
   bool show_version = false;
   try {
     getopt(args,
@@ -29,7 +32,7 @@ int main(string[] args) {
   }
 
   if (show_version) {
-    writeln("benchmark-gff3 (gff3-pltools) " ~ fetch_version());
+    writeln("gff3-benchmark (gff3-pltools) " ~ fetch_version());
     return 0;
   }
 
