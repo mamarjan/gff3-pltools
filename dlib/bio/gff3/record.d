@@ -151,11 +151,11 @@ class Record {
       append_field(strand, null);
       append_field(phase, null);
 
-      if (attributes.length == 0) {
-        app.put('.');
-      } else {
-        if ((format == DataFormat.GFF3) || ((format == DataFormat.DEFAULT) && (this.data_format == DataFormat.GFF3))) {
-          // Print attributes in GFF3 style
+      if ((format == DataFormat.GFF3) || ((format == DataFormat.DEFAULT) && (this.data_format == DataFormat.GFF3))) {
+        // Print attributes in GFF3 style
+        if (attributes.length == 0) {
+          app.put('.');
+        } else {
           bool first_attr = true;
           foreach(attr_name, attr_value; attributes) {
             if (first_attr)
@@ -166,21 +166,23 @@ class Record {
             app.put('=');
             attr_value.append_to_string(app);
           }
-        } else {
-          // Print attributes in GTF style
-          app.put("gene_id \"");
+        }
+      } else {
+        // Print attributes in GTF style
+        app.put("gene_id \"");
+        if ("gene_id" in attributes)
           app.put(attributes["gene_id"].first);
-          app.put("\"; transcript_id \"");
+        app.put("\"; transcript_id \"");
+        if ("transcript_id" in attributes)
           app.put(attributes["transcript_id"].first);
-          app.put("\";");
-          foreach(attr_name, attr_value; attributes) {
-            if ((attr_name != "gene_id") && (attr_name != "transcript_id")) {
-              app.put(' ');
-              append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
-              app.put(" \"");
-              attr_value.append_to_string(app);
-              app.put("\";");
-            }
+        app.put("\";");
+        foreach(attr_name, attr_value; attributes) {
+          if ((attr_name != "gene_id") && (attr_name != "transcript_id")) {
+            app.put(' ');
+            append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+            app.put(" \"");
+            attr_value.append_to_string(app);
+            app.put("\";");
           }
         }
       }
@@ -552,6 +554,16 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
   record.score = null;
   assert(record.toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
+
+  // Test toString with GTF data
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr 1;", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"1\";");
+
+  // Test format conversion
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id=abc;transcript_id=def")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).toString(DataFormat.GFF3).indexOf("gene_id=abc") != -1);
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"\"; transcript_id \"\";");
 
   // Testing toString with escaping of characters
   assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
