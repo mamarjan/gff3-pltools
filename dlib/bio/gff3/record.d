@@ -128,7 +128,7 @@ class Record {
    * Appends the record to an Appender object, in the format
    * of a line in a GFF3 file.
    */
-  void append_to(Appender!(char[]) app, bool add_newline = false) {
+  void append_to(Appender!(char[]) app, bool add_newline = false, DataFormat format = DataFormat.DEFAULT) {
     if (is_regular) {
       void append_field(string field_value, InvalidCharProc is_char_invalid) {
         if (field_value.length == 0) {
@@ -154,15 +154,34 @@ class Record {
       if (attributes.length == 0) {
         app.put('.');
       } else {
-        bool first_attr = true;
-        foreach(attr_name, attr_value; attributes) {
-          if (first_attr)
-            first_attr = false;
-          else
-            app.put(';');
-          append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
-          app.put('=');
-          attr_value.append_to_string(app);
+        if ((format == DataFormat.GFF3) || ((format == DataFormat.DEFAULT) && (this.data_format == DataFormat.GFF3))) {
+          // Print attributes in GFF3 style
+          bool first_attr = true;
+          foreach(attr_name, attr_value; attributes) {
+            if (first_attr)
+              first_attr = false;
+            else
+              app.put(';');
+            append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+            app.put('=');
+            attr_value.append_to_string(app);
+          }
+        } else {
+          // Print attributes in GTF style
+          app.put("gene_id \"");
+          app.put(attributes["gene_id"].first);
+          app.put("\"; transcript_id \"");
+          app.put(attributes["transcript_id"].first);
+          app.put("\";");
+          foreach(attr_name, attr_value; attributes) {
+            if ((attr_name != "gene_id") && (attr_name != "transcript_id")) {
+              app.put(' ');
+              append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+              app.put(" \"");
+              attr_value.append_to_string(app);
+              app.put("\";");
+            }
+          }
         }
       }
     } else {
@@ -180,6 +199,16 @@ class Record {
     if (is_regular()) {
       auto result = appender!(char[])();
       append_to(result);
+      return cast(string)(result.data);
+    } else {
+      return comment_or_pragma;
+    }
+  }
+
+  string toString(DataFormat format) {
+    if (is_regular()) {
+      auto result = appender!(char[])();
+      append_to(result, false, format);
       return cast(string)(result.data);
     } else {
       return comment_or_pragma;
