@@ -23,6 +23,8 @@ int main(string[] args) {
   bool pass_fasta_through = false;
   bool keep_comments = false;
   bool keep_pragmas = false;
+  bool gtf_input = false;
+  bool gtf_output = false;
   bool help = false;
   try {
     getopt(args,
@@ -34,6 +36,8 @@ int main(string[] args) {
         "pass-fasta-through", &pass_fasta_through,
         "keep-comments", &keep_comments,
         "keep-pragmas", &keep_pragmas,
+        "gtf-input", &gtf_input,
+        "gtf-output", &gtf_output,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -78,9 +82,15 @@ int main(string[] args) {
   // Prepare for parsing
   RecordRange!SplitFile records;
   if (filename == "-") {
-    records = GFF3File.parse_by_records(stdin);
+    if (!gtf_input)
+      records = GFF3File.parse_by_records(stdin);
+    else
+      records = GTFFile.parse_by_records(stdin);
   } else {
-    records = GFF3File.parse_by_records(filename);
+    if (!gtf_input)
+      records = GFF3File.parse_by_records(filename);
+    else
+      records = GTFFile.parse_by_records(filename);
   }
 
   records.set_validate(NO_VALIDATION)
@@ -93,7 +103,7 @@ int main(string[] args) {
   ulong record_counter = 0;
   if (at_most < 0) {
     foreach(rec; records) {
-      output.writeln(rec.toString());
+      output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
     }
   } else {
     foreach(rec; records) {
@@ -101,7 +111,7 @@ int main(string[] args) {
         output.write("# ...");
         break;
       } else {
-        output.writeln(rec.toString());
+        output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
         record_counter++;
       }
     }
@@ -138,6 +148,8 @@ void print_usage() {
   writeln("                  Copy the FASTA data at the end of the file to output");
   writeln("  --keep-comments Copy comments in GFF3 file to output");
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
+  writeln("  --gtf-input     Input data is in GTF format");
+  writeln("  --gtf-output    Output data in GTF format");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();

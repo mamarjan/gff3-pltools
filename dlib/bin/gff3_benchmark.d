@@ -89,7 +89,7 @@ void print_usage() {
   writeln("  -f           merge records into features");
   writeln("  -c N         feature cache size (how many features to keep in memory), default=1000");
   writeln("  -l           link feature into parent-child relationships");
-  writeln("  --gtf-input  Include this if input data is in GTF format");
+  writeln("  --gtf-input  Input data is in GTF format");
   writeln("  --version    Output version information and exit.");
   writeln();
 }
