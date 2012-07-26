@@ -37,11 +37,11 @@ int main(string[] args) {
   }
 
   // Only a filename should be left at this point
-  auto filename = args[1];
   if (args.length != 2) {
     print_usage();
     return 2; // Exit the application
   }
+  auto filename = args[1];
 
   // Check if file exists
   alias char[] array;
@@ -84,7 +84,7 @@ int main(string[] args) {
 }
 
 void print_usage() {
-  writeln("Usage: benchmark-gff3 [OPTIONS] FILE");
+  writeln("Usage: gff3-benchmark [OPTIONS] FILE");
   writeln("Parse FILE without any validation");
   writeln();
   writeln("  -v           turn on validation");
