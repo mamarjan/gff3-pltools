@@ -23,25 +23,43 @@ class GenericRecordRange : RangeWithCache!Record {
     this.filename = filename;
   }
 
+  /**
+   * Set the validation delegate which will be used for validation. Or
+   * NO_VALIDATION if no validation should be done.
+   */
   auto set_validate(RecordValidator validate) {
     this.validate = validate; return this;
   }
 
+  /**
+   * Call this with true if escaped characters are to be replaced by
+   * their real value after basic parsing of records. Otherwise the
+   * escaped characters will be left as they are.
+   */
   auto set_replace_esc_chars(bool replace) {
     this.replace_esc_chars = replace; return this;
   }
 
+  /**
+   * This filter will be invoked with a raw line before it is parsed.
+   * The current line will be parsed only if it passes this filter.
+   */
   auto set_before_filter(StringPredicate before_filter) {
     this.before_filter = before_filter; return this;
   }
 
+  /**
+   * This filter will be invoked with a Record object of the last parsed
+   * line. If it passes the filter, the record will be the next record to
+   * be returned.
+   */
   auto set_after_filter(RecordPredicate after_filter) {
     this.after_filter = after_filter; return this;
   }
 
   /**
    * The range will include records which represent comments in the original
-   * GFF3 file, if set to true.
+   * GFF3 or GTF file, if set to true.
    */
   auto set_keep_comments(bool keep = true) {
     this.keep_comments = keep; return this;
@@ -49,12 +67,16 @@ class GenericRecordRange : RangeWithCache!Record {
 
   /**
    * The range will include records which represent pragmas in the original
-   * GFF3 file, if set to true.
+   * GFF3 or GTF file, if set to true.
    */
   auto set_keep_pragmas(bool keep = true) {
     this.keep_pragmas = keep; return this;
   }
 
+  /**
+   * Use this to set the input format of the data. DataFormat.GFF3 and GTF are currently
+   * supported.
+   */
   auto set_data_format(DataFormat format) {
     this.data_format = format; return this;
   }
@@ -75,7 +97,7 @@ class GenericRecordRange : RangeWithCache!Record {
 }
 
 /**
- * Represents a range of GFF3 records derived from a range of lines.
+ * Represents a range of GFF3 or GTF records derived from a range of lines.
  * The class takes a type parameter, which is the class or the struct
  * which is used as a data source. It's enough for the data source to
  * support front, popFront() and empty methods to be used by this

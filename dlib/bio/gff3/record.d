@@ -41,12 +41,7 @@ class Record {
   }
 
   /**
-   * Parse a line from a GFF3 file and set object values.
-   * The line is first split into its parts and then escaped
-   * characters are replaced in those fields.
-   * 
-   * Setting replace_esc_chars to false will skip replacing
-   * escaped characters, and make parsing significantly faster.
+   * Parse a line from a GFF3 or GTF file and set object values.
    */
   void parse_line(string line) {
     seqname = get_and_skip_next_field(line);
@@ -64,6 +59,14 @@ class Record {
       attributes = parse_gtf_attributes(line);
   }
 
+  /**
+   * Parse a line from a GFF3 or GTF file and set object values.
+   * The line is first split into its parts and then escaped
+   * characters are replaced in those fields.
+   * 
+   * Setting replace_esc_chars to false will skip replacing
+   * escaped characters, and make parsing faster.
+   */
   void parse_line_and_replace_esc_chars(string original_line) {
     char[] line = original_line.dup;
 
@@ -118,13 +121,17 @@ class Record {
   @property string   gene_id()        { return ("gene_id" in attributes)       ? attributes["gene_id"].first                 : null;  }
   @property string   transcript_id()  { return ("transcript_id" in attributes) ? attributes["transcript_id"].first           : null;  }
 
+  /**
+   * A record can be a comment, a pragma, or a regular record. Use these
+   * functions to test for the type of a record.
+   */
   @property bool is_regular() { return record_type == RecordType.REGULAR; }
   @property bool is_comment() { return record_type == RecordType.COMMENT; }
   @property bool is_pragma() { return record_type == RecordType.PRAGMA; }
 
   /**
-   * Appends the record to an Appender object, in the format
-   * of a line in a GFF3 file.
+   * Converts the record to a string representstion, which can be a GFF3
+   * or GTF line, and then appends the result to an Appender object.
    */
   void append_to(Appender!(char[]) app, bool add_newline = false, DataFormat format = DataFormat.DEFAULT) {
     if (is_regular) {
@@ -162,7 +169,7 @@ class Record {
               app.put(';');
             append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
             app.put('=');
-            attr_value.append_to_string(app);
+            attr_value.append_to(app);
           }
         }
       } else {
@@ -179,7 +186,7 @@ class Record {
             app.put(' ');
             append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
             app.put(" \"");
-            attr_value.append_to_string(app);
+            attr_value.append_to(app);
             app.put("\";");
           }
         }
@@ -196,18 +203,9 @@ class Record {
   }
 
   /**
-   * Converts this object to a GFF3 line.
+   * Converts this object to a GFF3 or GTF line. The default is to covert
+   * it to the same type it was parsed from.
    */
-  string toString() {
-    if (is_regular()) {
-      auto result = appender!(char[])();
-      append_to(result);
-      return cast(string)(result.data);
-    } else {
-      return comment_or_pragma;
-    }
-  }
-
   string toString(DataFormat format) {
     if (is_regular()) {
       auto result = appender!(char[])();
@@ -216,6 +214,13 @@ class Record {
     } else {
       return comment_or_pragma;
     }
+  }
+
+  /**
+   * The following is required for compiler warnings.
+   */
+  string toString() {
+    return toString(DataFormat.DEFAULT);
   }
 
   private {
@@ -307,9 +312,9 @@ class Record {
 }
 
 /**
- * An attribute in a GFF3 record can have multiple values, separated by commas.
- * This struct can represent both attribute values with a single value and
- * multiple.
+ * An attribute in a GFF3 or GTF record can have multiple values, separated by
+ * commas. This struct can represent both attribute values with a single value
+ * and multiple values.
  */
 struct AttributeValue {
   /**
@@ -367,7 +372,7 @@ struct AttributeValue {
   /**
    * Appends the attribute values to the Appender object app.
    */
-  void append_to_string(T)(Appender!T app) {
+  void append_to(T)(Appender!T app) {
     if (is_multi) {
       if (replace_esc_chars) {
         bool first_value = true;
@@ -425,7 +430,7 @@ unittest {
   assert(value.first == "abc=f");
   assert(value.all == ["abc=f"]);
   auto app = appender!string();
-  value.append_to_string(app);
+  value.append_to(app);
   assert(app.data == "abc%3Df");
 
   value = AttributeValue("abc%3Df");
@@ -433,7 +438,7 @@ unittest {
   assert(value.first == "abc%3Df");
   assert(value.all == ["abc%3Df"]);
   app = appender!string();
-  value.append_to_string(app);
+  value.append_to(app);
   assert(app.data == "abc%3Df");
 
   value = AttributeValue("ab,cd,e");
@@ -441,7 +446,7 @@ unittest {
   assert(value.first == "ab");
   assert(value.all == ["ab", "cd", "e"]);
   app = appender!string();
-  value.append_to_string(app);
+  value.append_to(app);
   assert(app.data == "ab,cd,e");
 
   value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij".dup);
@@ -449,7 +454,7 @@ unittest {
   assert(value.first == "a=b");
   assert(value.all == ["a=b", "c;d", "e,f", "g&h", "ij"]);
   app = appender!string();
-  value.append_to_string(app);
+  value.append_to(app);
   assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 
   value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij");
@@ -457,7 +462,7 @@ unittest {
   assert(value.first == "a%3Db");
   assert(value.all == ["a%3Db", "c%3Bd", "e%2Cf", "g%26h", "ij"]);
   app = appender!string();
-  value.append_to_string(app);
+  value.append_to(app);
   assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 }
 

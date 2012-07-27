@@ -88,6 +88,9 @@ to filter out records with a CDS feature from a GFF3 file:
     gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
 ```
 
+If you need to filter a GTF file instead, use --gtf-input and
+--gtf-output options, or use the "gtf-ffetch" command instead.
+
 The utility will use the fast (and soon parallel) D library to do the
 parsing and filtering. You can then parse the result using your
 programming language and library of choice.
@@ -215,9 +218,15 @@ line options:
 Before exiting the utility prints the number of records or features
 it parsed.
 
+To use GTF files for benchmarking, uset the --gtf-input option or use
+the "gtf-benchmark" command instead. There is no support for joining
+records into features for now, so that the -f, -c and -l options
+cannot be used for now. There is also no support for validation of
+GTF data.
+
 ### Counting features
 
-The gff3-ffetch utility keeps only a small part of records in memory
+The gff3-benchmark utility keeps only a small part of records in memory
 while combining them into features. To check if the cache size is
 correct, the "gff3-count-features" utility can be used to get the
 correct number of features in a file. It gets all the IDs into
