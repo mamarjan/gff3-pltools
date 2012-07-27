@@ -394,6 +394,19 @@ struct AttributeValue {
     }
   }
 
+  /**
+   * Converts the attribute value to string, using append_to().
+   */
+  string toString() {
+    if (is_multi) {
+      auto result = appender!(char[])();
+      append_to(result);
+      return cast(string)(result.data);
+    } else {
+      return first;
+    }
+  }
+
   private {
     bool replace_esc_chars;
     int value_count;
