@@ -1,6 +1,7 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
-import bio.gff3.record_range, bio.gff3.selection;
+import bio.gff3.record_range, bio.gff3.selection, bio.gff3.record;
+import bio.gff3.conv.json;
 import util.split_file, util.version_helper;
 
 /**
@@ -14,11 +15,23 @@ import util.split_file, util.version_helper;
  * See package README for more information.
  */
 
+string to_gff3(Record record) {
+  return record.toString(DataFormat.GFF3);
+}
+
+string to_string(Record record) {
+  return record.toString();
+}
+
+string to_gtf(Record record) {
+  return record.toString(DataFormat.GTF);
+}
+
 int main(string[] args) {
   // Parse command line arguments
   string filter_string = null;
   string output_filename = null;
-  ulong at_most = -1;
+  long at_most = -1;
   bool show_version = false;
   bool pass_fasta_through = false;
   bool keep_comments = false;
@@ -30,7 +43,7 @@ int main(string[] args) {
     gtf_output = true;
   }
   string selection = null;
-  bool prepend_header = false;
+  bool json = false;
   bool help = false;
   try {
     getopt(args,
@@ -45,7 +58,7 @@ int main(string[] args) {
         "gtf-input", &gtf_input,
         "gtf-output", &gtf_output,
         "select", &selection,
-        "prepend-header", &prepend_header,
+        "json", &json,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -87,11 +100,6 @@ int main(string[] args) {
     output = File(output_filename, "w");
   }
 
-  // Prepare column selector
-  ColumnsSelector selector;
-  if (selection !is null)
-    selector = selection.to_selector();
-
   // Prepare for parsing
   RecordRange!SplitFile records;
   if (filename == "-") {
@@ -113,26 +121,22 @@ int main(string[] args) {
          .set_keep_pragmas(keep_pragmas);
 
   // Parsing, filtering and output
-  ulong record_counter = 0;
-  if (at_most < 0) {
-    foreach(rec; records) {
-      if (selection is null)
-        output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
-      else
-        output.writeln(rec.to_table(selector));
+  alias string delegate(Record) ConvFunc;
+  if (selection is null) {
+    if (gtf_output) {
+      records.to_gtf(output, at_most);
+    } else if (json) {
+      records.to_json(output, at_most);
+    } else {
+      records.to_gff(output, at_most);
     }
   } else {
-    foreach(rec; records) {
-      if (record_counter == at_most) {
-        output.write("# ...");
-        break;
-      } else {
-        if (selection is null)
-          output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
-        else
-          output.writeln(rec.to_table(selector));
-        record_counter++;
-      }
+    if (gtf_output) {
+      // invalid option combination
+    } else if (json) {
+      records.to_json(output, at_most, selection);
+    } else {
+      records.to_table(output, at_most, selection);
     }
   }
 
@@ -169,6 +173,7 @@ void print_usage() {
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
   writeln("  --gtf-input     Input data is in GTF format");
   writeln("  --gtf-output    Output data in GTF format");
+  writeln("  --select        Output data table format with columns specified by an argument");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
