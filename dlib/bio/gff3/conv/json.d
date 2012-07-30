@@ -3,6 +3,26 @@ module bio.gff3.conv.json;
 import std.array;
 import bio.gff3.record, bio.gff3.record_range;
 
+/**
+ * Converts a Record object to a string in JSON format. The
+ * result is in the following form, but without spaces:
+ * {
+ *   "seqname" : "value of seqname",
+ *   "source"  : "value of source",
+ *   "feature" : "value of feature",
+ *   "start"   : "value of start",
+ *   "end"     : "value of end",
+ *   "score"   : "value of score",
+ *   "strand"  : "value of strand",
+ *   "phase"   : "value of phase",
+ *   "attributes"   : {
+ *        "attr name 1" : "attr value 1",
+ *        "attr name 2" : "attr value 2",
+ *                     . . .
+ *        "attr name n" : "attr value n",
+ *   }
+ * }
+ */
 void to_json(Record record, ref Appender!string app) {
   app.put("{\"seqname\":\"");
   app.put(record.seqname);
