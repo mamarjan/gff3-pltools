@@ -89,7 +89,7 @@ int main(string[] args) {
 
   // Prepare column selector
   ColumnsSelector selector;
-  if (selection is null)
+  if (selection !is null)
     selector = selection.to_selector();
 
   // Prepare for parsing
