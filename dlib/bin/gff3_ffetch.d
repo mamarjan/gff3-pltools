@@ -30,6 +30,7 @@ int main(string[] args) {
     gtf_output = true;
   }
   string selection = null;
+  bool prepend_header = false;
   bool help = false;
   try {
     getopt(args,
@@ -44,6 +45,7 @@ int main(string[] args) {
         "gtf-input", &gtf_input,
         "gtf-output", &gtf_output,
         "select", &selection,
+        "prepend-header", &prepend_header,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -85,6 +87,11 @@ int main(string[] args) {
     output = File(output_filename, "w");
   }
 
+  // Prepare column selector
+  ColumnsSelector selector;
+  if (selection is null)
+    selector = selection.to_selector();
+
   // Prepare for parsing
   RecordRange!SplitFile records;
   if (filename == "-") {
@@ -107,7 +114,6 @@ int main(string[] args) {
 
   // Parsing, filtering and output
   ulong record_counter = 0;
-  auto selector = selection.to_selector();
   if (at_most < 0) {
     foreach(rec; records) {
       if (selection is null)
