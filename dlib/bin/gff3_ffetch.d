@@ -1,6 +1,6 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
-import bio.gff3.record_range;
+import bio.gff3.record_range, bio.gff3.selection;
 import util.split_file, util.version_helper;
 
 /**
@@ -29,6 +29,7 @@ int main(string[] args) {
     gtf_input = true;
     gtf_output = true;
   }
+  string selection = null;
   bool help = false;
   try {
     getopt(args,
@@ -42,6 +43,7 @@ int main(string[] args) {
         "keep-pragmas", &keep_pragmas,
         "gtf-input", &gtf_input,
         "gtf-output", &gtf_output,
+        "select", &selection,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -105,9 +107,13 @@ int main(string[] args) {
 
   // Parsing, filtering and output
   ulong record_counter = 0;
+  auto selector = selection.to_selector();
   if (at_most < 0) {
     foreach(rec; records) {
-      output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
+      if (selection is null)
+        output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
+      else
+        output.writeln(rec.to_table(selector));
     }
   } else {
     foreach(rec; records) {
@@ -115,7 +121,10 @@ int main(string[] args) {
         output.write("# ...");
         break;
       } else {
-        output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
+        if (selection is null)
+          output.writeln(rec.toString(gtf_output ? DataFormat.GTF : DataFormat.GFF3));
+        else
+          output.writeln(rec.to_table(selector));
         record_counter++;
       }
     }
