@@ -62,12 +62,12 @@ unittest {
   }
   with(record2) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
-           [".", ".", ".", ".", ".", ".", ".", "."]);
+           ["", "", "", "", "", "", "", ""]);
     assert(attributes.length == 0);
   }
   with(record3) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
-           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", "", "+", ""]);
     assert(attributes["ID"].all == ["EXON=00000131935"]);
     assert(attributes["Parent"].all == ["TRAN;00000017239"]);
   }

@@ -251,7 +251,7 @@ unittest {
 
   test_record = new Record(" \t.\ta\t123\t456\t1.0\t+\t2\tID=9");
   assert(FIELD(FIELD_SEQNAME, EQUALS(" "))(test_record) == true);
-  assert(FIELD(FIELD_SOURCE, EQUALS("."))(test_record) == true);
+  assert(FIELD(FIELD_SOURCE, EQUALS(""))(test_record) == true);
   assert(FIELD(FIELD_FEATURE, EQUALS("a"))(test_record) == true);
   assert(FIELD(FIELD_START, EQUALS("123"))(test_record) == true);
   assert(FIELD(FIELD_END, EQUALS("456"))(test_record) == true);

@@ -2,7 +2,7 @@ module bio.gff3.record;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, bio.gff3.validation;
+import bio.exceptions, bio.gff3.validation, bio.gff3.selection;
 import util.esc_char_conv, util.split_line;
 
 public import bio.gff3.data_formats;
@@ -45,13 +45,21 @@ class Record {
    */
   void parse_line(string line) {
     seqname = get_and_skip_next_field(line);
+    if ((seqname.length == 1) && (seqname[0] == '.')) seqname = null;
     source = get_and_skip_next_field(line);
+    if ((source.length == 1) && (source[0] == '.')) source = null;
     feature = get_and_skip_next_field(line);
+    if ((feature.length == 1) && (feature[0] == '.')) feature = null;
     start = get_and_skip_next_field(line);
+    if ((start.length == 1) && (start[0] == '.')) start = null;
     end = get_and_skip_next_field(line);
+    if ((end.length == 1) && (end[0] == '.')) end = null;
     score = get_and_skip_next_field(line);
+    if ((score.length == 1) && (score[0] == '.')) score = null;
     strand = get_and_skip_next_field(line);
+    if ((strand.length == 1) && (strand[0] == '.')) strand = null;
     phase = get_and_skip_next_field(line);
+    if ((phase.length == 1) && (phase[0] == '.')) phase = null;
 
     if (data_format == DataFormat.GFF3)
       attributes = parse_attributes(get_and_skip_next_field(line));
@@ -71,13 +79,21 @@ class Record {
     char[] line = original_line.dup;
 
     seqname = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    if ((seqname.length == 1) && (seqname[0] == '.')) seqname = null;
     source = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    if ((source.length == 1) && (source[0] == '.')) source = null;
     feature = cast(string) replace_url_escaped_chars( get_and_skip_next_field(line) );
+    if ((feature.length == 1) && (feature[0] == '.')) feature = null;
     start = cast(string) get_and_skip_next_field(line);
+    if ((start.length == 1) && (start[0] == '.')) start = null;
     end = cast(string) get_and_skip_next_field(line);
+    if ((end.length == 1) && (end[0] == '.')) end = null;
     score = cast(string) get_and_skip_next_field(line);
+    if ((score.length == 1) && (score[0] == '.')) score = null;
     strand = cast(string) get_and_skip_next_field(line);
+    if ((strand.length == 1) && (strand[0] == '.')) strand = null;
     phase = cast(string) get_and_skip_next_field(line);
+    if ((phase.length == 1) && (phase[0] == '.')) phase = null;
 
     if (data_format == DataFormat.GFF3)
       attributes = parse_attributes(get_and_skip_next_field(line));
@@ -221,6 +237,14 @@ class Record {
    */
   string toString() {
     return toString(DataFormat.DEFAULT);
+  }
+
+  /**
+   * Returns the fields selected by the selector separated by tab
+   * characters in one string.
+   */
+  string to_table(ColumnsSelector selector) {
+    return selector(this).join("\t");
   }
 
   private {
@@ -546,7 +570,7 @@ unittest {
   record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
   with (record) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
-           [".", ".", ".", ".", ".", ".", ".", "."]);
+           ["", "", "", "", "", "", "", ""]);
     assert(attributes.length == 0);
   }
 
@@ -554,7 +578,7 @@ unittest {
   record = new Record("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
   with (record) {
     assert([seqname, source, feature, start, end, score, strand, phase] ==
-           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", ".", "+", "."]);
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", "", "+", ""]);
     assert(attributes.length == 2); 
     assert(attributes["ID"].all == ["EXON=00000131935"]);
     assert(attributes["Parent"].all == ["TRAN;000000=17239"]);
@@ -599,6 +623,13 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id=abc;transcript_id=def")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).toString(DataFormat.GFF3).indexOf("gene_id=abc") != -1);
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"\"; transcript_id \"\";");
+
+  // Test to_table conversion
+  auto selector = to_selector("seqname,start,end,attr ID");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_table(selector) == "\t\t\t");
+  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "\t\t\ttesting");
+  assert((new Record("selected\tnothing should change\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t\t\ttesting");
+  assert((new Record("selected\t\t.\t123\t456\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t123\t456\ttesting");
 
   // Testing toString with escaping of characters
   assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
