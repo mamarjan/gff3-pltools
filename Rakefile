@@ -57,6 +57,7 @@ task :utilities => :bin do
     sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
     sh "dmd -O -release dlib/bin/gff3_to_gtf.d #{DFILES} -Idlib -J. -ofbin/gff3-to-gtf"
     sh "dmd -O -release dlib/bin/gtf_to_gff3.d #{DFILES} -Idlib -J. -ofbin/gtf-to-gff3"
+    sh "dmd -O -release dlib/bin/gff3_to_json.d #{DFILES} -Idlib -J. -ofbin/gff3-to-json"
   elsif dc == "gdc"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
@@ -64,10 +65,12 @@ task :utilities => :bin do
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_gtf.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-gtf"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gtf_to_gff3.d #{DFILES} -lpthread -fno-assert -J. -o bin/gtf-to-gff3"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_json.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-json"
   end
   rm_f Dir.glob("bin/*.o")
   sh "ln -s gff3-benchmark bin/gtf-benchmark"
   sh "ln -s gff3-ffetch bin/gtf-ffetch"
+  sh "ln -s gff3-to-json bin/gtf-to-json"
 end
 
 task :default => :unittests
