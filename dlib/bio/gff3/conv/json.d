@@ -1,7 +1,7 @@
 module bio.gff3.conv.json;
 
 import std.array;
-import bio.gff3.record, bio.gff3.record_range;
+import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
 
 /**
  * Converts a Record object to a string in JSON format. The
@@ -66,7 +66,9 @@ string to_json(Record record) {
 string to_json(Record record, ColumnsSelector selector, string[] column_names) {
   Appender!string app;
   auto columns = selector(record);
+
   app.put('{');
+
   bool first_attr = true;
   foreach(i, column_name; column_names) {
     if (!first_attr)
@@ -80,6 +82,7 @@ string to_json(Record record, ColumnsSelector selector, string[] column_names) {
     app.put('\"');
   }
   app.put('}');
+
   return app.data;
 }
 
@@ -108,7 +111,7 @@ string to_json(GenericRecordRange records) {
   return app.data;
 }
 
-void to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null) {
+bool to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null) {
   // First prepare the selector delegate
   ColumnsSelector selector = null;
   string[] columns = null;
@@ -137,14 +140,16 @@ void to_json(GenericRecordRange records, File output, long at_most = -1, string 
     // Check if the "at_most" limit has been reached
     if (counter == at_most) {
       output.write(",{\"limit_reached\":\"yes\"}");
-      break;
+      return true;
     }
   }
 
   output.write(']');
+
+  return false;
 }
 
-void to_gtf(GenericRecordRange records, File output, long at_most = -1) {
+bool to_gtf(GenericRecordRange records, File output, long at_most = -1) {
   long counter = 0;
   bool first_attr = true;
   foreach(rec; records) {
@@ -159,12 +164,14 @@ void to_gtf(GenericRecordRange records, File output, long at_most = -1) {
     // Check if the "at_most" limit has been reached
     if (counter == at_most) {
       output.write("# ...");
-      break;
+      return true;
     }
   }
+
+  return false;
 }
 
-void to_gff3(GenericRecordRange records, File output, long at_most = -1) {
+bool to_gff3(GenericRecordRange records, File output, long at_most = -1) {
   long counter = 0;
   bool first_attr = true;
   foreach(rec; records) {
@@ -179,9 +186,11 @@ void to_gff3(GenericRecordRange records, File output, long at_most = -1) {
     // Check if the "at_most" limit has been reached
     if (counter == at_most) {
       output.write("# ...");
-      break;
+      return true;
     }
   }
+
+  return false;
 }
 
 

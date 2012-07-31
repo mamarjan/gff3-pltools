@@ -1,7 +1,7 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
 import bio.gff3.record_range, bio.gff3.selection, bio.gff3.record;
-import bio.gff3.conv.json;
+import bio.gff3.conv.json, bio.gff3.conv.table;
 import util.split_file, util.version_helper;
 
 /**
@@ -14,18 +14,6 @@ import util.split_file, util.version_helper;
  *
  * See package README for more information.
  */
-
-string to_gff3(Record record) {
-  return record.toString(DataFormat.GFF3);
-}
-
-string to_string(Record record) {
-  return record.toString();
-}
-
-string to_gtf(Record record) {
-  return record.toString(DataFormat.GTF);
-}
 
 int main(string[] args) {
   // Parse command line arguments
@@ -121,28 +109,28 @@ int main(string[] args) {
          .set_keep_pragmas(keep_pragmas);
 
   // Parsing, filtering and output
-  alias string delegate(Record) ConvFunc;
+  bool at_most_reached = false;
   if (selection is null) {
     if (gtf_output) {
-      records.to_gtf(output, at_most);
+      at_most_reached = records.to_gtf(output, at_most);
     } else if (json) {
-      records.to_json(output, at_most);
+      at_most_reached = records.to_json(output, at_most);
     } else {
-      records.to_gff(output, at_most);
+      at_most_reached = records.to_gff3(output, at_most);
     }
   } else {
     if (gtf_output) {
       // invalid option combination
     } else if (json) {
-      records.to_json(output, at_most, selection);
+      at_most_reached = records.to_json(output, at_most, selection);
     } else {
-      records.to_table(output, at_most, selection);
+      at_most_reached = records.to_table(output, at_most, selection);
     }
   }
 
   // Print FASTA data if there is any and if the
   // line output limit has not been reached
-  if (record_counter != at_most) {
+  if (!at_most_reached) {
     if (pass_fasta_through) {
       auto fasta_data = records.get_fasta_data();
       if (fasta_data !is null) {
