@@ -1,7 +1,8 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering;
-import bio.gff3.record_range, bio.gff3.selection, bio.gff3.record;
-import bio.gff3.conv.json, bio.gff3.conv.table;
+import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
+       bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
+       bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
+       bio.gff3.conv.gtf;
 import util.split_file, util.version_helper;
 
 /**

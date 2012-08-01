@@ -23,8 +23,85 @@ import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
  *   }
  * }
  */
+
+string to_json(GenericRecordRange records) {
+  Appender!string app;
+  to_json(records, app);
+  return app.data;
+}
+
+void to_json(GenericRecordRange records, ref Appender!string app) {
+  app.put('[');
+
+  bool first_attr = true;
+  foreach(rec; records) {
+    if (!first_attr)
+      app.put(',');
+    else
+      first_attr = false;
+    rec.to_json(app);
+  }
+
+  app.put(']');
+}
+
+bool to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null) {
+  // First prepare the selector delegate
+  ColumnsSelector selector = null;
+  string[] columns = null;
+  if (selection !is null) {
+    selector = to_selector(selection);
+    columns = split(selection, ",");
+  }
+
+  // start output
+  output.write('[');
+
+  long counter = 0;
+  bool first_attr = true;
+  foreach(rec; records) {
+    if (!first_attr)
+      output.write(',');
+    else
+      first_attr = false;
+
+    if (selector is null)
+      output.write(rec.to_json());
+    else
+      output.write(rec.to_json(selector, columns));
+    counter += 1;
+
+    // Check if the "at_most" limit has been reached
+    if (counter == at_most) {
+      output.write(",{\"limit_reached\":\"yes\"}");
+      return true;
+    }
+  }
+
+  output.write(']');
+
+  return false;
+}
+
+
+void to_json(Record record, File output) {
+  output.write(record.to_json());
+}
+
+string to_json(Record record, ColumnsSelector selector = null, string[] column_names = null) {
+  Appender!string app;
+
+  if (selector is null)
+    record.to_json(app);
+  else
+    record.to_json(app, selector, column_names);
+
+  return app.data;
+}
+
 void to_json(Record record, ref Appender!string app) {
   app.put('{');
+
   if (record.is_regular) {
     app.put("\"seqname\":\"");
     app.put(record.seqname);
@@ -66,17 +143,11 @@ void to_json(Record record, ref Appender!string app) {
     app.put(record.toString());
     app.put('\"');
   }
+
   app.put('}');
 }
 
-string to_json(Record record) {
-  Appender!string app;
-  record.to_json(app);
-  return app.data;
-}
-
-string to_json(Record record, ColumnsSelector selector, string[] column_names) {
-  Appender!string app;
+void to_json(Record record, Appender!string app, ColumnsSelector selector, string[] column_names) {
   auto columns = selector(record);
 
   app.put('{');
@@ -105,116 +176,8 @@ string to_json(Record record, ColumnsSelector selector, string[] column_names) {
   }
 
   app.put('}');
-
-  return app.data;
 }
 
-void to_json(Record record, File output) {
-  output.write(record.to_json());
-}
-
-void to_json(GenericRecordRange records, ref Appender!string app) {
-  app.put('[');
-
-  bool first_attr = true;
-  foreach(rec; records) {
-    if (!first_attr)
-      app.put(',');
-    else
-      first_attr = false;
-    rec.to_json(app);
-  }
-
-  app.put(']');
-}
-
-string to_json(GenericRecordRange records) {
-  Appender!string app;
-  to_json(records, app);
-  return app.data;
-}
-
-bool to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null) {
-  // First prepare the selector delegate
-  ColumnsSelector selector = null;
-  string[] columns = null;
-  if (selection !is null) {
-    selector = to_selector(selection);
-    columns = split(selection, ",");
-  }
-
-  // start output
-  output.write('[');
-
-  long counter = 0;
-  bool first_attr = true;
-  foreach(rec; records) {
-    if (!first_attr)
-      output.write(',');
-    else
-      first_attr = false;
-
-    if (selector is null)
-      output.write(rec.to_json());
-    else
-      output.write(rec.to_json(selector, columns));
-    counter += 1;
-
-    // Check if the "at_most" limit has been reached
-    if (counter == at_most) {
-      output.write(",{\"limit_reached\":\"yes\"}");
-      return true;
-    }
-  }
-
-  output.write(']');
-
-  return false;
-}
-
-bool to_gtf(GenericRecordRange records, File output, long at_most = -1) {
-  long counter = 0;
-  bool first_attr = true;
-  foreach(rec; records) {
-    if (!first_attr)
-      output.write(',');
-    else
-      first_attr = false;
-
-    output.writeln(rec.toString(DataFormat.GTF));
-    counter += 1;
-
-    // Check if the "at_most" limit has been reached
-    if (counter == at_most) {
-      output.write("# ...");
-      return true;
-    }
-  }
-
-  return false;
-}
-
-bool to_gff3(GenericRecordRange records, File output, long at_most = -1) {
-  long counter = 0;
-  bool first_attr = true;
-  foreach(rec; records) {
-    if (!first_attr)
-      output.write(',');
-    else
-      first_attr = false;
-
-    output.writeln(rec.toString(DataFormat.GFF3));
-    counter += 1;
-
-    // Check if the "at_most" limit has been reached
-    if (counter == at_most) {
-      output.write("# ...");
-      return true;
-    }
-  }
-
-  return false;
-}
 
 
 import std.stdio;
