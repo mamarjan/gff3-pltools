@@ -1,7 +1,8 @@
 module bio.gff3.conv.json;
 
 import std.array;
-import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
+import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection,
+       bio.gff3.feature, bio.gff3.feature_range;
 
 /**
  * Functions which convert a Record object to a string in JSON format. The
@@ -23,6 +24,36 @@ import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
  *   }
  * }
  */
+
+void to_json(FeatureRange features, File output) {
+  output.write('[');
+
+  bool first_feature = true;
+  foreach(feature; features) {
+    if (!first_feature)
+      output.write(',');
+    else
+      first_feature = false;
+
+    output.write(feature.to_json());
+  }
+
+  output.write(']');
+}
+
+string to_json(Feature feature) {
+  Appender!string app;
+  to_json(feature, app);
+  return app.data;
+}
+
+void to_json(Feature feature, ref Appender!string app) {
+  app.put("{\"records\":[");
+  foreach(rec; feature.records) {
+    rec.to_json(app);
+  }
+  app.put("]}");
+}
 
 string to_json(GenericRecordRange records) {
   Appender!string app;

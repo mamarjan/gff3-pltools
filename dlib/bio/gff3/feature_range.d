@@ -38,6 +38,14 @@ class FeatureRange : RangeWithCache!Feature {
     records.set_after_filter(after_filter); return this;
   }
 
+  auto set_keep_comments(bool keep) {
+    records.set_keep_comments(keep); return this;
+  }
+
+  auto set_keep_pragmas(bool keep) {
+    records.set_keep_pragmas(keep); return this;
+  }
+
   protected Feature next_item() {
     Feature feature;
     while((!records.empty) && (feature is null)) {

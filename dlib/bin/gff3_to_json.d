@@ -1,6 +1,6 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.record_range,
-       bio.gff3.conv.json;
+       bio.gff3.conv.json, bio.gff3.feature_range;
 import util.split_file, util.version_helper;
 
 /**
@@ -17,6 +17,8 @@ int main(string[] args) {
   if (args[0].indexOf("gtf-to-json") != -1) {
     gtf_input = true;
   }
+  bool features_selected = false;
+  uint feature_cache_size = 1000;
   bool help = false;
   try {
     getopt(args,
@@ -26,6 +28,8 @@ int main(string[] args) {
         "keep-comments", &keep_comments,
         "keep-pragmas", &keep_pragmas,
         "gtf-input", &gtf_input,
+        "features", &features_selected,
+        "cache-size", &feature_cache_size,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -68,25 +72,45 @@ int main(string[] args) {
   }
 
   // Prepare for parsing
-  RecordRange!SplitFile records;
-  if (filename == "-") {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(stdin);
-    else
-      records = GTFFile.parse_by_records(stdin);
+  if (features_selected) {
+    FeatureRange features;
+    if (gtf_input) {
+      // raise error
+    } else {
+      if (filename == "-") {
+        features = GFF3File.parse_by_features(stdin);
+      } else {
+        features = GFF3File.parse_by_features(filename, feature_cache_size);
+      }
+    }
+
+    features.set_validate(NO_VALIDATION)
+            .set_replace_esc_chars(true)
+            .set_keep_comments(keep_comments)
+            .set_keep_pragmas(keep_pragmas);
+
+    features.to_json(output);
   } else {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(filename);
-    else
-      records = GTFFile.parse_by_records(filename);
+    RecordRange!SplitFile records;
+    if (filename == "-") {
+      if (!gtf_input)
+        records = GFF3File.parse_by_records(stdin);
+      else
+        records = GTFFile.parse_by_records(stdin);
+    } else {
+      if (!gtf_input)
+        records = GFF3File.parse_by_records(filename);
+      else
+        records = GTFFile.parse_by_records(filename);
+    }
+
+    records.set_validate(NO_VALIDATION)
+           .set_replace_esc_chars(true)
+           .set_keep_comments(keep_comments)
+           .set_keep_pragmas(keep_pragmas);
+
+    records.to_json(output);
   }
-
-  records.set_validate(NO_VALIDATION)
-         .set_replace_esc_chars(true)
-         .set_keep_comments(keep_comments)
-         .set_keep_pragmas(keep_pragmas);
-
-  records.to_json(output);
 
   return 0;
 }
@@ -101,6 +125,8 @@ void print_usage() {
   writeln("  --keep-comments Copy comments in GFF3 file to output");
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
   writeln("  --gtf-input     Input data is in GTF format");
+  writeln("  --features      merge records into features");
+  writeln("  --cache-size N  feature cache size (how many features to keep in memory), default=1000");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
