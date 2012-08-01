@@ -4,7 +4,7 @@ import std.array;
 import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
 
 /**
- * Converts a Record object to a string in JSON format. The
+ * Functions which convert a Record object to a string in JSON format. The
  * result is in the following form, but without spaces:
  * {
  *   "seqname" : "value of seqname",
