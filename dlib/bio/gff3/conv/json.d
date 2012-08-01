@@ -24,37 +24,49 @@ import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection;
  * }
  */
 void to_json(Record record, ref Appender!string app) {
-  app.put("{\"seqname\":\"");
-  app.put(record.seqname);
-  app.put("\",\"source\":\"");
-  app.put(record.source);
-  app.put("\",\"feature\":\"");
-  app.put(record.feature);
-  app.put("\",\"start\":\"");
-  app.put(record.start);
-  app.put("\",\"end\":\"");
-  app.put(record.end);
-  app.put("\",\"score\":\"");
-  app.put(record.score);
-  app.put("\",\"strand\":\"");
-  app.put(record.strand);
-  app.put("\",\"phase\":\"");
-  app.put(record.phase);
-  app.put("\",\"attributes\":[");
+  app.put('{');
+  if (record.is_regular) {
+    app.put("\"seqname\":\"");
+    app.put(record.seqname);
+    app.put("\",\"source\":\"");
+    app.put(record.source);
+    app.put("\",\"feature\":\"");
+    app.put(record.feature);
+    app.put("\",\"start\":\"");
+    app.put(record.start);
+    app.put("\",\"end\":\"");
+    app.put(record.end);
+    app.put("\",\"score\":\"");
+    app.put(record.score);
+    app.put("\",\"strand\":\"");
+    app.put(record.strand);
+    app.put("\",\"phase\":\"");
+    app.put(record.phase);
+    app.put("\",\"attributes\":[");
 
-  bool first_attr = true;
-  foreach(attr_name, attr_value; record.attributes) {
-    if (!first_attr)
-      app.put(',');
-    else
-      first_attr = false;
-    app.put("\"");
-    app.put(attr_name);
-    app.put("\":\"");
-    app.put(attr_value.toString());
+    bool first_attr = true;
+    foreach(attr_name, attr_value; record.attributes) {
+      if (!first_attr)
+        app.put(',');
+      else
+        first_attr = false;
+      app.put("\"");
+      app.put(attr_name);
+      app.put("\":\"");
+      app.put(attr_value.toString());
+      app.put('\"');
+    }
+    app.put("]");
+  } else if (record.is_comment) {
+    app.put("\"comment\":\"");
+    app.put(record.toString());
+    app.put('\"');
+  } else {
+    app.put("\"pragma\":\"");
+    app.put(record.toString());
     app.put('\"');
   }
-  app.put("]}");
+  app.put('}');
 }
 
 string to_json(Record record) {
@@ -69,18 +81,29 @@ string to_json(Record record, ColumnsSelector selector, string[] column_names) {
 
   app.put('{');
 
-  bool first_attr = true;
-  foreach(i, column_name; column_names) {
-    if (!first_attr)
-      app.put(',');
-    else
-      first_attr = false;
+  if (record.is_regular) {
+    bool first_attr = true;
+    foreach(i, column_name; column_names) {
+      if (!first_attr)
+        app.put(',');
+      else
+        first_attr = false;
+      app.put('\"');
+      app.put(column_name);
+      app.put("\":\"");
+      app.put(columns[i]);
+      app.put('\"');
+    }
+  } else if (record.is_comment) {
+    app.put("\"comment\":\"");
+    app.put(record.toString());
     app.put('\"');
-    app.put(column_name);
-    app.put("\":\"");
-    app.put(columns[i]);
+  } else {
+    app.put("\"pragma\":\"");
+    app.put(record.toString());
     app.put('\"');
   }
+
   app.put('}');
 
   return app.data;
