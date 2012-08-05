@@ -1,5 +1,5 @@
 import std.stdio, std.file, std.conv, std.getopt;
-import bio.gff3.file, bio.gff3.validation;
+import bio.gff3.file, bio.gff3.validation, bio.gff3.feature;
 import util.string_hash, util.version_helper;
 
 int main(string[] args) {
@@ -50,22 +50,45 @@ int main(string[] args) {
   auto records = GFF3File.parse_by_records(filename)
                          .set_validate(NO_VALIDATION)
                          .set_replace_esc_chars(false);
-  uint[string] IDs;
+  IDData[string] IDs;
   foreach(rec; records) {
     if (rec.id !is null) {
-      IDs[rec.id.idup] += 1;
+      if (rec.id in IDs)
+        IDs[rec.id.idup].total_records += 1;
+      else
+        IDs[rec.id.idup] = IDData(0, null);
     }
   }
 
   // Second pass - collect and output features
+  records = GFF3File.parse_by_records(filename)
+                    .set_validate(NO_VALIDATION)
+                    .set_replace_esc_chars(false);
 
+  foreach(rec; records) {
+    if (rec.id is null) {
+      output.writeln(rec.toString());
+    } else {
+      Feature tmp = IDs[rec.id].feature;
+
+      if (tmp is null)
+        tmp = IDs[rec.id].feature = new Feature(rec);
+      else
+        tmp.add_record(rec);
+
+      if (tmp.records.length == IDs[rec.id].total_records) {
+        output.writeln(tmp.toString());
+        IDs.remove(rec.id);
+      }
+    }
+  }
 
   return 0;
 }
 
-struct ID {
-  int hash;
-  string id;
+struct IDData {
+  uint total_records;
+  Feature feature;
 }
 
 void print_usage() {
