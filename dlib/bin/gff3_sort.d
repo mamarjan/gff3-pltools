@@ -5,11 +5,15 @@ import util.string_hash, util.version_helper;
 int main(string[] args) {
   // Parse command line arguments
   string output_filename = null;
+  bool keep_comments = false;
+  bool keep_pragmas = false;
   bool show_version = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
         "output|o", &output_filename,
+        "keep-comments", &keep_comments,
+        "keep-pragmas", &keep_pragmas,
         "version", &show_version);
   } catch (Exception e) {
     writeln(e.msg);
@@ -63,7 +67,9 @@ int main(string[] args) {
   // Second pass - collect and output features
   records = GFF3File.parse_by_records(filename)
                     .set_validate(NO_VALIDATION)
-                    .set_replace_esc_chars(false);
+                    .set_replace_esc_chars(false)
+                    .set_keep_comments(keep_comments)
+                    .set_keep_pragmas(keep_pragmas);
 
   foreach(rec; records) {
     if (rec.id is null) {
@@ -97,9 +103,11 @@ void print_usage() {
   writeln("are in the same place in the file.");
   writeln();
   writeln("Options:");
-  writeln("  -o, --output   Instead of writing results to stdout, write them to");
-  writeln("                 this file.");
-  writeln("  --version      Output version information and exit.");
+  writeln("  -o, --output    Instead of writing results to stdout, write them to");
+  writeln("                  this file.");
+  writeln("  --keep-comments Copy comments in GFF3 file to output");
+  writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
+  writeln("  --version       Output version information and exit.");
   writeln();
 }
 
