@@ -62,7 +62,7 @@ int main(string[] args) {
       if (rec.id in IDs)
         IDs[rec.id.idup].total_records += 1;
       else
-        IDs[rec.id.idup] = IDData(0, null);
+        IDs[rec.id.idup] = IDData(1, null);
     }
   }
 
@@ -77,15 +77,15 @@ int main(string[] args) {
     if (rec.id is null) {
       output.writeln(rec.toString());
     } else {
-      Feature tmp = IDs[rec.id].feature;
+      auto tmp = IDs[rec.id];
 
-      if (tmp is null)
-        tmp = IDs[rec.id].feature = new Feature(rec);
+      if (tmp.feature is null)
+        tmp.feature = IDs[rec.id].feature = new Feature(rec);
       else
-        tmp.add_record(rec);
+        tmp.feature.add_record(rec);
 
-      if (tmp.records.length == IDs[rec.id].total_records) {
-        output.writeln(tmp.toString());
+      if (tmp.feature.records.length == tmp.total_records) {
+        output.writeln(tmp.feature.toString());
         IDs.remove(rec.id);
       }
     }
