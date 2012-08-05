@@ -151,6 +151,7 @@ void print_usage() {
   writeln("Options:");
   writeln("  -f, --filter    A filtering expresion. Only records which match the");
   writeln("                  expression will be passed to stdout or output file.");
+  writeln("  --select        Output data table format with columns specified by an argument");
   writeln("  -o, --output    Instead of writing results to stdout, write them to");
   writeln("                  this file.");
   writeln("  -a, --at-most   At most this number of lines/records will be parsed.");
@@ -161,7 +162,7 @@ void print_usage() {
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
   writeln("  --gtf-input     Input data is in GTF format");
   writeln("  --gtf-output    Output data in GTF format");
-  writeln("  --select        Output data table format with columns specified by an argument");
+  writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();

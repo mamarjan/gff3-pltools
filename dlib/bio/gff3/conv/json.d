@@ -150,7 +150,7 @@ void to_json(Record record, ref Appender!string app) {
     app.put(record.strand);
     app.put("\",\"phase\":\"");
     app.put(record.phase);
-    app.put("\",\"attributes\":[");
+    app.put("\",\"attributes\":{");
 
     bool first_attr = true;
     foreach(attr_name, attr_value; record.attributes) {
@@ -164,7 +164,7 @@ void to_json(Record record, ref Appender!string app) {
       app.put(attr_value.toString());
       app.put('\"');
     }
-    app.put("]");
+    app.put("}");
   } else if (record.is_comment) {
     app.put("\"comment\":\"");
     app.put(record.toString());

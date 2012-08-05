@@ -1,5 +1,6 @@
 import std.stdio, std.file, std.conv, std.getopt;
-import bio.gff3.file, bio.gff3.validation, bio.gff3.feature;
+import bio.gff3.file, bio.gff3.validation, bio.gff3.feature,
+       bio.gff3.conv.json;
 import util.string_hash, util.version_helper;
 
 int main(string[] args) {
@@ -8,6 +9,7 @@ int main(string[] args) {
   bool keep_fasta = false;
   bool keep_comments = false;
   bool keep_pragmas = false;
+  bool json = false;
   bool show_version = false;
   try {
     getopt(args,
@@ -16,6 +18,7 @@ int main(string[] args) {
         "keep-fasta", &keep_fasta,
         "keep-comments", &keep_comments,
         "keep-pragmas", &keep_pragmas,
+        "json", &json,
         "version", &show_version);
   } catch (Exception e) {
     writeln(e.msg);
@@ -73,9 +76,19 @@ int main(string[] args) {
          .set_keep_comments(keep_comments)
          .set_keep_pragmas(keep_pragmas);
 
+  if (json) {
+    output.write('[');
+  }
+
   foreach(rec; records) {
     if (rec.id is null) {
-      output.writeln(rec.toString());
+      if (json) {
+        output.write("{\"records\":[");
+        output.write(rec.to_json());
+        output.write("]},");
+      } else {
+        output.writeln(rec.toString());
+      }
     } else {
       auto tmp = IDs[rec.id];
 
@@ -85,14 +98,22 @@ int main(string[] args) {
         tmp.feature.add_record(rec);
 
       if (tmp.feature.records.length == tmp.total_records) {
-        output.writeln(tmp.feature.toString());
+        if (json) {
+          output.write(tmp.feature.to_json(), ',');
+        } else {
+          output.writeln(tmp.feature.toString());
+        }
         IDs.remove(rec.id);
       }
     }
   }
 
+  if (json) {
+    output.write(']');
+  }
+
   // Print FASTA data if there is any
-  if (keep_fasta) {
+  if (!json && keep_fasta) {
     auto fasta_data = records.get_fasta_data();
     if (fasta_data !is null) {
       output.writeln("##FASTA");
@@ -119,6 +140,7 @@ void print_usage() {
   writeln("  --keep-fasta    Copy FASTA data at the end of input file to output");
   writeln("  --keep-comments Copy comments in GFF3 file to output");
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
+  writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln();
 }
