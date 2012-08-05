@@ -173,7 +173,7 @@ If there are more then a 1000 records in the results, after the
 "# ..." and the utility terminates.
 
 To pass through the FASTA data contained in a GFF3 file, you can use
-the "--pass-fasta-through" option. If there is FASTA data in it, it
+the "--keep-fasta" option. If there is FASTA data in it, it
 will be copies to output after the GFF3 records.
 
 To keep the comments and/or pragmas in the output, you can use the

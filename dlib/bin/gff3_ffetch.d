@@ -22,7 +22,7 @@ int main(string[] args) {
   string output_filename = null;
   long at_most = -1;
   bool show_version = false;
-  bool pass_fasta_through = false;
+  bool keep_fasta = false;
   bool keep_comments = false;
   bool keep_pragmas = false;
   bool gtf_input = false;
@@ -41,7 +41,7 @@ int main(string[] args) {
         "output|o", &output_filename,
         "at-most|a", &at_most,
         "version", &show_version,
-        "pass-fasta-through", &pass_fasta_through,
+        "keep-fasta", &keep_fasta,
         "keep-comments", &keep_comments,
         "keep-pragmas", &keep_pragmas,
         "gtf-input", &gtf_input,
@@ -132,7 +132,7 @@ int main(string[] args) {
   // Print FASTA data if there is any and if the
   // line output limit has not been reached
   if (!at_most_reached) {
-    if (pass_fasta_through) {
+    if (keep_fasta) {
       auto fasta_data = records.get_fasta_data();
       if (fasta_data !is null) {
         output.writeln("##FASTA");
@@ -156,8 +156,7 @@ void print_usage() {
   writeln("  -a, --at-most   At most this number of lines/records will be parsed.");
   writeln("                  If there are more records a line with \"# ...\" will");
   writeln("                  be appended at the end of the file.");
-  writeln("  --pass-fasta-through");
-  writeln("                  Copy the FASTA data at the end of the file to output");
+  writeln("  --keep-fasta    Copy FASTA data at the end of input file to output");
   writeln("  --keep-comments Copy comments in GFF3 file to output");
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
   writeln("  --gtf-input     Input data is in GTF format");
