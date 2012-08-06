@@ -23,6 +23,36 @@ import bio.gff3.record, bio.gff3.record_range, bio.gff3.selection,
  *        "attr name n" : "attr value n",
  *   }
  * }
+ *
+ * Features for now contain only the list of records they contain:
+ * {
+ *   "records" : [
+ *     { ...record1...},
+ *     { ...record2...},
+ *     {      ...     },
+ *     { ...recordn...}
+ *   ]
+ * }
+ *
+ * When converting a range of records, the output looks like the following:
+ * {
+ *   "records" : [
+ *     { ...record1...},
+ *     { ...record2...},
+ *     {      ...     },
+ *     { ...recordn...}
+ *   ]
+ * }
+ *
+ * And similar when converting a range of features:
+ * {
+ *   "features" : [
+ *     { ...feature1...},
+ *     { ...feature2...},
+ *     {      ...     },
+ *     { ...featuren...}
+ *   ]
+ * }
  */
 
 void to_json(FeatureRange features, File output) {
