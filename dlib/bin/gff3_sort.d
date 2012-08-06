@@ -77,15 +77,18 @@ int main(string[] args) {
          .set_keep_pragmas(keep_pragmas);
 
   if (json) {
-    output.write('[');
+    output.write("{\"features\":[");
   }
 
+  bool first_feature = true;
   foreach(rec; records) {
     if (rec.id is null) {
       if (json) {
+        if (!first_feature)
+          output.write(',');
         output.write("{\"records\":[");
         output.write(rec.to_json());
-        output.write("]},");
+        output.write("]}");
       } else {
         output.writeln(rec.toString());
       }
@@ -99,17 +102,22 @@ int main(string[] args) {
 
       if (tmp.feature.records.length == tmp.total_records) {
         if (json) {
-          output.write(tmp.feature.to_json(), ',');
+          if (!first_feature)
+            output.write(',');
+          output.write(tmp.feature.to_json());
         } else {
           output.writeln(tmp.feature.toString());
         }
         IDs.remove(rec.id);
+      } else {
+        continue;
       }
     }
+    first_feature = false;
   }
 
   if (json) {
-    output.write(']');
+    output.write("]}");
   }
 
   // Print FASTA data if there is any
