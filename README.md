@@ -80,9 +80,10 @@ can use the "unittests" rake task to run D unittests, like this:
 
 ### gff3-ffetch utility
 
-Currently this utility supports only filtering a file, based on a
-filtering expression. For example, you can use the following command
-to filter out records with a CDS feature from a GFF3 file:
+This utility supports filtering a file, with GFF3 and GTF input and
+output, and JSON and table output. For example, you can use the
+following command to filter out records with a CDS feature from
+a GFF3 file:
 
 ```sh
     gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
@@ -95,14 +96,14 @@ The utility will use the fast (and soon parallel) D library to do the
 parsing and filtering. You can then parse the result using your
 programming language and library of choice.
 
-Currently supported predicates are "field", "attribute", "equals",
-"contains", "starts_with" and "not". You can combine them in a way
-that makes sense. First, the utility needs to know what field or
-attribute should be used for filtering. In the previous example,
-that's the "field:feature" part. Next, the utility needs to know
-what you want to do with it. In the example, that's the "equals"
-part. And then the last part in the example is a parameter to the
-"equals", which tells the utility what the attribute or field
+Currently supported filtering predicates are "field", "attribute",
+"equals", "contains", "starts_with" and "not". You can combine them
+in a way that makes sense. First, the utility needs to know what
+field or attribute should be used for filtering. In the previous
+example, that's the "field:feature" part. Next, the utility needs
+to know what you want to do with it. In the example, that's the
+"equals" part. And then the last part in the example is a parameter
+to the "equals", which tells the utility what the attribute or field
 should be compared to.
 
 Parts of the expression are separated by a colon, ':', and if colon
@@ -147,6 +148,17 @@ example, the "attribute" predicate first runs the contained predicate
 on all attribute's values and returns true when an operation
 returns true for a parent value. That is, it has an implicit "and"
 operation built-in.
+
+There is also an option for selecting which fields and attributes
+should be in output:
+
+```sh
+    gff3-ffetch --select "seqname,start,end,attr ID" path-to-file.gff3
+```
+
+The previous command will output all records from the GFF3 file in
+tab-separated table format with four columns. JSON output is
+supported with this option too.
 
 There are a few more options available. In the examples above, the
 data was comming from a GFF3 file which was specified on the command
@@ -237,6 +249,29 @@ command:
 
 ```sh
     ./gff3-count-features path/to/file.gff3
+```
+
+### Format conversion utilities
+
+There are a few conversion utilities: gff3-to-json, gff3-to-gtf and
+gtf-to-gff3.
+
+Conversion from GTF to GFF3 and back is only on the syntax level,
+which means that the attributes column is reformated so that it can
+be interpreted by a parser for the target file format.
+
+### GFF3 sorting utility
+
+Currently the tool sorts the file so that records which are part of the
+same feature are in successive rows. It makes two passes on the input
+file, the first to collect information and the second to actually sort
+the data. The speed depends on the input file size and the number of
+records with the ID attribute specified, and is not very impressive.
+But the expected worst-case memory footprint is less then half the size
+of the input file.
+
+```sh
+    ./gff3-sort path/to/file.gff3
 ```
 
 ## Project home page
