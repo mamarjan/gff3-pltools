@@ -55,6 +55,9 @@ int main(string[] args) {
     output = File(output_filename, "w");
   }
 
+  // Increase output buffer size
+  output.setvbuf(1_048_576);
+
   // First pass - collecting info
   auto records = GFF3File.parse_by_records(filename);
   records.set_validate(NO_VALIDATION)

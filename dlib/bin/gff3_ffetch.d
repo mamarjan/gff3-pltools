@@ -31,6 +31,7 @@ int main(string[] args) {
     gtf_input = true;
     gtf_output = true;
   }
+  bool gff3_output = false;
   string selection = null;
   bool json = false;
   bool help = false;
@@ -46,6 +47,7 @@ int main(string[] args) {
         "keep-pragmas", &keep_pragmas,
         "gtf-input", &gtf_input,
         "gtf-output", &gtf_output,
+        "gff3-output", &gff3_output,
         "select", &selection,
         "json", &json,
         "help", &help);
@@ -64,6 +66,10 @@ int main(string[] args) {
   if (show_version) {
     writeln("gff3-ffetch (gff3-pltools) " ~ fetch_version());
     return 0;
+  }
+
+  if (gff3_output) {
+    gtf_output = false;
   }
 
   // Only a filename should be left at this point
@@ -88,6 +94,9 @@ int main(string[] args) {
   if (output_filename !is null) {
     output = File(output_filename, "w");
   }
+
+  // Increase output buffer size
+  output.setvbuf(1048576);
 
   // Prepare for parsing
   RecordRange!SplitFile records;
@@ -162,6 +171,7 @@ void print_usage() {
   writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
   writeln("  --gtf-input     Input data is in GTF format");
   writeln("  --gtf-output    Output data in GTF format");
+  writeln("  --gff3-output   Output data in GFF3 format");
   writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
