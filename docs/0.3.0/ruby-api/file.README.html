@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>
+  File: README
+  
+    &mdash; Documentation by YARD 0.7.5
+  
+</title>
+
+  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8" />
+
+  <link rel="stylesheet" href="css/common.css" type="text/css" media="screen" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  relpath = '';
+  if (relpath != '') relpath += '/';
+</script>
+
+  <script type="text/javascript" charset="utf-8" src="js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="js/app.js"></script>
+
+
+  </head>
+  <body>
+    <script type="text/javascript" charset="utf-8">
+      if (window.top.frames.main) document.body.className = 'frames';
+    </script>
+    
+    <div id="header">
+      <div id="menu">
+  
+    <a href="_index.html" title="Index">Index</a> &raquo; 
+    <span class="title">File: README</span>
+  
+  
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a id="class_list_link" href="#">Class List</a>
+  
+    <a id="method_list_link" href="#">Method List</a>
+  
+    <a id="file_list_link" href="#">File List</a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+    
+    <iframe id="search_frame"></iframe>
+    
+    <div id="content"><div id='filecontents'><h1>bioruby-gff3-pltools</h1>
+
+<p><a href="http://travis-ci.org/mamarjan/bioruby-gff3-pltools"><img src="https://secure.travis-ci.org/mamarjan/bioruby-gff3-pltools.png" alt="Build Status"></a></p>
+
+<p>Note: this software is under active development!</p>
+
+<p>This is currently an early work in progress to create a wrapper
+library for gff3-pltools.</p>
+
+<h2>Installation</h2>
+
+<h3>Requirements</h3>
+
+<p>gff3-pltools have to be installed and in the PATH. Ruby is a requirement
+too, and the rest can be installed using bundler.</p>
+
+<h3>Build and install instructions</h3>
+
+<p>Given the gff3-tools are installed, the gem command can be used to
+install the latest gem from rubygems.org:</p>
+
+<pre class="code sh"><code>    gem install bio-gff3-pltools
+</code></pre>
+
+<p>To build and install the library from source, use the following steps:</p>
+
+<pre class="code sh"><code>    tar -zxvf bioruby-gff3-pltools-X.Y.Z.tar.gz
+    cd bioruby-gff3-pltools-X.Y.Z
+    bundle install
+    rake install
+</code></pre>
+
+<p>To build a gem without installing, use the rake task &quot;build&quot; instead
+of &quot;install&quot; in the previous example.</p>
+
+<h3>Run tests</h3>
+
+<p>To run cucumber tests, first make sure the  D utilities
+are available in the path and then start the &quot;features&quot; rake task,
+like this:</p>
+
+<pre class="code sh"><code>    rake features
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>To use the library in your code, after installing the gem, simply
+require the library:</p>
+
+<pre class="code ruby"><code>    <span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>'</span><span class='tstring_content'>bio-gff3-pltools</span><span class='tstring_end'>'</span></span>
+</code></pre>
+
+<p>The API docs are online:</p>
+
+<p><a href="http://mamarjan.github.com/gff3-pltools/docs/0.3.0/ruby-api/">http://mamarjan.github.com/gff3-pltools/docs/0.3.0/ruby-api/</a> </p>
+
+<p>For more code examples see the test files in the source tree.</p>
+
+<h2>Project home page</h2>
+
+<p>Project home page can be found at the following location:</p>
+
+<p><a href="http://mamarjan.github.com/gff3-pltools/">http://mamarjan.github.com/gff3-pltools/</a></p>
+
+<p>For information on the source tree, issues and
+how to contribute, see</p>
+
+<p><a href="http://github.com/mamarjan/bioruby-gff3-pltools">http://github.com/mamarjan/bioruby-gff3-pltools</a></p>
+
+<p>The BioRuby community is on IRC server: irc.freenode.org, channel: #bioruby.</p>
+
+<h2>Cite</h2>
+
+<p>If you use this software, please cite one of</p>
+
+<ul>
+<li><a href="http://dx.doi.org/10.1093/bioinformatics/btq475">BioRuby: bioinformatics software for the Ruby programming language</a></li>
+<li><a href="http://dx.doi.org/10.1093/bioinformatics/bts080">Biogem: an effective tool-based approach for scaling up open source software development in bioinformatics</a></li>
+</ul>
+
+<h2>Biogems.info</h2>
+
+<p>This Biogem is published at <a href="http://biogems.info/index.html">#bio-gff3-pltools</a></p>
+
+<h2>Copyright</h2>
+
+<p>Copyright (c) 2012 Marjan Povolni. See LICENSE.txt for further details.</p>
+</div></div>
+    
+    <div id="footer">
+  Generated on Tue Aug  7 15:12:22 2012 by 
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.7.5 (ruby-1.9.3).
+</div>
+
+  </body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>
+  Module: Bio::PL::GTF
+  
+    &mdash; Documentation by YARD 0.7.5
+  
+</title>
+
+  <link rel="stylesheet" href="../../css/style.css" type="text/css" media="screen" charset="utf-8" />
+
+  <link rel="stylesheet" href="../../css/common.css" type="text/css" media="screen" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  relpath = '../..';
+  if (relpath != '') relpath += '/';
+</script>
+
+  <script type="text/javascript" charset="utf-8" src="../../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <script type="text/javascript" charset="utf-8">
+      if (window.top.frames.main) document.body.className = 'frames';
+    </script>
+    
+    <div id="header">
+      <div id="menu">
+  
+    <a href="../../_index.html">Index (G)</a> &raquo; 
+    <span class='title'><span class='object_link'><a href="../../Bio.html" title="Bio (module)">Bio</a></span></span> &raquo; <span class='title'><span class='object_link'><a href="../PL.html" title="Bio::PL (module)">PL</a></span></span>
+     &raquo; 
+    <span class="title">GTF</span>
+  
+  
+  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
+</div>
+
+      <div id="search">
+  
+    <a id="class_list_link" href="#">Class List</a>
+  
+    <a id="method_list_link" href="#">Method List</a>
+  
+    <a id="file_list_link" href="#">File List</a>
+  
+</div>
+      <div class="clear"></div>
+    </div>
+    
+    <iframe id="search_frame"></iframe>
+    
+    <div id="content"><h1>Module: Bio::PL::GTF
+  
+  
+  
+</h1>
+
+<dl class="box">
+  
+  
+    
+  
+    
+  
+  
+  
+    <dt class="r1 last">Defined in:</dt>
+    <dd class="r1 last">lib/bio-gff3-pltools/filtering.rb</dd>
+  
+</dl>
+<div class="clear"></div>
+
+
+
+
+
+
+
+
+  
+    <h2>
+      Class Method Summary
+      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+    </h2>
+
+    <ul class="summary">
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#filter_data-class_method" title="filter_data (class method)">+ (Object) <strong>filter_data</strong>(data, filter_string, options = {}) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Runs the gtf-ffetch utility with the specified parameters while passing
+data to its stdin.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#filter_file-class_method" title="filter_file (class method)">+ (Object) <strong>filter_file</strong>(filename, filter_string, options = {}) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Runs the gtf-ffetch utility with the specified parameters on an external
+file.</p>
+</div></span>
+  
+</li>
+
+      
+    </ul>
+  
+
+
+
+  <div id="class_method_details" class="method_details_list">
+    <h2>Class Method Details</h2>
+    
+    
+      <div class="method_details first">
+  <p class="signature first" id="filter_data-class_method">
+  
+    + (<tt>Object</tt>) <strong>filter_data</strong>(data, filter_string, options = {}) 
+  
+
+  
+</p><div class="docstring">
+  <div class="discussion">
+    
+<p>Runs the gtf-ffetch utility with the specified parameters while passing
+data to its stdin. Options include :output and :at_most, :keep_fasta,
+:keep_comments, :keep_pragmas, :gff3_output, :json_output, :select</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/bio-gff3-pltools/filtering.rb', line 138</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_filter_data'>filter_data</span> <span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='id identifier rubyid_filter_string'>filter_string</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='id identifier rubyid_output_option'>output_option</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_output'>output</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:output</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_output_option'>output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--output </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:output</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:at_most</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_at_most_option'>at_most_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--at-most </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:at_most</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_fasta</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_fasta_option'>fasta_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-fasta</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_comments</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_comments_option'>comments_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-comments</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_pragmas</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_pragmas_option'>pragmas_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-pragmas</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:gff3_output</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_gff3_output_option'>gff3_output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--gff3-output</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:json_output</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_json_output_option'>json_output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--json</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:select</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_select_option'>select_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--select \&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:select</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_content'>\&quot;</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span> <span class='op'>=</span> <span class='const'>IO</span><span class='period'>.</span><span class='id identifier rubyid_popen'>popen</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>gtf-ffetch --filter \&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_filter_string'>filter_string</span><span class='rbrace'>}</span><span class='tstring_content'>\&quot; - </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_output_option'>output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_at_most_option'>at_most_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_fasta_option'>fasta_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_comments_option'>comments_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_pragmas_option'>pragmas_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_gff3_output_option'>gff3_output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_json_output_option'>json_output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_select_option'>select_option</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>r+</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span> <span class='id identifier rubyid_data'>data</span>
+  <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_close_write'>close_write</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_output_option'>output_option</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_output'>output</span> <span class='op'>=</span> <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_read'>read</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_close'>close</span>
+  <span class='id identifier rubyid_output'>output</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <p class="signature " id="filter_file-class_method">
+  
+    + (<tt>Object</tt>) <strong>filter_file</strong>(filename, filter_string, options = {}) 
+  
+
+  
+</p><div class="docstring">
+  <div class="discussion">
+    
+<p>Runs the gtf-ffetch utility with the specified parameters on an external
+file. Options include :output, :at_most, :keep_fasta, :keep_comments,
+:keep_pragmas, :gff3_output, :json_output, :select</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'lib/bio-gff3-pltools/filtering.rb', line 95</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_filter_file'>filter_file</span> <span class='id identifier rubyid_filename'>filename</span><span class='comma'>,</span> <span class='id identifier rubyid_filter_string'>filter_string</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span> <span class='op'>=</span> <span class='lbrace'>{</span><span class='rbrace'>}</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='const'>File</span><span class='period'>.</span><span class='id identifier rubyid_exists?'>exists?</span><span class='lparen'>(</span><span class='id identifier rubyid_filename'>filename</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='const'>Exception</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>No such file - </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_filename'>filename</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
+
+  <span class='id identifier rubyid_output_option'>output_option</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='id identifier rubyid_output'>output</span> <span class='op'>=</span> <span class='kw'>nil</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:output</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_output_option'>output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--output </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:output</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:at_most</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_at_most_option'>at_most_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--at-most </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:at_most</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_fasta</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_fasta_option'>fasta_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-fasta</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_comments</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_comments_option'>comments_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-comments</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:keep_pragmas</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_pragmas_option'>pragmas_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--keep-pragmas</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:gff3_output</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_gff3_output_option'>gff3_output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--gff3-output</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:json_output</span><span class='rbracket'>]</span>
+    <span class='id identifier rubyid_json_output_option'>json_output_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--json</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='kw'>if</span> <span class='op'>!</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:select</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_select_option'>select_option</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>--select \&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_options'>options</span><span class='lbracket'>[</span><span class='symbol'>:select</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='tstring_content'>\&quot;</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_gff3_ffetch'>gff3_ffetch</span> <span class='op'>=</span> <span class='const'>IO</span><span class='period'>.</span><span class='id identifier rubyid_popen'>popen</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>gtf-ffetch --filter \&quot;</span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_filter_string'>filter_string</span><span class='rbrace'>}</span><span class='tstring_content'>\&quot; </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_filename'>filename</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_output_option'>output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_at_most_option'>at_most_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_fasta_option'>fasta_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_comments_option'>comments_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_pragmas_option'>pragmas_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_gff3_output_option'>gff3_output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_json_output_option'>json_output_option</span><span class='rbrace'>}</span><span class='tstring_content'> </span><span class='embexpr_beg'>#{</span><span class='id identifier rubyid_select_option'>select_option</span><span class='rbrace'>}</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
+  <span class='kw'>if</span> <span class='id identifier rubyid_output_option'>output_option</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
+    <span class='id identifier rubyid_output'>output</span> <span class='op'>=</span> <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_read'>read</span>
+  <span class='kw'>end</span>
+  <span class='id identifier rubyid_gtf_ffetch'>gtf_ffetch</span><span class='period'>.</span><span class='id identifier rubyid_close'>close</span>
+  <span class='id identifier rubyid_output'>output</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+  </div>
+
+</div>
+    
+    <div id="footer">
+  Generated on Tue Aug  7 15:12:23 2012 by 
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.7.5 (ruby-1.9.3).
+</div>
+
+  </body>
+</html>
