@@ -154,14 +154,10 @@ static this() {
 }
 
 RecordPredicate string_to_filter(string filter_string) {
-  if (filter_string is null) {
-    return NO_AFTER_FILTER;
-  }
-
   auto parts = split_filter_string(filter_string);
   string parameter;
   StringPredicate last_string_predicate;
-  RecordPredicate last_record_predicate;
+  RecordPredicate last_record_predicate = NO_AFTER_FILTER;
   foreach(value; parts.reverse) {
     switch(value) {
       case "equals":
