@@ -129,9 +129,7 @@ int main(string[] args) {
       at_most_reached = records.to_gff3(output, at_most);
     }
   } else {
-    if (gtf_output) {
-      // invalid option combination
-    } else if (json) {
+    if (json) {
       at_most_reached = records.to_json(output, at_most, selection);
     } else {
       at_most_reached = records.to_table(output, at_most, selection);

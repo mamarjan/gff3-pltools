@@ -154,6 +154,10 @@ static this() {
 }
 
 RecordPredicate string_to_filter(string filter_string) {
+  if (filter_string is null) {
+    return NO_AFTER_FILTER;
+  }
+
   auto parts = split_filter_string(filter_string);
   string parameter;
   StringPredicate last_string_predicate;
