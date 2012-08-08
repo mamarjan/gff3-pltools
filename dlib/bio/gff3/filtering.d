@@ -1,6 +1,6 @@
 module bio.gff3.filtering;
 
-import std.algorithm, std.string, std.conv;
+import std.algorithm, std.string, std.conv, std.array, std.ascii;
 import bio.gff3.record;
 import util.split_line;
 
@@ -392,5 +392,127 @@ unittest {
   assert(string_to_filter("field:seqname:contains:55")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
   assert(string_to_filter("not:attribute:ID:equals:9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
   assert(string_to_filter("not:attribute:ID:equals:9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+}
+
+alias bool delegate(Record r) RecordFilter;
+alias string delegate(Record r) StringFilter;
+alias long delegate(Record r) LongFilter;
+alias double delegate(Record r) DoubleFilter;
+
+RecordFilter new_string_to_filter(string filtering_expression) {
+  if (filtering_expression.strip().length == 0)
+    return NO_AFTER_FILTER;
+  else {
+    string[] tokens = extract_tokens(filtering_expression);
+    return NO_AFTER_FILTER;
+  }
+}
+
+string[] extract_tokens(string expression) {
+  Appender!(string[]) tokens;
+
+  expression = reduce_double_whitespace(expression);
+
+  while(expression.length != 0) {
+    if ((expression[0] == '(') || (expression[0] == ')')) {
+      tokens.put(expression[0..1]);
+      expression = expression[1..$].stripLeft();
+    } else if (expression[0] == '"') {
+      expression = expression[1..$];
+      size_t end_index = std.string.indexOf(expression[0..$], '\"');
+      if (end_index == -1)
+        throw new Exception("Could not find second \"");
+      else {
+        tokens.put(expression[0..end_index]);
+        expression = expression[(end_index+1)..$].stripLeft();
+      }
+    } else {
+      size_t next_delim_index = expression.first_of("() ");
+      if (next_delim_index == -1) {
+        tokens.put(expression);
+        expression = null;
+      } else {
+        tokens.put(expression[0..next_delim_index]);
+        expression = expression[next_delim_index..$].stripLeft();
+      }
+    }
+  }
+
+  return tokens.data;
+}
+
+unittest {
+  writeln("Testing extract_tokens()...");
+
+  assert(extract_tokens("").length == 0);
+  assert(extract_tokens("field seqname == test") == ["field", "seqname", "==", "test"] );
+  assert(extract_tokens("(field seqname) == test") == ["(", "field", "seqname", ")", "==", "test"] );
+  assert(extract_tokens("  (  field \tseqname  )  == \n test") == ["(", "field", "seqname", ")", "==", "test"] );
+  assert(extract_tokens("((field seqname) == test) and (attrib ID == test2)") ==
+           ["(", "(", "field", "seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID", "==", "test2", ")"] );
+  assert(extract_tokens("field seqname == \"test\"") == ["field", "seqname", "==", "test"] );
+  assert(extract_tokens("field seqname == \"test data\"") == ["field", "seqname", "==", "test data"] );
+  assert(extract_tokens("((field \" seqname\") == test) and (attrib \"ID test\" == test2)") ==
+           ["(", "(", "field", " seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID test", "==", "test2", ")"] );
+}
+
+string reduce_double_whitespace(string expression) {
+  Appender!string app;
+
+  foreach(i, c; expression) {
+    if (c.isWhite())
+      if ((i == 0) || (expression[i-1].isWhite()))
+        continue;
+      else
+        app.put(' ');
+    else
+      app.put(c);
+  }
+
+  return app.data.stripRight();
+}
+
+unittest {
+  writeln("Testing reduce_double_whitespace()...");
+
+  assert(reduce_double_whitespace("  aa  bb\t  c   ") == "aa bb c");
+  assert(reduce_double_whitespace("  (aa  bb  )   c   ") == "(aa bb ) c");
+}
+
+size_t first_of(string data, string what) {
+  size_t current_index = -1;
+  foreach(c; what) {
+    auto index = std.string.indexOf(data, c);
+    if (index != -1)
+      current_index = min(index, current_index);
+  }
+  
+  return current_index;
+}
+
+unittest {
+  writeln("Testing fist_of()...");
+
+  assert(first_of("abc", "bc") == 1);
+  assert(first_of("abc", "bd") == 1);
+  assert(first_of("abc", "cb") == 1);
+  assert(first_of("abc", "cd") == 2);
+  assert(first_of("abc", "abc") == 0);
+  assert(first_of("abc", "abcd") == 0);
+  assert(first_of("abc", "cdb") == 1);
+}
+
+class Node {
+  string text;
+  Node parent;
+  Node[] children;
+}
+
+unittest {
+  auto record = new Record("test\t.\t.\t.\t.\t.\t.\t.\t.");
+  //assert(new_string_to_filter("")(record) == true);
+  //assert(new_string_to_filter("field seqname == test")(record) == true);
+  //assert(new_string_to_filter("field seqname == bad")(record) == false);
+  //assert(new_string_to_filter("field seqname == tes")(record) == false);
 }
 
