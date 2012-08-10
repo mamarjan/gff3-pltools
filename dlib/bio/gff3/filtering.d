@@ -404,8 +404,353 @@ RecordFilter new_string_to_filter(string filtering_expression) {
     return NO_AFTER_FILTER;
   else {
     string[] tokens = extract_tokens(filtering_expression);
-    return NO_AFTER_FILTER;
+    Node root = generate_tree(tokens);
+    RecordFilter filter = get_bool_delegate(root);
+    if (filter is null) {
+      throw new Exception("Result of filtering expression should be boolean");
+    }
   }
+}
+
+RecordFilter get_bool_delegate(Node node) {
+  RecordFilter filter;
+
+  final switch(node.type) {
+    case NodeType.NONE:
+      filter = delegate bool(Record record) { return true; };
+      break;
+    case NodeType.AND_OPERATOR:
+    case NodeType.OR_OPERATOR:
+      if (node.children.length != 2)
+        throw new Exception(node.text ~ " requires two operands");
+      auto and_or_left = get_bool_delegate(node.children[0]);
+      auto and_or_right = get_bool_delegate(node.children[1]);
+      if ((and_or_left is null) || (and_or_right is null))
+        throw new Exception(node.text ~ " requires two boolean operands");
+      switch(node.type) {
+        case NodeType.AND_OPERATOR:
+          filter = delegate bool(Record record) { return and_or_left(record) && and_or_right(record); };
+          break;
+        case NodeType.OR_OPERATOR:
+          filter = delegate bool(Record record) { return and_or_left(record) || and_or_right(record); };
+          break;
+        default:
+          throw new Exception("Error in the code, please report to the maintainer");
+          break;
+      }
+      break;
+    case NodeType.NOT_OPERATOR:
+      if (node.children.length != 1)
+        throw new Exception("not requires one operand");
+      auto not_right = get_bool_delegate(node.children[0]);
+      if (not_right is null)
+        throw new Exception(node.text ~ " requires one boolean operand");
+      filter = delegate bool(Record record) { return !right(record); };
+      break;
+    case NodeType.CONTAINS_OPERATOR:
+    case NodeType.STARTS_WITH_OPERATOR:
+      if (node.children.length != 2)
+        throw new Exception("contains requires two operands");
+      auto contains_left = get_string_delegate(node.children[0]);
+      auto contains_right = get_string_delegate(node.children[1]);
+      if ((contains_left is null) || (contains_right is null))
+        throw new Exception(node.text ~ " requires two boolean operands");
+      switch(node.type) {
+        case NodeType.CONTAINS_OPERATOR:
+          filter = delegate bool(Record record) { return std.string.indexOf(left(record), right(record)) > -1; };
+          break;
+        case NodeType.STARTS_WITH_OPERATOR:
+          filter = delegate bool(Record record) { return left(record).startsWith(right(record)); };
+          break;
+        default:
+          throw new Exception("Error in the code, please report to the maintainer");
+          break;
+      }
+      break;
+    case NodeType.EQUALS_OPERATOR:
+    case NodeType.NOT_EQUALS_OPERATOR:
+    case NodeType.GREATER_THAN_OPERATOR:
+    case NodeType.LOWER_THAN_OPERATOR:
+    case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+      if (node.children.length != 2)
+        throw new Exception(node.text ~ " requires two operands");
+      auto double_left = get_double_delegate(node.children[0]);
+      auto double_right = get_double_delegate(node.children[1]);
+      if ((double_left !is null) && (double_right !is null)) {
+        switch(node.type) {
+          case NodeType.EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) == double_right(record); };
+            break;
+          case NodeType.NOT_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) != double_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) > double_right(record); };
+            break;
+          case NodeType.LOWER_THAN_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) < double_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) >= double_right(record); };
+            break;
+          case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return double_left(record) <= double_right(record); };
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+        break;
+      }
+      auto long_left = get_long_delegate(node.children[0]);
+      auto long_right = get_long_delegate(node.children[1]);
+      if ((long_left !is null) && (long_right !is null)) {
+        switch(node.type) {
+          case NodeType.EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) == long_right(record); };
+            break;
+          case NodeType.NOT_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) != long_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) > long_right(record); };
+            break;
+          case NodeType.LOWER_THAN_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) < long_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) >= long_right(record); };
+            break;
+          case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return long_left(record) <= long_right(record); };
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+        break;
+      }
+      auto bool_left = get_bool_delegate(node.children[0]);
+      auto bool_right = get_bool_delegate(node.children[1]);
+      if ((bool_left !is null) && (bool_right !is null)) {
+        switch(node.type) {
+          case NodeType.EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return bool_left(record) == bool_right(record); };
+            break;
+          case NodeType.NOT_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return bool_left(record) != bool_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.LOWER_THAN_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+            filter = null;
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+        break;
+      }
+      auto string_left = get_string_delegate(node.children[0]);
+      auto string_right = get_string_delegate(node.children[1]);
+      if ((string_left !is null) && (string_right !is null)) {
+        switch(node.type) {
+          case NodeType.EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return string_left(record) == string_right(record); };
+            break;
+          case NodeType.NOT_EQUALS_OPERATOR:
+            filter = delegate bool(Record record) { return string_left(record) != string_right(record); };
+            break;
+          case NodeType.GREATER_THAN_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.LOWER_THAN_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+            filter = null;
+            break;
+          case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+            filter = null;
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+        break;
+      }
+      throw new Exception("contains requires two operands");
+      break;
+    case NodeType.BRACKETS:
+      auto brackets_right = get_bool_delegate(node.children[0]);
+      if (brackets_right is null)
+        filter = null;
+      else
+        filter = delegate bool(Record record) { return brackets_right(record); };
+      break;
+    case NodeType.VALUE:
+    case NodeType.FIELD_OPERATOR:
+    case NodeType.ATTR_OPERATOR:
+    case NodeType.PLUS_OPERATOR:
+    case NodeType.MINUS_OPERATOR:
+    case NodeType.MULTIPLICATION_OPERATOR:
+    case NodeType.DIVISION_OPERATOR:
+      filter = null;
+      break;
+  }
+
+  return filter;
+}
+
+StringFilter get_string_delegate(Node node) {
+  StringFilter filter;
+
+  final switch(node.type) {
+    case NodeType.VALUE:
+      filter = delegate string(Record record) { return node.text; };
+      break;
+    case NodeType.FIELD_OPERATOR:
+      switch(node.parameter) {
+        case FIELD_SEQNAME:
+          filter = delegate string(Record record) { return record.seqname; };
+          break;
+        case FIELD_SOURCE:
+          filter = delegate string(Record record) { return record.source; };
+          break;
+        case FIELD_FEATURE:
+          filter = delegate string(Record record) { return record.feature; };
+          break;
+        case FIELD_START:
+          filter = delegate string(Record record) { return record.start; };
+          break;
+        case FIELD_END:
+          filter = delegate string(Record record) { return record.end; };
+          break;
+        case FIELD_SCORE:
+          filter = delegate string(Record record) { return record.score; };
+          break;
+        case FIELD_STRAND:
+          filter = delegate string(Record record) { return record.strand; };
+          break;
+        case FIELD_PHASE:
+          filter = delegate string(Record record) { return record.phase; };
+          break;
+        default:
+          throw new Exception("a GFF3 record has no " ~ node.parameter ~ " field");
+          break;
+      }
+      break;
+    case NodeType.ATTR_OPERATOR:
+      filter = delegate string(Record record) {
+        return (node.parameter in record.attributes) ? record.attributes[node.parameter] : null;
+      };
+      break;
+    case NodeType.BRACKETS:
+      filter = get_string_delegate(node.children[0]);
+      break;
+    case NodeType.NONE:
+    case NodeType.AND_OPERATOR:
+    case NodeType.OR_OPERATOR:
+    case NodeType.NOT_OPERATOR:
+    case NodeType.CONTAINS_OPERATOR:
+    case NodeType.STARTS_WITH_OPERATOR:
+    case NodeType.EQUALS_OPERATOR:
+    case NodeType.NOT_EQUALS_OPERATOR:
+    case NodeType.GREATER_THAN_OPERATOR:
+    case NodeType.LOWER_THAN_OPERATOR:
+    case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.PLUS_OPERATOR:
+    case NodeType.MINUS_OPERATOR:
+    case NodeType.MULTIPLICATION_OPERATOR:
+    case NodeType.DIVISION_OPERATOR:
+      filter null;
+      break;
+  }
+
+  return filter;
+}
+
+StringFilter get_double_delegate(Node node) {
+  DoubleFilter filter;
+
+  final switch(node.type) {
+    case VALUE:
+      double double_value;
+      bool converted_to_double = true;
+      try {
+        double_value = to!double(node.text);
+      } catch (Exception e) {
+        converted_to_double = false;
+      }
+      if (converted_to_double)
+        filter = delegate double(Record record) { return double_value; };
+      else
+        filter = null;
+      break;
+    case FIELD_OPERATOR:
+      StringFilter field_accessor = get_field_accessor(node.parameter);
+      filter = delegate double(Record record) { return to!double(field_accessor(record)); };
+      break;
+    case ATTR_OPERATOR:
+      filter = delegate double(Record record) { return (node.parameter in record.attributes) ? to!double(node.parameter) : 0.0; };
+      break;
+    case BRACKETS:
+      filter = get_double_delegate(node.children[0]);
+      break;
+    case PLUS_OPERATOR:
+    case MINUS_OPERATOR:
+    case MULTIPLICATION_OPERATOR:
+    case DIVISION_OPERATOR:
+      DoubleFilter left_operand = get_double_delegate(node.children[0]);
+      DoubleFilter right_operand = get_double_delegate(node.children[1]);
+      if ((left_operand is null) || (right_operand is null)) {
+        filter = null;
+      } else {
+        switch(node.type) {
+          case PLUS_OPERATOR:
+            filter = delegate double(Record record) { return left_operand(record) + right_operand(record); };
+            break;
+          case MINUS_OPERATOR:
+            filter = delegate double(Record record) { return left_operand(record) - right_operand(record); };
+            break;
+          case MULTIPLICATION_OPERATOR:
+            filter = delegate double(Record record) { return left_operand(record) * right_operand(record); };
+            break;
+          case DIVISION_OPERATOR:
+            filter = delegate double(Record record) { return left_operand(record) / right_operand(record); };
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+      }
+      break;
+    case NONE:
+    case AND_OPERATOR:
+    case OR_OPERATOR:
+    case NOT_OPERATOR:
+    case CONTAINS_OPERATOR:
+    case STARTS_WITH_OPERATOR:
+    case EQUALS_OPERATOR:
+    case NOT_EQUALS_OPERATOR:
+    case GREATER_THAN_OPERATOR:
+    case LOWER_THAN_OPERATOR:
+    case GREATER_THAN_OR_EQUALS_OPERATOR:
+    case LOWER_THAN_OR_EQUALS_OPERATOR:
+      filter = null;
+      break;
+  }
+
+  return filter;
 }
 
 enum NodeType {
@@ -429,6 +774,41 @@ enum NodeType {
   MINUS_OPERATOR,
   MULTIPLICATION_OPERATOR,
   DIVISION_OPERATOR
+}
+
+StringFilter get_field_accessor(string field_name) {
+    string function(Record r) field_accessor;
+    switch(field_name) {
+      case FIELD_SEQNAME:
+        field_accessor = function string(Record r) { return r.seqname; };
+        break;
+      case FIELD_SOURCE:
+        field_accessor = function string(Record r) { return r.source; };
+        break;
+      case FIELD_FEATURE:
+        field_accessor = function string(Record r) { return r.feature; };
+        break;
+      case FIELD_START:
+        field_accessor = function string(Record r) { return r.start; };
+        break;
+      case FIELD_END:
+        field_accessor = function string(Record r) { return r.end; };
+        break;
+      case FIELD_SCORE:
+        field_accessor = function string(Record r) { return r.score; };
+        break;
+      case FIELD_STRAND:
+        field_accessor = function string(Record r) { return r.strand; };
+        break;
+      case FIELD_PHASE:
+        field_accessor = function string(Record r) { return r.phase; };
+        break;
+      default:
+        throw new Exception("Invalid field name: " ~ field_name);
+        break;
+  }
+
+  return field_accessor;
 }
 
 Node generate_tree(string[] tokens) {
