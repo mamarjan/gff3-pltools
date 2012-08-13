@@ -2,8 +2,8 @@ import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
-       bio.gff3.conv.gtf;
-import util.split_file, util.version_helper;
+       bio.gff3.conv.gtf, bio.gff3.conv.fasta;
+import util.split_file, util.version_helper, util.read_file;
 
 /**
  * A utility for fetching sequences from GFF3 and FASTA files files.
@@ -62,6 +62,7 @@ int main(string[] args) {
 
   // The second argument left should be either a FASTA or a GFF3 file
   string fasta_filename;
+  string fasta_data;
 
   // Prepare File object for output
   File output = stdout;
@@ -82,7 +83,7 @@ int main(string[] args) {
     }
 
     if (filename.endsWith(".fa") || filename.endsWith(".fas") || filename.endsWith(".fas")) {
-      if (fasta_filename.lenth == 0) {
+      if (fasta_filename.length == 0) {
         fasta_filename = filename;
         continue;
       } else {
@@ -92,31 +93,19 @@ int main(string[] args) {
       }
     }
 
-    // Prepare for parsing
-    RecordRange!SplitFile records;
-    string fasta_data;
-    if (fasta_filename.length == 0) {
-      records = GFF3File.parse_by_records(filename);
-      records.set_validate(NO_VALIDATION)
-             .set_replace_esc_chars(false)
-             .set_keep_comments(false)
-             .set_keep_pragmas(false);
-      fasta_data = records.get_fasta_data();
+    if (fasta_data is null) {
+      if (fasta_filename !is null) {
+        fasta_data = read(File(fasta_filename, "r"));
+      }
     }
 
-    if (no_assemble) {
-      FeatureRange features = GFF3File.parse_by_features(filename);
-      features.set_validate(NO_VALIDATION)
-              .set_replace_esc_chars(false)
-              .set_keep_comments(false)
-              .set_keep_pragmas(false);
-    } else {
-      records = GFF3File.parse_by_records(gff3_filename);
-      records.set_validate(NO_VALIDATION)
-             .set_replace_esc_chars(false)
-             .set_keep_comments(false)
-             .set_keep_pragmas(false);
-    }
+    auto records = GFF3File.parse_by_records(filename);
+    records.set_validate(NO_VALIDATION)
+           .set_replace_esc_chars(false)
+           .set_keep_comments(false)
+           .set_keep_pragmas(false);
+
+    records.to_fasta(feature_type, fasta_data, output);
   }
 
   return 0;

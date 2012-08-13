@@ -25,6 +25,7 @@ DFILES = ["dlib/bio/gff3/file.d",
           "dlib/bio/gff3/conv/table.d",
           "dlib/bio/gff3/conv/gff3.d",
           "dlib/bio/gff3/conv/gtf.d",
+          "dlib/bio/gff3/conv/fasta.d",
           "dlib/util/esc_char_conv.d",
           "dlib/util/join_lines.d",
           "dlib/util/read_file.d",
@@ -53,21 +54,21 @@ CLEAN.include("unittests.o")
 desc "Compile GFF3 utilities"
 task :utilities => :bin do
   if dc == "dmd"
+    sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
     sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
     sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
     sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
     sh "dmd -O -release dlib/bin/gff3_filter.d #{DFILES} -Idlib -J. -ofbin/gff3-filter"
-    sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
     sh "dmd -O -release dlib/bin/gff3_to_gtf.d #{DFILES} -Idlib -J. -ofbin/gff3-to-gtf"
     sh "dmd -O -release dlib/bin/gtf_to_gff3.d #{DFILES} -Idlib -J. -ofbin/gtf-to-gff3"
     sh "dmd -O -release dlib/bin/gff3_to_json.d #{DFILES} -Idlib -J. -ofbin/gff3-to-json"
     sh "dmd -O -release dlib/bin/gff3_sort.d #{DFILES} -Idlib -J. -ofbin/gff3-sort"
   elsif dc == "gdc"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_count_features.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-count-features"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_filter.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-filter"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_gtf.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-gtf"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gtf_to_gff3.d #{DFILES} -lpthread -fno-assert -J. -o bin/gtf-to-gff3"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_json.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-json"
