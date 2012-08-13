@@ -56,6 +56,7 @@ task :utilities => :bin do
     sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
     sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
     sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
+    sh "dmd -O -release dlib/bin/gff3_filter.d #{DFILES} -Idlib -J. -ofbin/gff3-filter"
     sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
     sh "dmd -O -release dlib/bin/gff3_to_gtf.d #{DFILES} -Idlib -J. -ofbin/gff3-to-gtf"
     sh "dmd -O -release dlib/bin/gtf_to_gff3.d #{DFILES} -Idlib -J. -ofbin/gtf-to-gff3"
@@ -65,6 +66,7 @@ task :utilities => :bin do
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_count_features.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-count-features"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_filter.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-filter"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_gtf.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-gtf"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gtf_to_gff3.d #{DFILES} -lpthread -fno-assert -J. -o bin/gtf-to-gff3"
@@ -73,7 +75,7 @@ task :utilities => :bin do
   end
   rm_f Dir.glob("bin/*.o")
   sh "ln -s gff3-benchmark bin/gtf-benchmark"
-  sh "ln -s gff3-ffetch bin/gtf-ffetch"
+  sh "ln -s gff3-filter bin/gtf-filter"
   sh "ln -s gff3-to-json bin/gtf-to-json"
 end
 
