@@ -6,50 +6,35 @@ import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
 import util.split_file, util.version_helper;
 
 /**
- * A utility for parsing GFF3 files. The only function supported for now is
- * filtering GFF3 files, for example, if your're only interested in CDS,
- * you can use this utility to extract all CDS records from a file like
- * this:
+ * A utility for fetching sequences from GFF3 and FASTA files files.
  *
- *   gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
+ *   gff3-ffetch cds path-to-file.fa path-to-file.gff3
  *
  * See package README for more information.
  */
 
 int main(string[] args) {
   // Parse command line arguments
-  string filter_string = null;
   string output_filename = null;
-  long at_most = -1;
+  bool translate = false;
+  bool validate = false;
+  bool fix = false;
+  bool fix_wormbase = false;
+  bool no_assemble = false;
+  bool phase = false;
   bool show_version = false;
-  bool keep_fasta = false;
-  bool keep_comments = false;
-  bool keep_pragmas = false;
-  bool gtf_input = false;
-  bool gtf_output = false;
-  if (args[0].indexOf("gtf-ffetch") != -1) {
-    gtf_input = true;
-    gtf_output = true;
-  }
-  bool gff3_output = false;
-  string selection = null;
-  bool json = false;
   bool help = false;
   try {
     getopt(args,
         std.getopt.config.passThrough,
-        "filter|f", &filter_string,
         "output|o", &output_filename,
-        "at-most|a", &at_most,
+        "translate", &translate,
+        "validate", &validate,
+        "fix", &fix,
+        "fix-wormbase", &fix_wormbase,
+        "no-assemble", &no_assemble,
+        "phase", &phase,
         "version", &show_version,
-        "keep-fasta", &keep_fasta,
-        "keep-comments", &keep_comments,
-        "keep-pragmas", &keep_pragmas,
-        "gtf-input", &gtf_input,
-        "gtf-output", &gtf_output,
-        "gff3-output", &gff3_output,
-        "select", &selection,
-        "json", &json,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -68,26 +53,15 @@ int main(string[] args) {
     return 0;
   }
 
-  if (gff3_output) {
-    gtf_output = false;
+  // The first argument left should be the feature type
+  auto feature_type = toLower(args[1]);
+  if ((feature_type != "cds") && (feature_type != "mrna")) {
+    writeln("Only CDS and mRNA features are supported at the moment.");
+    return 5;
   }
 
-  // Only a filename should be left at this point
-  auto filename = args[1];
-  if (args.length != 2) {
-    print_usage();
-    return 2; // Exit the application
-  }
-
-  // Check if file exists, if not stdin
-  alias char[] array;
-  if (filename != "-") {
-    if (!(to!array(filename).exists)) {
-      writeln("Could not find file: " ~ filename ~ "\n");
-      print_usage();
-      return 3;
-    }
-  }
+  // The second argument left should be either a FASTA or a GFF3 file
+  string fasta_filename;
 
   // Prepare File object for output
   File output = stdout;
@@ -98,84 +72,71 @@ int main(string[] args) {
   // Increase output buffer size
   output.setvbuf(1048576);
 
-  // Prepare for parsing
-  RecordRange!SplitFile records;
-  if (filename == "-") {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(stdin);
-    else
-      records = GTFFile.parse_by_records(stdin);
-  } else {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(filename);
-    else
-      records = GTFFile.parse_by_records(filename);
-  }
-
-  records.set_validate(NO_VALIDATION)
-         .set_replace_esc_chars(false)
-         .set_after_filter(string_to_filter(filter_string))
-         .set_keep_comments(keep_comments)
-         .set_keep_pragmas(keep_pragmas);
-
-  // Parsing, filtering and output
-  bool at_most_reached = false;
-  if (selection is null) {
-    if (gtf_output) {
-      at_most_reached = records.to_gtf(output, at_most);
-    } else if (json) {
-      at_most_reached = records.to_json(output, at_most);
-    } else {
-      at_most_reached = records.to_gff3(output, at_most);
+  foreach(filename; args[2..$]) {
+    // Check if files exist
+    alias char[] array;
+    if (!(to!array(filename).exists)) {
+      writeln("Could not find file: " ~ filename ~ "\n");
+      print_usage();
+      return 3;
     }
-  } else {
-    if (json) {
-      at_most_reached = records.to_json(output, at_most, selection);
-    } else {
-      at_most_reached = records.to_table(output, at_most, selection);
-    }
-  }
 
-  // Print FASTA data if there is any and if the
-  // line output limit has not been reached
-  if (!at_most_reached) {
-    if (keep_fasta) {
-      auto fasta_data = records.get_fasta_data();
-      if (fasta_data !is null) {
-        output.writeln("##FASTA");
-        output.write(fasta_data);
+    if (filename.endsWith(".fa") || filename.endsWith(".fas") || filename.endsWith(".fas")) {
+      if (fasta_filename.lenth == 0) {
+        fasta_filename = filename;
+        continue;
+      } else {
+        writeln("Only one FASTA file allowed per GFF3");
+        print_usage();
+        return 6;
       }
     }
+
+    // Prepare for parsing
+    RecordRange!SplitFile records;
+    string fasta_data;
+    if (fasta_filename.length == 0) {
+      records = GFF3File.parse_by_records(filename);
+      records.set_validate(NO_VALIDATION)
+             .set_replace_esc_chars(false)
+             .set_keep_comments(false)
+             .set_keep_pragmas(false);
+      fasta_data = records.get_fasta_data();
+    }
+
+    if (no_assemble) {
+      FeatureRange features = GFF3File.parse_by_features(filename);
+      features.set_validate(NO_VALIDATION)
+              .set_replace_esc_chars(false)
+              .set_keep_comments(false)
+              .set_keep_pragmas(false);
+    } else {
+      records = GFF3File.parse_by_records(gff3_filename);
+      records.set_validate(NO_VALIDATION)
+             .set_replace_esc_chars(false)
+             .set_keep_comments(false)
+             .set_keep_pragmas(false);
+    }
   }
- 
+
   return 0;
 }
 
 void print_usage() {
-  writeln("Usage: gff3-ffetch [OPTIONS] FILE");
-  writeln("Parse GFF3 file and write records to stdout");
+  writeln("Usage: gff3-ffetch [OPTIONS] [FILE1.fa] FILE2.gff3...");
+  writeln("Fetch sequences form GFF3 and FASTA files");
   writeln();
   writeln("Options:");
-  writeln("  -f, --filter    A filtering expresion. Only records which match the");
-  writeln("                  expression will be passed to stdout or output file.");
-  writeln("  --select        Output data table format with columns specified by an argument");
+  writeln("  --translate     Output as amino acid sequence.");
+  writeln("  --validate      Validate GFF3 file by translating.");
+  writeln("  --fix           Check 3-frame translation and fix, if possible.");
+  writeln("  --fix-wormbase  Fix 3-frame translation on ORFs named 'gene1'.");
+  writeln("  --no-assemble   Output each record as a sequence.");
+  writeln("  --phase         Output records using phase (useful w. no-assemble CDS to AA).");
   writeln("  -o, --output    Instead of writing results to stdout, write them to");
   writeln("                  this file.");
-  writeln("  -a, --at-most   At most this number of lines/records will be parsed.");
-  writeln("                  If there are more records a line with \"# ...\" will");
-  writeln("                  be appended at the end of the file.");
-  writeln("  --keep-fasta    Copy FASTA data at the end of input file to output");
-  writeln("  --keep-comments Copy comments in GFF3 file to output");
-  writeln("  --keep-pragmas  Copy pragmas in GFF3 file to output");
-  writeln("  --gtf-input     Input data is in GTF format");
-  writeln("  --gtf-output    Output data in GTF format");
-  writeln("  --gff3-output   Output data in GFF3 format");
-  writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
-  writeln();
-  writeln("See package README for more information on what filtering expressions");
-  writeln("are allowed.");
   writeln();
 }
 
