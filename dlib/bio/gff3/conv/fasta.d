@@ -1,70 +1,204 @@
 module bio.gff3.conv.fasta;
 
-import std.stdio, std.conv, std.array;
+import std.stdio, std.conv, std.array, std.algorithm, std.string, std.ascii,
+       core.exception;
 import bio.gff3.record_range, bio.fasta;
+import util.split_into_lines;
 
-void to_fasta(GenericRecordRange records, string feature_type, string fasta_data, File output) {
-  auto all_records = collect_data(records);
-
-  auto all_cdss = collect_CDSs(all_records);
-  auto all_mrnas = collect_mRNAs(all_records);
+void to_fasta(GenericRecordRange records, string feature_type, string raw_fasta_data, File output) {
+  auto all_records = collect_data(records, feature_type);
+  auto features = collect_features(all_records);
+  auto fasta_data = parse_fasta(raw_fasta_data);
+  foreach(feature; features) {
+    output.writeln(feature.fasta_id);
+    output.writeln(feature.to_fasta(fasta_data));
+  }
 }
 
-RecordData[] collect_data(GenericRecordRange records) {
+RecordData[] collect_data(GenericRecordRange records, string feature_type) {
   Appender!(RecordData[]) all_records;
   foreach(rec; records) {
-    RecordData current;
+    if (equals_ci(feature_type, rec.feature)) {
+      RecordData current = new RecordData;
 
-    current.seqname = rec.seqname;
-    current.id = rec.id;
-    current.parent = rec.parent;
-    current.feature = rec.feature;
+      current.seqname = rec.seqname;
+      current.id = rec.id;
+      current.feature = rec.feature;
+      current.strand = rec.strand[0];
 
-    if (rec.start.length != 0)
-      current.start = to!long(rec.start);
-    if (rec.end.length != 0)
-      current.end = to!long(rec.end);
-    if (rec.phase.length != 0)
-      current.phase = to!byte(rec.phase);
+      if (rec.start.length != 0)
+        current.start = to!long(rec.start);
+      if (rec.end.length != 0)
+        current.end = to!long(rec.end);
+      if (rec.phase.length != 0)
+        current.phase = to!byte(rec.phase);
 
-    all_records.put(current);
+      all_records.put(current);
+    }
   }
 
   return all_records.data;
 }
 
-RecordData[] collect_CDSs(RecordData[] all_records) {
-  Appender!(RecordData[]) cds_records;
-
-  foreach(current; all_records) {
-    if (current.feature == "CDS") {
-      cds_records.put(current);
-    }
-  }
-
-  return cds_records.data;
+bool equals_ci(string a, string b) {
+  if (a.length != b.length)
+    return false;
+  foreach(i, c; a)
+    if (toLower(c) != toLower(b[i]))
+      return false;
+  return true;
 }
 
-RecordData[] collect_mRNAs(RecordData[] all_records) {
-  Appender!(RecordData[]) mrna_records;
+class FeatureData {
+  RecordData[] records;
 
-  foreach(current; all_records) {
-    if (current.feature == "mRNA") {
-      mrna_records.put(current);
-    }
+  void sort() {
+    bool rec_cmp(RecordData a, RecordData b) { return a.start < b.start; }
+    std.algorithm.sort!(rec_cmp)(records);
   }
 
-  return mrna_records.data;
+  @property string fasta_id() {
+    Appender!(string) new_id;
+    new_id.put('>');
+    if (records[0].id.length == 0) {
+      if (records[0].seqname.length == 0) {
+        new_id.put("unknown");
+        // TODO: report error
+      } else {
+        new_id.put(records[0].seqname);
+        new_id.put(' ');
+        new_id.put(to!string(records[0].start));
+        new_id.put(' ');
+        new_id.put(to!string(records[0].end));
+      }
+    } else {
+      new_id.put(records[0].id);
+    }
+    new_id.put(" Sequence:");
+    new_id.put(records[0].seqname);
+    sort();
+    new_id.put('_');
+    new_id.put(to!string(records[0].start));
+    new_id.put(':');
+    new_id.put(to!string(records[$-1].end));
+    new_id.put(" (");
+    bool first_record = true;
+    foreach(rec; records) {
+      if (first_record)
+        first_record = false;
+      else
+        new_id.put(", ");
+      new_id.put(to!string(rec.start));
+      new_id.put(':');
+      new_id.put(to!string(rec.end));
+    }
+    new_id.put(')');
+    return new_id.data;
+  }
+
+  string to_fasta(string[string] fasta_data) {
+    string fasta_sequence;
+    string seqname = records[0].seqname;
+    if (seqname.length == 0) {
+      // TODO: report error
+      fasta_sequence = null;
+    } else {
+      if (seqname in fasta_data) {
+        if (records[0].strand == '-') {
+          auto copy = records.dup;
+          reverse(copy);
+          foreach(rec; copy) {
+            auto sequence = fasta_data[seqname];
+            auto sequence_part = sequence[rec.start-1..rec.end].dup;
+            if (sequence_part.length == 0) {
+              // TODO: report sequence length 0, e.g. start == end is true
+            } else {
+              reverse(sequence_part);
+              reverse_strand(sequence_part);
+              if (sequence_part.length < rec.phase) {
+                // TODO: report error
+              }  else {
+                fasta_sequence ~= sequence_part[rec.phase..$];
+              }
+            }
+          }
+        } else {
+          foreach(rec; records) {
+            auto sequence_part = fasta_data[seqname][rec.start-1..rec.end];
+            if (sequence_part.length < rec.phase) {
+              // TODO: report error
+            }  else {
+              fasta_sequence ~= sequence_part[rec.phase..$];
+            }
+          }
+        }
+      } else {
+        // TODO: report error
+        fasta_sequence = null;
+      }
+    }
+    return fasta_sequence;
+  }
 }
 
-// Collect only relevant feature data
-struct RecordData {
+// Collect only relevant data
+class RecordData {
   string seqname;
   string feature;
   string id;
-  string parent;
+  char strand;
   long start;
   long end;
   byte phase;
+}
+
+FeatureData[] collect_features(RecordData[] all_records) {
+  FeatureData[string] lookup_table;
+  Appender!(FeatureData[]) features;
+
+  foreach(rec; all_records) {
+    if (rec.id.length == 0) {
+      auto new_feature = new FeatureData;
+      new_feature.records = [rec];
+      features.put(new_feature);
+    } else {
+      if (rec.id in lookup_table) {
+        lookup_table[rec.id].records ~= rec;
+      } else {
+        auto new_feature = new FeatureData;
+        new_feature.records = [rec];
+        lookup_table[rec.id] = new_feature;
+        features.put(new_feature);
+      }
+    }
+  }
+
+  return features.data;
+}
+
+string[string] parse_fasta(string raw_fasta_data) {
+  auto records = new FastaRange!SplitIntoLines(new SplitIntoLines(raw_fasta_data));
+
+  string[string] fasta_data;
+  foreach(rec; records)
+    fasta_data[rec.header] = rec.sequence;
+
+  return fasta_data;
+}
+
+void reverse_strand(char[] sequence) {
+  foreach(ref c; sequence) {
+    switch(c) {
+      case 'A': c = 'T'; break;
+      case 'T': c = 'A'; break;
+      case 'C': c = 'G'; break;
+      case 'G': c = 'C'; break;
+      case 'a': c = 't'; break;
+      case 't': c = 'a'; break;
+      case 'c': c = 'g'; break;
+      case 'g': c = 'c'; break;
+      default: break;
+    }
+  }
 }
 

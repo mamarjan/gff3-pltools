@@ -59,9 +59,9 @@ class FastaRange(SourceRangeType) {
 
       FastaRecord result = new FastaRecord();
       static if (is(typeof(data) == SplitIntoLines)) {
-        result.header = header;
+        result.header = header[1..$];
       } else {
-        result.header = to!string(header);
+        result.header = to!string(header[1..$]);
       }
       data.popFront();
 
@@ -128,7 +128,7 @@ unittest {
   auto seq2 = fasta.front; fasta.popFront();
   assert(fasta.empty == true);
   with (seq1) {
-    assert(header == ">ctg123");
+    assert(header == "ctg123");
     assert(sequence == (
            "cttctgggcgtacccgattctcggagaacttgccgcaccattccgccttg" ~
            "tgttcattgctgcctgcatgttcattgtctacctcggctacgtgtggcta" ~
@@ -142,7 +142,7 @@ unittest {
            "aatctagctagctatccgaaattcgaggcctgaaaagtgtgacgccattc" ));
   }
   with (seq2) {
-    assert(header == ">cnda0123");
+    assert(header == "cnda0123");
     assert(sequence == (
            "ttcaagtgctcagtcaatgtgattcacagtatgtcaccaaatattttggc" ~
            "agctttctcaagggatcaaaattatggatcattatggaatacctcggtgg" ~
