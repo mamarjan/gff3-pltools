@@ -15,6 +15,7 @@ import util.split_file, util.version_helper, util.read_file;
 
 int main(string[] args) {
   // Parse command line arguments
+  string parent_feature_type = null;
   string output_filename = null;
   bool translate = false;
   bool validate = false;
@@ -27,6 +28,7 @@ int main(string[] args) {
   try {
     getopt(args,
         std.getopt.config.passThrough,
+        "parent-type", &parent_feature_type,
         "output|o", &output_filename,
         "translate", &translate,
         "validate", &validate,
@@ -105,7 +107,7 @@ int main(string[] args) {
            .set_keep_comments(false)
            .set_keep_pragmas(false);
 
-    records.to_fasta(feature_type, fasta_data, output);
+    records.to_fasta(feature_type, parent_feature_type, fasta_data, output);
   }
 
   return 0;
@@ -116,6 +118,7 @@ void print_usage() {
   writeln("Fetch sequences form GFF3 and FASTA files");
   writeln();
   writeln("Options:");
+  writeln("  --parent-type   Use parent features for grouping instead of ID attr");
   writeln("  --translate     Output as amino acid sequence.");
   writeln("  --validate      Validate GFF3 file by translating.");
   writeln("  --fix           Check 3-frame translation and fix, if possible.");

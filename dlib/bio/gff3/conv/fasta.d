@@ -5,26 +5,36 @@ import std.stdio, std.conv, std.array, std.algorithm, std.string, std.ascii,
 import bio.gff3.record_range, bio.fasta;
 import util.split_into_lines;
 
-void to_fasta(GenericRecordRange records, string feature_type, string raw_fasta_data, File output) {
-  auto all_records = collect_data(records, feature_type);
-  auto features = collect_features(all_records);
+void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type, string raw_fasta_data, File output) {
+  auto all_records = collect_data(records, [feature_type, parent_feature_type]);
+  FeatureData[] features;
+  if (parent_feature_type is null) {
+    features = collect_features(all_records);
+  } else {
+    features = collect_features(all_records, feature_type, parent_feature_type);
+  }
   auto fasta_data = parse_fasta(raw_fasta_data);
   foreach(feature; features) {
-    output.writeln(feature.fasta_id);
-    output.writeln(feature.to_fasta(fasta_data));
+    if (feature.records.length > 0) {
+      output.writeln(feature.fasta_id);
+      output.writeln(feature.to_fasta(fasta_data));
+    }
   }
 }
 
-RecordData[] collect_data(GenericRecordRange records, string feature_type) {
+RecordData[] collect_data(GenericRecordRange records, string[] feature_types) {
   Appender!(RecordData[]) all_records;
   foreach(rec; records) {
-    if (equals_ci(feature_type, rec.feature)) {
+    bool is_requested_feature(string a) { return equals_ci(a, rec.feature); }
+    //if (equals_ci(feature_type, rec.feature)) {
+    if (reduce!("a || b")(false, map!(is_requested_feature)(feature_types))) {
       RecordData current = new RecordData;
 
       current.seqname = rec.seqname;
       current.id = rec.id;
       current.feature = rec.feature;
       current.strand = rec.strand[0];
+      current.parent = rec.parent;
 
       if (rec.start.length != 0)
         current.start = to!long(rec.start);
@@ -162,6 +172,7 @@ class RecordData {
   string seqname;
   string feature;
   string id;
+  string parent;
   char strand;
   long start;
   long end;
@@ -185,6 +196,35 @@ FeatureData[] collect_features(RecordData[] all_records) {
         new_feature.records = [rec];
         lookup_table[rec.id] = new_feature;
         features.put(new_feature);
+      }
+    }
+  }
+
+  return features.data;
+}
+
+FeatureData[] collect_features(RecordData[] all_records, string child_feature_type, string parent_feature_type) {
+  FeatureData[string] lookup_table;
+  Appender!(FeatureData[]) features;
+
+  // Collect all ID's of parents
+  foreach(rec; all_records) {
+    if (equals_ci(rec.feature, parent_feature_type)) {
+      if (rec.id !in lookup_table) {
+        auto new_feature = new FeatureData;
+        lookup_table[rec.id] = new_feature;
+        features.put(new_feature);
+      }
+    }
+  }
+
+  foreach(rec; all_records) {
+    if (equals_ci(rec.feature, child_feature_type)) {
+      if (rec.parent in lookup_table) {
+        rec.id = rec.parent;
+        lookup_table[rec.parent].records ~= rec;
+      } else {
+        // TODO: report error
       }
     }
   }
