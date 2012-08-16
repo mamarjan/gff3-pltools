@@ -118,7 +118,15 @@ class FeatureData {
               if (sequence_part.length < rec.phase) {
                 // TODO: report error
               }  else {
-                fasta_sequence ~= sequence_part[rec.phase..$];
+                sequence_part = sequence_part[rec.phase..$];
+                int[3] frameshift;
+                if (sequence_part.length > 5) {
+                  frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
+                  frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
+                  frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
+                  sequence_part = sequence_part[min_pos(frameshift)..$];
+                }
+                fasta_sequence ~= sequence_part[0..$-(sequence_part.length % 3)];
               }
             }
           }
@@ -128,7 +136,15 @@ class FeatureData {
             if (sequence_part.length < rec.phase) {
               // TODO: report error
             }  else {
-              fasta_sequence ~= sequence_part[rec.phase..$];
+              sequence_part = sequence_part[rec.phase..$];
+              int[3] frameshift;
+              if (sequence_part.length > 5) {
+                frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
+                frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
+                frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
+                sequence_part = sequence_part[min_pos(frameshift)..$];
+              }
+              fasta_sequence ~= sequence_part[0..$-(sequence_part.length % 3)];
             }
           }
         }
@@ -200,5 +216,42 @@ void reverse_strand(char[] sequence) {
       default: break;
     }
   }
+}
+
+int count_stop_codons(T)(T[] sequence) {
+  int stop_codons = 0;
+  while(sequence.length >= 3) {
+    switch(sequence[0..3]) {
+      case "TAA", "taa", "TGA", "tga", "TAG", "tag":
+        stop_codons += 1;
+        break;
+      default:
+        break;
+    }
+    sequence = sequence[3..$];
+  }
+
+  return stop_codons;
+}
+
+int min_pos(int[] values) {
+  int current_min = values[0];
+  int current_index = 0;
+  foreach(int i, int value; values) {
+    if (value < current_min) {
+      current_min = value;
+      current_index = i;
+    }
+  }
+
+  return current_index;
+}
+
+unittest {
+  writeln("Testing min_pos()...");
+
+  assert(min_pos([1, 2, 3]) == 0);
+  assert(min_pos([2, 1, 3]) == 1);
+  assert(min_pos([6, 5, 4]) == 2);
 }
 
