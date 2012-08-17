@@ -5,15 +5,22 @@ import std.stdio, std.conv, std.array, std.algorithm, std.string, std.ascii,
 import bio.gff3.record_range, bio.fasta;
 import util.split_into_lines;
 
-void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type, string raw_fasta_data, File output) {
-  auto all_records = collect_data(records, [feature_type, parent_feature_type]);
+void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type,
+              string raw_fasta_data, bool no_assemble, File output) {
+  RecordData[] all_records;
+  if (no_assemble)
+    all_records = collect_data(records, [feature_type]);
+  else
+    all_records = collect_data(records, [feature_type, parent_feature_type]);
+  auto fasta_data = parse_fasta(raw_fasta_data);
   FeatureData[] features;
-  if (parent_feature_type is null) {
+  if (no_assemble) {
+    features = convert_to_features(all_records);
+  } else if (parent_feature_type is null) {
     features = collect_features(all_records);
   } else {
     features = collect_features(all_records, feature_type, parent_feature_type);
   }
-  auto fasta_data = parse_fasta(raw_fasta_data);
   foreach(feature; features) {
     if (feature.records.length > 0) {
       output.writeln(feature.fasta_id);
@@ -166,6 +173,18 @@ class RecordData {
   long start;
   long end;
   byte phase;
+}
+
+FeatureData[] convert_to_features(RecordData[] all_records) {
+  Appender!(FeatureData[]) features;
+
+  foreach(rec; all_records) {
+    auto new_feature = new FeatureData;
+    new_feature.records = [rec];
+    features.put(new_feature);
+  }
+
+  return features.data;
 }
 
 FeatureData[] collect_features(RecordData[] all_records) {

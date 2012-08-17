@@ -107,7 +107,7 @@ int main(string[] args) {
            .set_keep_comments(false)
            .set_keep_pragmas(false);
 
-    records.to_fasta(feature_type, parent_feature_type, fasta_data, output);
+    records.to_fasta(feature_type, parent_feature_type, fasta_data, no_assemble, output);
   }
 
   return 0;
