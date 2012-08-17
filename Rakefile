@@ -80,5 +80,25 @@ task :utilities => :bin do
   sh "ln -s gff3-to-json bin/gtf-to-json"
 end
 
+directory "dev_bin"
+CLEAN.include("dev_bin/")
+
+desc "Compile development utilities"
+task :dev_tools => :dev_bin do
+  if dc == "dmd"
+    sh "dmd -g dlib/dev_tools/combine_fasta.d #{DFILES} -Idlib -J. -ofdev_bin/combine-fasta"
+    sh "dmd -g dlib/dev_tools/fasta_rewrite.d #{DFILES} -Idlib -J. -ofdev_bin/fasta-rewrite"
+    sh "dmd -g dlib/dev_tools/compare_fasta.d #{DFILES} -Idlib -J. -ofdev_bin/compare-fasta"
+    sh "dmd -g dlib/dev_tools/fasta_stats.d #{DFILES} -Idlib -J. -ofdev_bin/fasta-stats"
+    sh "dmd -g dlib/dev_tools/make_fasta_comparable.d #{DFILES} -Idlib -J. -ofdev_bin/make-fasta-comparable"
+  elsif dc == "gdc"
+    sh "gdc -fdebug dlib/dev_tools/combine_fasta.d #{DFILES} -lpthread -J. -o dev_bin/combine-fasta"
+    sh "gdc -fdebug dlib/dev_tools/compare_fasta.d #{DFILES} -lpthread -J. -o dev_bin/compare-fasta"
+    sh "gdc -fdebug dlib/dev_tools/fasta_stats.d #{DFILES} -lpthread -J. -o dev_bin/fasta-stats"
+    sh "gdc -fdebug dlib/dev_tools/make_fasta_comparable.d #{DFILES} -lpthread -J. -o dev_bin/make-fasta-comparable"
+  end
+  rm_f Dir.glob("dev_bin/*.o")
+end
+
 task :default => :unittests
 

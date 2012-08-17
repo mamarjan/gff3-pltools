@@ -123,7 +123,8 @@ class FeatureData {
                   frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
                   sequence_part = sequence_part[min_pos(frameshift)..$];
                 }
-                fasta_sequence ~= sequence_part[0..$-(sequence_part.length % 3)];
+                sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
+                fasta_sequence ~= sequence_part;
               }
             }
           }
@@ -141,7 +142,8 @@ class FeatureData {
                 frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
                 sequence_part = sequence_part[min_pos(frameshift)..$];
               }
-              fasta_sequence ~= sequence_part[0..$-(sequence_part.length % 3)];
+              sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
+              fasta_sequence ~= sequence_part;
             }
           }
         }
