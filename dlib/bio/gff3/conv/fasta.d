@@ -1,7 +1,7 @@
 module bio.gff3.conv.fasta;
 
 import std.stdio, std.conv, std.array, std.algorithm, std.string, std.ascii,
-       core.exception;
+       std.format, core.exception;
 import bio.gff3.record_range, bio.fasta;
 import util.split_into_lines;
 
@@ -68,39 +68,26 @@ class FeatureData {
   }
 
   @property string fasta_id() {
+    sort();
     Appender!(string) new_id;
     new_id.put('>');
-    if (records[0].id.length == 0) {
-      if (records[0].seqname.length == 0) {
+    auto rec0 = records[0];
+    if (rec0.id.length == 0) {
+      if (rec0.seqname.length == 0) {
         new_id.put("unknown");
         // TODO: report error
       } else {
-        new_id.put(records[0].seqname);
-        new_id.put(' ');
-        new_id.put(to!string(records[0].start));
-        new_id.put(' ');
-        new_id.put(to!string(records[0].end));
+        new_id.formattedWrite("%s %d %d", rec0.seqname, rec0.start, rec0.end);
       }
     } else {
-      new_id.put(records[0].id);
+      new_id.formattedWrite("%s", rec0.id);
     }
-    new_id.put(" Sequence:");
-    new_id.put(records[0].seqname);
-    sort();
-    new_id.put('_');
-    new_id.put(to!string(records[0].start));
-    new_id.put(':');
-    new_id.put(to!string(records[$-1].end));
-    new_id.put(" (");
-    bool first_record = true;
-    foreach(rec; records) {
-      if (first_record)
-        first_record = false;
+    formattedWrite(new_id, " Sequence:%s_%d:%d (", rec0.seqname, rec0.start, records[$-1].end);
+    foreach(i, rec; records) {
+      if (i == 0)
+        new_id.formattedWrite("%d:%d", rec.start, rec.end);
       else
-        new_id.put(", ");
-      new_id.put(to!string(rec.start));
-      new_id.put(':');
-      new_id.put(to!string(rec.end));
+        new_id.formattedWrite(", %d:%d", rec.start, rec.end);
     }
     new_id.put(')');
     return new_id.data;
