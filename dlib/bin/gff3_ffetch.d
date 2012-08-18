@@ -23,6 +23,8 @@ int main(string[] args) {
   bool fix_wormbase = false;
   bool no_assemble = false;
   bool phase = false;
+  bool frame = false;
+  bool trim_end = false;
   bool show_version = false;
   bool help = false;
   try {
@@ -33,9 +35,10 @@ int main(string[] args) {
         "translate", &translate,
         "validate", &validate,
         "fix", &fix,
-        "fix-wormbase", &fix_wormbase,
         "no-assemble", &no_assemble,
         "phase", &phase,
+        "frame", &frame,
+        "trim-end", &trim_end,
         "version", &show_version,
         "help", &help);
   } catch (Exception e) {
@@ -53,6 +56,12 @@ int main(string[] args) {
   if (show_version) {
     writeln("gff3-ffetch (gff3-pltools) " ~ fetch_version());
     return 0;
+  }
+
+  if (fix) {
+    phase = true;
+    frame = true;
+    trim_end = true;
   }
 
   // The first argument left should be the feature type
@@ -107,7 +116,7 @@ int main(string[] args) {
            .set_keep_comments(false)
            .set_keep_pragmas(false);
 
-    records.to_fasta(feature_type, parent_feature_type, fasta_data, no_assemble, output);
+    records.to_fasta(feature_type, parent_feature_type, fasta_data, no_assemble, phase, frame, trim_end, output);
   }
 
   return 0;
@@ -121,10 +130,14 @@ void print_usage() {
   writeln("  --parent-type   Use parent features for grouping instead of ID attr");
   writeln("  --translate     Output as amino acid sequence.");
   writeln("  --validate      Validate GFF3 file by translating.");
-  writeln("  --fix           Check 3-frame translation and fix, if possible.");
-  writeln("  --fix-wormbase  Fix 3-frame translation on ORFs named 'gene1'.");
+  writeln("  --fix           Same as phase, frame and trim-end options together.");
   writeln("  --no-assemble   Output each record as a sequence.");
-  writeln("  --phase         Output records using phase (useful w. no-assemble CDS to AA).");
+  writeln("  --phase         Take into account the phase field of a GFF3 record and adjust");
+  writeln("                  the sequence.");
+  writeln("  --frame         Try to guess the best reading frame, by optimising the");
+  writeln("                  sequence for the least possible number of stop codons.");
+  writeln("  --trim-end      Trim the end of each sequence to make sure it's");
+  writeln("                  length modulo 3 is 0");
   writeln("  -o, --output    Instead of writing results to stdout, write them to");
   writeln("                  this file.");
   writeln("  --version       Output version information and exit.");

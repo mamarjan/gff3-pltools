@@ -6,7 +6,8 @@ import bio.gff3.record_range, bio.fasta;
 import util.split_into_lines;
 
 void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type,
-              string raw_fasta_data, bool no_assemble, File output) {
+              string raw_fasta_data, bool no_assemble, bool phase, bool frame,
+              bool trim_end, File output) {
   RecordData[] all_records;
   if (no_assemble)
     all_records = collect_data(records, [feature_type]);
@@ -24,7 +25,7 @@ void to_fasta(GenericRecordRange records, string feature_type, string parent_fea
   foreach(feature; features) {
     if (feature.records.length > 0) {
       output.writeln(feature.fasta_id);
-      output.writeln(feature.to_fasta(fasta_data));
+      output.writeln(feature.to_fasta(fasta_data, phase, frame, trim_end));
     }
   }
 }
@@ -100,7 +101,7 @@ class FeatureData {
     return new_id.data;
   }
 
-  string to_fasta(string[string] fasta_data) {
+  string to_fasta(string[string] fasta_data, bool phase, bool frame, bool trim_end) {
     string fasta_sequence;
     string seqname = records[0].seqname;
     if (seqname.length == 0) {
@@ -119,39 +120,53 @@ class FeatureData {
             } else {
               reverse(sequence_part);
               reverse_strand(sequence_part);
-              if (sequence_part.length < rec.phase) {
-                // TODO: report error
-              }  else {
-                sequence_part = sequence_part[rec.phase..$];
+              if (phase) {
+                if (sequence_part.length < rec.phase) {
+                  // TODO: report error
+                }  else {
+                  sequence_part = sequence_part[rec.phase..$];
+                }
+              }
+              if (frame) {
                 int[3] frameshift;
                 if (sequence_part.length > 5) {
                   frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
                   frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
                   frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
                   sequence_part = sequence_part[min_pos(frameshift)..$];
+                } else {
+                  // TODO: report a warning
                 }
-                sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
-                fasta_sequence ~= sequence_part;
               }
+              if (trim_end)
+                sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
+              fasta_sequence ~= sequence_part;
             }
           }
         } else {
           foreach(rec; records) {
             auto sequence_part = fasta_data[seqname][rec.start-1..rec.end];
-            if (sequence_part.length < rec.phase) {
-              // TODO: report error
-            }  else {
-              sequence_part = sequence_part[rec.phase..$];
+            if (phase) {
+              if (sequence_part.length < rec.phase) {
+                // TODO: report error
+              }  else {
+                sequence_part = sequence_part[rec.phase..$];
+              }
+            }
+            if (phase) {
               int[3] frameshift;
               if (sequence_part.length > 5) {
                 frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
                 frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
                 frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
                 sequence_part = sequence_part[min_pos(frameshift)..$];
+              } else {
+                // TODO: report a warning
               }
-              sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
-              fasta_sequence ~= sequence_part;
             }
+            if (trim_end)
+              sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
+            fasta_sequence ~= sequence_part;
           }
         }
       } else {
