@@ -15,7 +15,6 @@ int main(string[] args) {
   ulong count_taa_ends = 0;
   ulong count_tga_ends = 0;
   ulong count_tag_ends = 0;
-  ulong count_invalid_ends = 0;
   ulong count_length_ok = 0;
 
   ulong count_stop_codons = 0;
@@ -42,14 +41,14 @@ int main(string[] args) {
         count_taa_ends += 1;
         break;
       default:
-        count_invalid_ends += 1;
+        break;
     }
     if ((line.length % 3) == 0) {
       count_length_ok += 1;
     }
 
     bool valid_sequence = true;
-    while(line.length > 3) {
+    while(line.length > 5) {
       switch(line[0..3]) {
         case "TAA", "taa":
         case "TGA", "tga":
@@ -58,7 +57,7 @@ int main(string[] args) {
           valid_sequence = false;
           break;
         default:
-          count_invalid_ends += 1;
+          break;
       }
       line = line[3..$];
     }
