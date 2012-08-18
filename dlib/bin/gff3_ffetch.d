@@ -119,7 +119,7 @@ int main(string[] args) {
            .set_keep_comments(false)
            .set_keep_pragmas(false);
 
-    records.to_fasta(feature_type, parent_feature_type, fasta_map, no_assemble, phase, frame, trim_end, output);
+    records.to_fasta(feature_type, parent_feature_type, fasta_map, no_assemble, phase, frame, trim_end, translate, output);
   }
 
   return 0;

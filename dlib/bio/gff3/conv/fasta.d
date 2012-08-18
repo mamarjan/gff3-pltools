@@ -27,7 +27,7 @@ import util.split_into_lines, util.array_includes, util.equals;
  */
 void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type,
               string[string] fasta_data, bool no_assemble, bool phase, bool frame,
-              bool trim_end, File output) {
+              bool trim_end, bool translate, File output) {
   RecordData[] all_records;
   FeatureData[] features;
 
@@ -51,7 +51,10 @@ void to_fasta(GenericRecordRange records, string feature_type, string parent_fea
   foreach(feature; features) {
     if (feature.records.length > 0) {
       output.writeln(feature.fasta_id);
-      output.writeln(feature.to_fasta(fasta_data, phase, frame, trim_end));
+      if (translate)
+        output.writeln(translate_sequence(feature.to_fasta(fasta_data, phase, frame, trim_end)));
+      else
+        output.writeln(feature.to_fasta(fasta_data, phase, frame, trim_end));
     }
   }
 }
@@ -362,5 +365,140 @@ unittest {
   assert(min_pos([1, 2, 3]) == 0);
   assert(min_pos([2, 1, 3]) == 1);
   assert(min_pos([6, 5, 4]) == 2);
+}
+
+/**
+ * Translation using the DNA codon table from this wikipedia
+ * page:
+ *
+ * https://en.wikipedia.org/wiki/DNA_codon_table
+ */
+string translate_sequence(string sequence) {
+  Appender!string app;
+  while(sequence.length >= 3) {
+    string codon = sequence[0..3];
+    char aa;
+    switch(codon) {
+      case "TTT":
+      case "TTC":
+        aa = 'F';
+        break;
+      case "TTA":
+      case "TTG":
+      case "CTT":
+      case "CTC":
+      case "CTA":
+      case "CTG":
+        aa = 'L';
+        break;
+      case "ATT":
+      case "ATC":
+      case "ATA":
+        aa = 'I';
+        break;
+      case "ATG":
+        aa = 'M';
+        break;
+      case "GTT":
+      case "GTC":
+      case "GTA":
+      case "GTG":
+        aa = 'V';
+        break;
+      case "TCT":
+      case "TCC":
+      case "TCA":
+      case "TCG":
+        aa = 'S';
+        break;
+      case "CCT":
+      case "CCC":
+      case "CCA":
+      case "CCG":
+        aa = 'P';
+        break;
+      case "ACT":
+      case "ACC":
+      case "ACA":
+      case "ACG":
+        aa = 'T';
+        break;
+      case "GCT":
+      case "GCC":
+      case "GCA":
+      case "GCG":
+        aa = 'A';
+        break;
+      case "TAT":
+      case "TAC":
+        aa = 'Y';
+        break;
+      case "TAA":
+      case "TAG":
+        aa = '*';
+        break;
+      case "CAT":
+      case "CAC":
+        aa = 'H';
+        break;
+      case "CAA":
+      case "CAG":
+        aa = 'Q';
+        break;
+      case "AAT":
+      case "AAC":
+        aa = 'N';
+        break;
+      case "AAA":
+      case "AAG":
+        aa = 'K';
+        break;
+      case "GAT":
+      case "GAC":
+        aa = 'D';
+        break;
+      case "GAA":
+      case "GAG":
+        aa = 'E';
+        break;
+      case "TGT":
+      case "TGC":
+        aa = 'C';
+        break;
+      case "TGA":
+        aa = '*';
+        break;
+      case "TGG":
+        aa = 'W';
+        break;
+      case "CGT":
+      case "CGC":
+      case "CGA":
+      case "CGG":
+        aa = 'R';
+        break;
+      case "AGT":
+      case "AGC":
+        aa = 'S';
+        break;
+      case "AGA":
+      case "AGG":
+        aa = 'R';
+        break;
+      case "GGT":
+      case "GGC":
+      case "GGA":
+      case "GGG":
+        aa = 'G';
+        break;
+      default:
+        throw new Exception("This should not happen, pleasee report to mantained.");
+        break;
+    }
+    app.put(aa);
+    sequence = sequence[3..$];
+  }
+
+  return app.data;
 }
 
