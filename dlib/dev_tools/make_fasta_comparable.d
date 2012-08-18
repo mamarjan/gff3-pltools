@@ -26,7 +26,6 @@ int main(string[] args) {
   foreach(rec; fasta_records) {
     string id = split(rec.header)[0];
     if (id in id_list) {
-      if (id_list[id] == rec.sequence;
       output.writeln('>', rec.header);
       output.writeln(rec.sequence);
     }
