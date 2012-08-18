@@ -81,6 +81,18 @@ class GenericRecordRange : RangeWithCache!Record {
     this.data_format = format; return this;
   }
 
+  /**
+   * Retrieve a range of FASTA sequences appended to
+   * GFF3 data.
+   */
+  abstract GenericFastaRange get_fasta_range();
+
+  /**
+   * Retrieves the FASTA data at the end of file
+   * in a string.
+   */
+  abstract string get_fasta_data();
+
   private {
     RecordValidator validate;
     bool replace_esc_chars = true;
@@ -93,6 +105,15 @@ class GenericRecordRange : RangeWithCache!Record {
     bool keep_pragmas = false;
 
     DataFormat data_format = DataFormat.GFF3;
+
+
+    /**
+     * Skips all the GFF3 records until it gets to the start of
+     * the FASTA section or end of file
+     */
+    void scroll_until_fasta() {
+      while(!empty) popFront();
+    }
   }
 }
 
@@ -117,7 +138,7 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
    * Retrieve a range of FASTA sequences appended to
    * GFF3 data.
    */
-  auto get_fasta_range() {
+  GenericFastaRange get_fasta_range() {
     scroll_until_fasta();
     if (empty && fasta_mode)
       return new FastaRange!(SourceRangeType)(data);
@@ -193,26 +214,6 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
     bool fasta_mode = false;
 
     int line_number = 1;
-
-    /**
-     * Skips all the GFF3 records until it gets to the start of
-     * the FASTA section or end of file
-     */
-    void scroll_until_fasta() {
-      auto line = data.front;
-      while ((!data.empty) && (!is_start_of_fasta(line))) {
-        dataPopFront();
-        if (!data.empty)
-          line = data.front;
-      }
-
-      if (is_start_of_fasta(line)) {
-        fasta_mode = true;
-        if (!is_fasta_header(line))
-          //Remove ##FASTA line from data source
-          dataPopFront();
-      }
-    }
 
     /**
      * Helper method for line counting

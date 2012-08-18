@@ -2,8 +2,9 @@ import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
-       bio.gff3.conv.gtf, bio.gff3.conv.fasta;
-import util.split_file, util.version_helper, util.read_file;
+       bio.gff3.conv.gtf, bio.gff3.conv.fasta, bio.fasta;
+import util.split_file, util.version_helper, util.read_file,
+       util.split_into_lines;
 
 /**
  * A utility for fetching sequences from GFF3 and FASTA files files.
@@ -74,6 +75,7 @@ int main(string[] args) {
   // The second argument left should be either a FASTA or a GFF3 file
   string fasta_filename;
   string fasta_data;
+  string[string] fasta_map;
 
   // Prepare File object for output
   File output = stdout;
@@ -107,6 +109,7 @@ int main(string[] args) {
     if (fasta_data is null) {
       if (fasta_filename !is null) {
         fasta_data = read(File(fasta_filename, "r"));
+        fasta_map = (new FastaRange!SplitIntoLines(new SplitIntoLines(fasta_data))).all;
       }
     }
 
@@ -116,7 +119,7 @@ int main(string[] args) {
            .set_keep_comments(false)
            .set_keep_pragmas(false);
 
-    records.to_fasta(feature_type, parent_feature_type, fasta_data, no_assemble, phase, frame, trim_end, output);
+    records.to_fasta(feature_type, parent_feature_type, fasta_map, no_assemble, phase, frame, trim_end, output);
   }
 
   return 0;

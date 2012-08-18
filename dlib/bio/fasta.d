@@ -1,7 +1,7 @@
 module bio.fasta;
 
 import std.conv, std.array, std.stdio, std.algorithm, std.string;
-import util.split_into_lines;
+import util.split_into_lines, util.range_with_cache;
 
 /**
  * A minimal class for grouping the header and sequence
@@ -12,47 +12,33 @@ class FastaRecord {
   string sequence;
 }
 
+class GenericFastaRange : RangeWithCache!FastaRecord {
+  /**
+   * Return all remaining sequences as a dictionary.
+   */
+  @property string[string] all() {
+    string[string] all_data;
+    foreach(rec; this)
+      all_data[rec.header] = rec.sequence;
+
+    return all_data;
+  }
+}
+
 /**
  * Fasta range for FASTA sequences appended to the end of GFF3 data.
  */
-class FastaRange(SourceRangeType) {
+class FastaRange(SourceRangeType) : GenericFastaRange {
   this(SourceRangeType data) {
     this.data = data;
-  }
-
-  /**
-   * Return the next sequence in range.
-   */
-  @property FastaRecord front() {
-    if (cache is null) {
-      cache = get_next_record();
-    }
-    return cache;
-  }
-
-  /**
-   * Pops the next sequence in range.
-   */
-  void popFront() {
-    cache = null;
-  }
-
-  /**
-   * Return true if no more records left in the range.
-   */
-  @property bool empty() {
-    if (cache is null)
-      cache = get_next_record();
-    return cache is null;
   }
 
   private {
     alias typeof(SourceRangeType.front()) Array;
 
     SourceRangeType data;
-    FastaRecord cache;
 
-    FastaRecord get_next_record() {
+    protected FastaRecord next_item() {
       auto header = next_fasta_line().idup;
       if (header is null)
         return null;

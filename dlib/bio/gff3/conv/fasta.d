@@ -1,27 +1,53 @@
 module bio.gff3.conv.fasta;
 
-import std.stdio, std.conv, std.array, std.algorithm, std.string, std.ascii,
-       std.format, core.exception;
+import std.stdio, std.conv, std.array, std.algorithm, std.format;
 import bio.gff3.record_range, bio.fasta;
-import util.split_into_lines;
+import util.split_into_lines, util.array_includes, util.equals;
 
+/**
+ * Converts the passed records range to one fasta sequence per feature.
+ * Params:
+ *     records =       the records for the features to be converted
+ *     feature_type =  only features of this type will be converted
+ *     parent_feature_type =  when null, the attribute ID of GFF3 records will be
+ *                            be used for grouping records into features. When something
+ *                            else, that feature type will be used as parent for the
+ *                            features to be converted to fasta.
+ *     fasta_data =           an associative array mapping fasta headers to fasta sequences.
+ *                            If null, the function will attempt to extract fasta data from
+ *                            the passed record range
+ *     no_assemble =          if true, records will not be grouped into features, but
+ *                            converted to one fasta sequence per GFF3 record
+ *     phase =                each sequence part will be adjusted per it's own phase field
+ *                            if true
+ *     frame =                each sequence part will be adjusted as to yield the least
+ *                            number of stop codons
+ *     trim_end =             trim the end of each sequence part to get modulo 3 length
+ *     output =               File object where the fasta data will be written
+ */
 void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type,
-              string raw_fasta_data, bool no_assemble, bool phase, bool frame,
+              string[string] fasta_data, bool no_assemble, bool phase, bool frame,
               bool trim_end, File output) {
   RecordData[] all_records;
-  if (no_assemble)
-    all_records = collect_data(records, [feature_type]);
-  else
-    all_records = collect_data(records, [feature_type, parent_feature_type]);
-  auto fasta_data = parse_fasta(raw_fasta_data);
   FeatureData[] features;
+
+  // Fetch required features
   if (no_assemble) {
+    all_records = collect_data(records, [feature_type]);
     features = convert_to_features(all_records);
   } else if (parent_feature_type is null) {
+    all_records = collect_data(records, [feature_type]);
     features = collect_features(all_records);
   } else {
+    all_records = collect_data(records, [feature_type, parent_feature_type]);
     features = collect_features(all_records, feature_type, parent_feature_type);
   }
+
+  // Fetch fasta from end of GFF3 file if no fasta data provided
+  if (fasta_data is null)
+    fasta_data = records.get_fasta_range().all;
+
+  // Output features in fasta format
   foreach(feature; features) {
     if (feature.records.length > 0) {
       output.writeln(feature.fasta_id);
@@ -30,12 +56,15 @@ void to_fasta(GenericRecordRange records, string feature_type, string parent_fea
   }
 }
 
+private:
+
+/**
+ * Collect all records whose type is in the feature_types array.
+ */
 RecordData[] collect_data(GenericRecordRange records, string[] feature_types) {
   Appender!(RecordData[]) all_records;
   foreach(rec; records) {
-    bool is_requested_feature(string a) { return equals_ci(a, rec.feature); }
-    //if (equals_ci(feature_type, rec.feature)) {
-    if (reduce!("a || b")(false, map!(is_requested_feature)(feature_types))) {
+    if (feature_types.includes_ci(rec.feature)) {
       RecordData current = new RecordData;
 
       current.seqname = rec.seqname;
@@ -58,39 +87,48 @@ RecordData[] collect_data(GenericRecordRange records, string[] feature_types) {
   return all_records.data;
 }
 
-bool equals_ci(string a, string b) {
-  if (a.length != b.length)
-    return false;
-  foreach(i, c; a)
-    if (toLower(c) != toLower(b[i]))
-      return false;
-  return true;
-}
-
 class FeatureData {
   RecordData[] records;
 
+  /**
+   * Sort records in this feature by the start coordinate.
+   */
   void sort() {
-    bool rec_cmp(RecordData a, RecordData b) { return a.start < b.start; }
+    bool rec_cmp(RecordData a, RecordData b) {
+      return a.start < b.start;
+    }
+
     std.algorithm.sort!(rec_cmp)(records);
   }
 
+  /**
+   * Return an fasta ID string for this feature.
+   */
   @property string fasta_id() {
     sort();
     Appender!(string) new_id;
+
+    // The following statement is required because formattedWrite() cannot
+    // initialize the Appender object
     new_id.put('>');
+
+    // ID attribute or seqname is the first part
     auto rec0 = records[0];
     if (rec0.id.length == 0) {
       if (rec0.seqname.length == 0) {
         new_id.put("unknown");
-        // TODO: report error
+        // TODO: report warning
       } else {
         new_id.formattedWrite("%s %d %d", rec0.seqname, rec0.start, rec0.end);
       }
     } else {
       new_id.formattedWrite("%s", rec0.id);
     }
+
+    // Original fasta sequence and start and stop come next
     formattedWrite(new_id, " Sequence:%s_%d:%d (", rec0.seqname, rec0.start, records[$-1].end);
+
+    // Comma-separated coordinates of CDS records finish the fasta ID
     foreach(i, rec; records) {
       if (i == 0)
         new_id.formattedWrite("%d:%d", rec.start, rec.end);
@@ -98,6 +136,7 @@ class FeatureData {
         new_id.formattedWrite(", %d:%d", rec.start, rec.end);
     }
     new_id.put(')');
+
     return new_id.data;
   }
 
@@ -105,76 +144,93 @@ class FeatureData {
     string fasta_sequence;
     string seqname = records[0].seqname;
     if (seqname.length == 0) {
-      // TODO: report error
+      // TODO: report warning
       fasta_sequence = null;
     } else {
       if (seqname in fasta_data) {
-        if (records[0].strand == '-') {
-          auto copy = records.dup;
-          reverse(copy);
-          foreach(rec; copy) {
-            auto sequence = fasta_data[seqname];
-            auto sequence_part = sequence[rec.start-1..rec.end].dup;
-            if (sequence_part.length == 0) {
-              // TODO: report sequence length 0, e.g. start == end is true
-            } else {
-              reverse(sequence_part);
-              reverse_strand(sequence_part);
-              if (phase) {
-                if (sequence_part.length < rec.phase) {
-                  // TODO: report error
-                }  else {
-                  sequence_part = sequence_part[rec.phase..$];
-                }
-              }
-              if (frame) {
-                int[3] frameshift;
-                if (sequence_part.length > 5) {
-                  frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
-                  frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
-                  frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
-                  sequence_part = sequence_part[min_pos(frameshift)..$];
-                } else {
-                  // TODO: report a warning
-                }
-              }
-              if (trim_end)
-                sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
-              fasta_sequence ~= sequence_part;
-            }
-          }
-        } else {
-          foreach(rec; records) {
-            auto sequence_part = fasta_data[seqname][rec.start-1..rec.end];
-            if (phase) {
-              if (sequence_part.length < rec.phase) {
-                // TODO: report error
-              }  else {
-                sequence_part = sequence_part[rec.phase..$];
-              }
-            }
-            if (phase) {
-              int[3] frameshift;
-              if (sequence_part.length > 5) {
-                frameshift[0] = count_stop_codons(sequence_part[0..$-3]);
-                frameshift[1] = count_stop_codons(sequence_part[1..$-3]);
-                frameshift[2] = count_stop_codons(sequence_part[2..$-3]);
-                sequence_part = sequence_part[min_pos(frameshift)..$];
-              } else {
-                // TODO: report a warning
-              }
-            }
-            if (trim_end)
-              sequence_part = sequence_part[0..$-(sequence_part.length % 3)];
-            fasta_sequence ~= sequence_part;
-          }
-        }
+        if (records[0].strand == '-')
+          fasta_sequence = to_fasta_negative_strand(fasta_data, phase, frame, trim_end);
+        else
+          fasta_sequence = to_fasta_positive_strand(fasta_data, phase, frame, trim_end);
       } else {
         // TODO: report error
         fasta_sequence = null;
       }
     }
+
     return fasta_sequence;
+  }
+
+  string to_fasta_negative_strand(string[string] fasta_data, bool phase, bool frame, bool trim_end) {
+    string fasta_sequence;
+    string seqname = records[0].seqname;
+    auto sequence = fasta_data[seqname];
+
+    auto copy = records.dup;
+    reverse(copy);
+    foreach(rec; copy) {
+      auto sequence_part = sequence[rec.start-1..rec.end].dup;
+      if (sequence_part.length == 0) {
+        // TODO: report sequence length 0, e.g. start == end is true
+      } else {
+        reverse(sequence_part);
+        reverse_strand(sequence_part);
+        if (phase)
+          sequence_part = adjust_for_phase(sequence_part, rec);
+        if (frame)
+          sequence_part = adjust_for_frame(sequence_part);
+        if (trim_end)
+          sequence_part = trim_sequence_end(sequence_part);
+        fasta_sequence ~= sequence_part;
+      }
+    }
+
+    return fasta_sequence;
+  }
+
+  string to_fasta_positive_strand(string[string] fasta_data, bool phase, bool frame, bool trim_end) {
+    string fasta_sequence;
+    string seqname = records[0].seqname;
+    auto sequence = fasta_data[seqname];
+
+    foreach(rec; records) {
+      auto sequence_part = sequence[rec.start-1..rec.end];
+      if (phase)
+        sequence_part = adjust_for_phase(sequence_part, rec);
+      if (frame)
+        sequence_part = adjust_for_frame(sequence_part);
+      if (trim_end)
+        sequence_part = trim_sequence_end(sequence_part);
+      fasta_sequence ~= sequence_part;
+    }
+
+    return fasta_sequence;
+  }
+
+  T[] adjust_for_phase(T)(T[] sequence, RecordData rec) {
+    if (sequence.length < rec.phase) {
+      // TODO: report warning
+    }  else {
+      sequence = sequence[rec.phase..$];
+    }
+    return sequence;
+  }
+
+  T[] adjust_for_frame(T)(T[] sequence) {
+    int[3] frameshift;
+    if (sequence.length > 5) {
+      frameshift[0] = count_stop_codons(sequence[0..$-3]);
+      frameshift[1] = count_stop_codons(sequence[1..$-3]);
+      frameshift[2] = count_stop_codons(sequence[2..$-3]);
+      sequence = sequence[min_pos(frameshift)..$];
+    } else {
+      // TODO: report a warning
+    }
+    return sequence;
+  }
+
+  T[] trim_sequence_end(T)(T[] sequence) {
+    return sequence[0..$-(sequence.length % 3)];
   }
 }
 
@@ -253,16 +309,6 @@ FeatureData[] collect_features(RecordData[] all_records, string child_feature_ty
   }
 
   return features.data;
-}
-
-string[string] parse_fasta(string raw_fasta_data) {
-  auto records = new FastaRange!SplitIntoLines(new SplitIntoLines(raw_fasta_data));
-
-  string[string] fasta_data;
-  foreach(rec; records)
-    fasta_data[rec.header] = rec.sequence;
-
-  return fasta_data;
 }
 
 void reverse_strand(char[] sequence) {
