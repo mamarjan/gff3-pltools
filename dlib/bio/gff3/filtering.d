@@ -2,7 +2,7 @@ module bio.gff3.filtering;
 
 import std.algorithm, std.string, std.conv, std.array, std.ascii;
 import bio.gff3.record;
-import util.split_line;
+import util.split_line, util.is_float, util.is_integer;
 
 /**
 Sample usage:
@@ -400,16 +400,19 @@ alias long delegate(Record r) LongFilter;
 alias double delegate(Record r) DoubleFilter;
 
 RecordFilter new_string_to_filter(string filtering_expression) {
+  RecordFilter filter;
   if (filtering_expression.strip().length == 0)
-    return NO_AFTER_FILTER;
+    filter = NO_AFTER_FILTER;
   else {
     string[] tokens = extract_tokens(filtering_expression);
     Node root = generate_tree(tokens);
-    RecordFilter filter = get_bool_delegate(root);
+    filter = get_bool_delegate(root);
     if (filter is null) {
       throw new Exception("Result of filtering expression should be boolean");
     }
   }
+
+  return filter;
 }
 
 RecordFilter get_bool_delegate(Node node) {
@@ -445,7 +448,7 @@ RecordFilter get_bool_delegate(Node node) {
       auto not_right = get_bool_delegate(node.children[0]);
       if (not_right is null)
         throw new Exception(node.text ~ " requires one boolean operand");
-      filter = delegate bool(Record record) { return !right(record); };
+      filter = delegate bool(Record record) { return !not_right(record); };
       break;
     case NodeType.CONTAINS_OPERATOR:
     case NodeType.STARTS_WITH_OPERATOR:
@@ -457,10 +460,10 @@ RecordFilter get_bool_delegate(Node node) {
         throw new Exception(node.text ~ " requires two boolean operands");
       switch(node.type) {
         case NodeType.CONTAINS_OPERATOR:
-          filter = delegate bool(Record record) { return std.string.indexOf(left(record), right(record)) > -1; };
+          filter = delegate bool(Record record) { return std.string.indexOf(contains_left(record), contains_right(record)) > -1; };
           break;
         case NodeType.STARTS_WITH_OPERATOR:
-          filter = delegate bool(Record record) { return left(record).startsWith(right(record)); };
+          filter = delegate bool(Record record) { return contains_left(record).startsWith(contains_right(record)); };
           break;
         default:
           throw new Exception("Error in the code, please report to the maintainer");
@@ -618,39 +621,11 @@ StringFilter get_string_delegate(Node node) {
       filter = delegate string(Record record) { return node.text; };
       break;
     case NodeType.FIELD_OPERATOR:
-      switch(node.parameter) {
-        case FIELD_SEQNAME:
-          filter = delegate string(Record record) { return record.seqname; };
-          break;
-        case FIELD_SOURCE:
-          filter = delegate string(Record record) { return record.source; };
-          break;
-        case FIELD_FEATURE:
-          filter = delegate string(Record record) { return record.feature; };
-          break;
-        case FIELD_START:
-          filter = delegate string(Record record) { return record.start; };
-          break;
-        case FIELD_END:
-          filter = delegate string(Record record) { return record.end; };
-          break;
-        case FIELD_SCORE:
-          filter = delegate string(Record record) { return record.score; };
-          break;
-        case FIELD_STRAND:
-          filter = delegate string(Record record) { return record.strand; };
-          break;
-        case FIELD_PHASE:
-          filter = delegate string(Record record) { return record.phase; };
-          break;
-        default:
-          throw new Exception("a GFF3 record has no " ~ node.parameter ~ " field");
-          break;
-      }
+      filter = get_field_accessor(node.parameter);
       break;
     case NodeType.ATTR_OPERATOR:
       filter = delegate string(Record record) {
-        return (node.parameter in record.attributes) ? record.attributes[node.parameter] : null;
+        return (node.parameter in record.attributes) ? record.attributes[node.parameter].first : null;
       };
       break;
     case NodeType.BRACKETS:
@@ -672,60 +647,55 @@ StringFilter get_string_delegate(Node node) {
     case NodeType.MINUS_OPERATOR:
     case NodeType.MULTIPLICATION_OPERATOR:
     case NodeType.DIVISION_OPERATOR:
-      filter null;
+      filter = null;
       break;
   }
 
   return filter;
 }
 
-StringFilter get_double_delegate(Node node) {
+DoubleFilter get_double_delegate(Node node) {
   DoubleFilter filter;
 
   final switch(node.type) {
-    case VALUE:
-      double double_value;
-      bool converted_to_double = true;
-      try {
-        double_value = to!double(node.text);
-      } catch (Exception e) {
-        converted_to_double = false;
-      }
-      if (converted_to_double)
+    case NodeType.VALUE:
+      if (is_float(node.text)) {
+        double  double_value = to!double(node.text);
         filter = delegate double(Record record) { return double_value; };
-      else
+      } else {
         filter = null;
+      }
       break;
-    case FIELD_OPERATOR:
+    case NodeType.FIELD_OPERATOR:
       StringFilter field_accessor = get_field_accessor(node.parameter);
       filter = delegate double(Record record) { return to!double(field_accessor(record)); };
       break;
-    case ATTR_OPERATOR:
+    case NodeType.ATTR_OPERATOR:
       filter = delegate double(Record record) { return (node.parameter in record.attributes) ? to!double(node.parameter) : 0.0; };
       break;
-    case BRACKETS:
+    case NodeType.BRACKETS:
       filter = get_double_delegate(node.children[0]);
       break;
-    case PLUS_OPERATOR:
-    case MINUS_OPERATOR:
-    case MULTIPLICATION_OPERATOR:
-    case DIVISION_OPERATOR:
+    case NodeType.PLUS_OPERATOR:
+    case NodeType.MINUS_OPERATOR:
+    case NodeType.MULTIPLICATION_OPERATOR:
+    case NodeType.DIVISION_OPERATOR:
       DoubleFilter left_operand = get_double_delegate(node.children[0]);
       DoubleFilter right_operand = get_double_delegate(node.children[1]);
       if ((left_operand is null) || (right_operand is null)) {
         filter = null;
       } else {
         switch(node.type) {
-          case PLUS_OPERATOR:
+          case NodeType.PLUS_OPERATOR:
             filter = delegate double(Record record) { return left_operand(record) + right_operand(record); };
             break;
-          case MINUS_OPERATOR:
+          case NodeType.MINUS_OPERATOR:
             filter = delegate double(Record record) { return left_operand(record) - right_operand(record); };
             break;
-          case MULTIPLICATION_OPERATOR:
+          case NodeType.MULTIPLICATION_OPERATOR:
             filter = delegate double(Record record) { return left_operand(record) * right_operand(record); };
             break;
-          case DIVISION_OPERATOR:
+          case NodeType.DIVISION_OPERATOR:
             filter = delegate double(Record record) { return left_operand(record) / right_operand(record); };
             break;
           default:
@@ -734,22 +704,90 @@ StringFilter get_double_delegate(Node node) {
         }
       }
       break;
-    case NONE:
-    case AND_OPERATOR:
-    case OR_OPERATOR:
-    case NOT_OPERATOR:
-    case CONTAINS_OPERATOR:
-    case STARTS_WITH_OPERATOR:
-    case EQUALS_OPERATOR:
-    case NOT_EQUALS_OPERATOR:
-    case GREATER_THAN_OPERATOR:
-    case LOWER_THAN_OPERATOR:
-    case GREATER_THAN_OR_EQUALS_OPERATOR:
-    case LOWER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.NONE:
+    case NodeType.AND_OPERATOR:
+    case NodeType.OR_OPERATOR:
+    case NodeType.NOT_OPERATOR:
+    case NodeType.CONTAINS_OPERATOR:
+    case NodeType.STARTS_WITH_OPERATOR:
+    case NodeType.EQUALS_OPERATOR:
+    case NodeType.NOT_EQUALS_OPERATOR:
+    case NodeType.GREATER_THAN_OPERATOR:
+    case NodeType.LOWER_THAN_OPERATOR:
+    case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
       filter = null;
       break;
   }
 
+  return filter;
+}
+
+LongFilter get_long_delegate(Node node) {
+  LongFilter filter;
+
+  final switch(node.type) {
+    case NodeType.VALUE:
+      if (is_integer(node.text)) {
+        long integer_value = to!long(node.text);
+        filter = delegate long(Record record) { return integer_value; };
+      } else {
+        filter = null;
+      }
+      break;
+    case NodeType.FIELD_OPERATOR:
+      StringFilter field_accessor = get_field_accessor(node.parameter);
+      filter = delegate long(Record record) { return to!long(field_accessor(record)); };
+      break;
+    case NodeType.ATTR_OPERATOR:
+      filter = delegate long(Record record) { return (node.parameter in record.attributes) ? to!long(node.parameter) : 0; };
+      break;
+    case NodeType.BRACKETS:
+      filter = get_long_delegate(node.children[0]);
+      break;
+    case NodeType.PLUS_OPERATOR:
+    case NodeType.MINUS_OPERATOR:
+    case NodeType.MULTIPLICATION_OPERATOR:
+    case NodeType.DIVISION_OPERATOR:
+      LongFilter left_operand = get_long_delegate(node.children[0]);
+      LongFilter right_operand = get_long_delegate(node.children[1]);
+      if ((left_operand is null) || (right_operand is null)) {
+        filter = null;
+      } else {
+        switch(node.type) {
+          case NodeType.PLUS_OPERATOR:
+            filter = delegate long(Record record) { return left_operand(record) + right_operand(record); };
+            break;
+          case NodeType.MINUS_OPERATOR:
+            filter = delegate long(Record record) { return left_operand(record) - right_operand(record); };
+            break;
+          case NodeType.MULTIPLICATION_OPERATOR:
+            filter = delegate long(Record record) { return left_operand(record) * right_operand(record); };
+            break;
+          case NodeType.DIVISION_OPERATOR:
+            filter = delegate long(Record record) { return left_operand(record) / right_operand(record); };
+            break;
+          default:
+            throw new Exception("Error in the code, please report to the maintainer");
+            break;
+        }
+      }
+      break;
+    case NodeType.NONE:
+    case NodeType.AND_OPERATOR:
+    case NodeType.OR_OPERATOR:
+    case NodeType.NOT_OPERATOR:
+    case NodeType.CONTAINS_OPERATOR:
+    case NodeType.STARTS_WITH_OPERATOR:
+    case NodeType.EQUALS_OPERATOR:
+    case NodeType.NOT_EQUALS_OPERATOR:
+    case NodeType.GREATER_THAN_OPERATOR:
+    case NodeType.LOWER_THAN_OPERATOR:
+    case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
+    case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
+      filter = null;
+      break;
+  }
   return filter;
 }
 
@@ -777,35 +815,35 @@ enum NodeType {
 }
 
 StringFilter get_field_accessor(string field_name) {
-    string function(Record r) field_accessor;
-    switch(field_name) {
-      case FIELD_SEQNAME:
-        field_accessor = function string(Record r) { return r.seqname; };
-        break;
-      case FIELD_SOURCE:
-        field_accessor = function string(Record r) { return r.source; };
-        break;
-      case FIELD_FEATURE:
-        field_accessor = function string(Record r) { return r.feature; };
-        break;
-      case FIELD_START:
-        field_accessor = function string(Record r) { return r.start; };
-        break;
-      case FIELD_END:
-        field_accessor = function string(Record r) { return r.end; };
-        break;
-      case FIELD_SCORE:
-        field_accessor = function string(Record r) { return r.score; };
-        break;
-      case FIELD_STRAND:
-        field_accessor = function string(Record r) { return r.strand; };
-        break;
-      case FIELD_PHASE:
-        field_accessor = function string(Record r) { return r.phase; };
-        break;
-      default:
-        throw new Exception("Invalid field name: " ~ field_name);
-        break;
+  StringFilter field_accessor;
+  switch(field_name) {
+    case FIELD_SEQNAME:
+      field_accessor = delegate string(Record r) { return r.seqname; };
+      break;
+    case FIELD_SOURCE:
+      field_accessor = delegate string(Record r) { return r.source; };
+      break;
+    case FIELD_FEATURE:
+      field_accessor = delegate string(Record r) { return r.feature; };
+      break;
+    case FIELD_START:
+      field_accessor = delegate string(Record r) { return r.start; };
+      break;
+    case FIELD_END:
+      field_accessor = delegate string(Record r) { return r.end; };
+      break;
+    case FIELD_SCORE:
+      field_accessor = delegate string(Record r) { return r.score; };
+      break;
+    case FIELD_STRAND:
+      field_accessor = delegate string(Record r) { return r.strand; };
+      break;
+    case FIELD_PHASE:
+      field_accessor = delegate string(Record r) { return r.phase; };
+      break;
+    default:
+      throw new Exception("Invalid field name: " ~ field_name);
+      break;
   }
 
   return field_accessor;
