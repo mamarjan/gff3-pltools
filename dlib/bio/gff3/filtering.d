@@ -196,8 +196,6 @@ RecordPredicate string_to_filter(string filter_string) {
 }
 
 
-private:
-
 string[] split_filter_string(string filter_string) {
   string[] parts;
   while(filter_string.length > 0) {
@@ -916,8 +914,8 @@ Node parse_next_token(Node left, ref string[] tokens) {
       switch(token) {
         case "=="  : node = new Node(NodeType.EQUALS_OPERATOR); break;
         case "!="  : node = new Node(NodeType.NOT_EQUALS_OPERATOR); break;
-        case ">="  : node = new Node(NodeType.LOWER_THAN_OR_EQUALS_OPERATOR); break;
-        case "<="  : node = new Node(NodeType.GREATER_THAN_OR_EQUALS_OPERATOR); break;
+        case "<="  : node = new Node(NodeType.LOWER_THAN_OR_EQUALS_OPERATOR); break;
+        case ">="  : node = new Node(NodeType.GREATER_THAN_OR_EQUALS_OPERATOR); break;
         case ">"   : node = new Node(NodeType.GREATER_THAN_OPERATOR); break;
         case "<"   : node = new Node(NodeType.LOWER_THAN_OPERATOR); break;
         case "and" : node = new Node(NodeType.AND_OPERATOR); break;

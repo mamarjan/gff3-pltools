@@ -114,7 +114,7 @@ int main(string[] args) {
 
   records.set_validate(NO_VALIDATION)
          .set_replace_esc_chars(false)
-         .set_after_filter(string_to_filter(filter_string))
+         .set_after_filter(new_string_to_filter(filter_string))
          .set_keep_comments(keep_comments)
          .set_keep_pragmas(keep_pragmas);
 
