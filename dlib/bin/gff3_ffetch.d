@@ -4,10 +4,10 @@ import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
        bio.gff3.conv.gtf, bio.gff3.conv.fasta, bio.fasta;
 import util.split_file, util.version_helper, util.read_file,
-       util.split_into_lines;
+       util.split_into_lines, util.logger;
 
 /**
- * A utility for fetching sequences from GFF3 and FASTA files files.
+ * A utility for fetching sequences from GFF3 and FASTA files.
  *
  *   gff3-ffetch cds path-to-file.fa path-to-file.gff3
  *
@@ -26,8 +26,22 @@ int main(string[] args) {
   bool phase = false;
   bool frame = false;
   bool trim_end = false;
+  int verbosity_level = 0;
   bool show_version = false;
   bool help = false;
+  void verbosity_level_handler(string option) {
+    switch(option) {
+      case "v":
+        verbosity_level += 1;
+        break;
+      case "q":
+        verbosity_level -= 1;
+        break;
+      default:
+        throw new Exception("This should never happen. Please report to maintainer.");
+        break;
+    }
+  }
   try {
     getopt(args,
         std.getopt.config.passThrough,
@@ -40,6 +54,8 @@ int main(string[] args) {
         "phase", &phase,
         "frame", &frame,
         "trim-end", &trim_end,
+        "v", &verbosity_level_handler,
+        "q", &verbosity_level_handler,
         "version", &show_version,
         "help", &help);
   } catch (Exception e) {
@@ -64,6 +80,8 @@ int main(string[] args) {
     frame = true;
     trim_end = true;
   }
+
+  init_default_logger(verbosity_level);
 
   // The first argument left should be the feature type
   auto feature_type = toLower(args[1]);
@@ -143,6 +161,8 @@ void print_usage() {
   writeln("                  length modulo 3 is 0");
   writeln("  -o, --output    Instead of writing results to stdout, write them to");
   writeln("                  this file.");
+  writeln("  -v, -q          Increase/decrease verbosity level. Multiple can be used in");
+  writeln("                  one command.");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();

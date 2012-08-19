@@ -2,7 +2,7 @@ module bio.gff3.conv.fasta;
 
 import std.stdio, std.conv, std.array, std.algorithm, std.format;
 import bio.gff3.record_range, bio.fasta;
-import util.split_into_lines, util.array_includes, util.equals;
+import util.split_into_lines, util.array_includes, util.equals, util.logger;
 
 /**
  * Converts the passed records range to one fasta sequence per feature.
@@ -120,7 +120,9 @@ class FeatureData {
     if (rec0.id.length == 0) {
       if (rec0.seqname.length == 0) {
         new_id.put("unknown");
-        // TODO: report warning
+        warn("A records without a sequence name and ID attribute: " ~
+             to!string(rec0.feature) ~ ", start: " ~ to!string(rec0.start) ~
+             ", end: " ~ to!string(rec0.end));
       } else {
         new_id.formattedWrite("%s %d %d", rec0.seqname, rec0.start, rec0.end);
       }
@@ -147,7 +149,6 @@ class FeatureData {
     string fasta_sequence;
     string seqname = records[0].seqname;
     if (seqname.length == 0) {
-      // TODO: report warning
       fasta_sequence = null;
     } else {
       if (seqname in fasta_data) {
@@ -156,7 +157,8 @@ class FeatureData {
         else
           fasta_sequence = to_fasta_positive_strand(fasta_data, phase, frame, trim_end);
       } else {
-        // TODO: report error
+        warn("A record was reffering to a FASTA sequence that could not be found: " ~
+             seqname);
         fasta_sequence = null;
       }
     }
@@ -174,7 +176,7 @@ class FeatureData {
     foreach(rec; copy) {
       auto sequence_part = sequence[rec.start-1..rec.end].dup;
       if (sequence_part.length == 0) {
-        // TODO: report sequence length 0, e.g. start == end is true
+        continue;
       } else {
         reverse(sequence_part);
         reverse_strand(sequence_part);
@@ -212,7 +214,9 @@ class FeatureData {
 
   T[] adjust_for_phase(T)(T[] sequence, RecordData rec) {
     if (sequence.length < rec.phase) {
-      // TODO: report warning
+      warn("Sequence shorter than phase shift size for the following record: " ~
+           rec.feature ~ ", ID attr: " ~ rec.id ~ ", start: " ~ to!string(rec.start) ~
+           ", end:" ~ to!string(rec.end));
     }  else {
       sequence = sequence[rec.phase..$];
     }
@@ -227,7 +231,7 @@ class FeatureData {
       frameshift[2] = count_stop_codons(sequence[2..$-3]);
       sequence = sequence[min_pos(frameshift)..$];
     } else {
-      // TODO: report a warning
+      warn(cast(string) ("Sequence not long enough for calculating frameshift: " ~ sequence));
     }
     return sequence;
   }
@@ -306,7 +310,8 @@ FeatureData[] collect_features(RecordData[] all_records, string child_feature_ty
         rec.id = rec.parent;
         lookup_table[rec.parent].records ~= rec;
       } else {
-        // TODO: report error
+        warn("Could not find parent record: ID: " ~ rec.parent ~ ", type: " ~
+             parent_feature_type);
       }
     }
   }
@@ -492,7 +497,8 @@ string translate_sequence(string sequence) {
         aa = 'G';
         break;
       default:
-        throw new Exception("This should not happen, pleasee report to mantained.");
+        warn("Found invalid nucleotide sequence: " ~ sequence[0..3]);
+        aa = 'X';
         break;
     }
     app.put(aa);
