@@ -19,7 +19,6 @@ int main(string[] args) {
   string parent_feature_type = null;
   string output_filename = null;
   bool translate = false;
-  bool validate = false;
   bool fix = false;
   bool fix_wormbase = false;
   bool no_assemble = false;
@@ -48,7 +47,6 @@ int main(string[] args) {
         "parent-type", &parent_feature_type,
         "output|o", &output_filename,
         "translate", &translate,
-        "validate", &validate,
         "fix", &fix,
         "no-assemble", &no_assemble,
         "phase", &phase,
@@ -150,7 +148,6 @@ void print_usage() {
   writeln("Options:");
   writeln("  --parent-type   Use parent features for grouping instead of ID attr");
   writeln("  --translate     Output as amino acid sequence.");
-  writeln("  --validate      Validate GFF3 file by translating.");
   writeln("  --fix           Same as phase, frame and trim-end options together.");
   writeln("  --no-assemble   Output each record as a sequence.");
   writeln("  --phase         Take into account the phase field of a GFF3 record and adjust");
