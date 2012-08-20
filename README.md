@@ -68,7 +68,20 @@ Run
 
 ### gff3-ffetch utility
 
-gff3-ffetch can filter a GFF3/GTF file, rendering GFF3/GTF
+gff3-ffetch assembles sequences from a GFF3/GTF plus FASTA contig
+file, and can produce FASTA, JSON and table output. Example
+
+```sh
+  gff3-ffetch CDS --parent-type mRNA m_hapla.WS232.genomic.fa m_hapla.WS232.annotations.gff3 
+```
+
+and translated to amino acids
+
+```sh
+  gff3-ffetch CDS --translate --parent-type mRNA m_hapla.WS232.genomic.fa m_hapla.WS232.annotations.gff3 
+```
+
+gff3-ffetch can also filter a GFF3/GTF file, rendering GFF3/GTF
 output, as well as, JSON and table output. For example, you can use the
 following command to filter out records with a CDS feature from
 a GFF3 file:
