@@ -1,0 +1,142 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GFF3\-FFETCH" "1" "August 2012" "BioRuby" "BioRuby Manual"
+.
+.SH "NAME"
+\fBgff3\-ffetch\fR \- assemble sequences from GFF3 and FASTA files
+.
+.SH "SYNOPSIS"
+\fBgff3\-ffetch\fR feature [\-\-parent\-type p\-feature] [FASTA_FILE] GFF3_FILE\.\.\. \fI\-o OUTPUT_FILE\fR
+.
+.P
+\fBgff3\-ffetch\fR \-\-help
+.
+.P
+\fBgff3\-ffetch\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgff3\-ffetch\fR assembles sequences of a single type, described in one or more GFF3 annotation files and outputs them in FASTA format\. It can use the FASTA data attached to the GFF3 file, or a separate FASTA file for the original sequences\.
+.
+.P
+Even though the GFF3 specification says that the ID attribute should be used to specify multiple parts of a single feature in multiple records, experience shows that this is rarely used\. In cases when the parts have different IDs, or no IDs at all, the parent feature can be used to assemble a feature from it\'s parts\. The \fB\-\-parent\-type\fR option should be use to use this grouping of features instead of the default\.
+.
+.P
+The options \fB\-\-phase\fR, \fB\-\-frame\fR and \fB\-\-trim\-end\fR can be used to get a better chance at getting a valid FASTA sequence, which can then be translated to an amino acid sequence using the \fB\-\-translate\fR option\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-\-parent\-type TYPE\fR
+Use features of type \fITYPE\fR to group records into features, instead of the ID attribute\.
+.
+.TP
+\fB\-\-translate\fR
+Output amino acid sequences\.
+.
+.TP
+\fB\-\-fix\fR
+Same as \-\-phase, \-\-frame and \-\-trim\-end combined\.
+.
+.TP
+\fB\-\-no\-assemble\fR
+Turn off combining of records into features, and simply output one sequence per record\.
+.
+.TP
+\fB\-\-phase\fR
+Adjust each sequence part using the phase field from the record\.
+.
+.TP
+\fB\-\-frame\fR
+Adjust each sequence part by trying to predict the reading frame\. Three options are tested (0, 1 and 2) and the one which gives the least number of stop codons is used\.
+.
+.TP
+\fB\-\-trim\-end\fR
+The end of the sequence is trimmed so that the sequence lenght modulo 3 equals zero\.
+.
+.TP
+\fB\-o\fR, \fB\-\-output OUT\fR
+Output will be written to the file \fIout\fR\.
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.TP
+\fB\-\-help\fR
+Print usage information and exit\.
+.
+.P
+Logging options:
+.
+.TP
+\fB\-q\fR
+Run quietly, with warnings suppressed\.
+.
+.TP
+\fB\-v\fR
+Run verbosely, with additional informational messages\.
+.
+.SH "EXAMPLES"
+To extract CDS sequences from a GFF3 file with appended FASTA data, where one CDS feature equals one FASTA sequence, and the CDS recods are grouped into features using the attribute ID:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-ffetch CDS m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+The same, but with FASTA data in a separate file:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-ffetch CDS m_hapla\.genomic\.fa m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+To use grouping by the same parent feature, use the following:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-ffetch CDS \-\-parent\-type mRNA m_hapla\.genomic\.fa \e
+      m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+To ge the best chance at having a valid sequence which can be translated to a protein sequence, use the \-\-fix option:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-ffetch CDS \-\-parent\-type mRNA m_hapla\.genomic\.fa \e
+      m_hapla\.annotations\.gff3 \-\-fix \-\-translate
+.
+.fi
+.
+.IP "" 0
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgff3\-ffetch\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-tools(1), gff3\-filter(1), gff3\-select(1)

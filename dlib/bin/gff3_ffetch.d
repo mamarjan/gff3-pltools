@@ -25,7 +25,7 @@ int main(string[] args) {
   bool phase = false;
   bool frame = false;
   bool trim_end = false;
-  int verbosity_level = 0;
+  int verbosity_level = 1;
   bool show_version = false;
   bool help = false;
   void verbosity_level_handler(string option) {
@@ -142,8 +142,8 @@ int main(string[] args) {
 }
 
 void print_usage() {
-  writeln("Usage: gff3-ffetch [OPTIONS] [FILE1.fa] FILE2.gff3...");
-  writeln("Fetch sequences form GFF3 and FASTA files");
+  writeln("Usage: gff3-ffetch FEATURE_TYPE [FASTA_FILE] GFF3_FILE... [OPTIONS]");
+  writeln("Assemble sequences form GFF3 and FASTA files");
   writeln();
   writeln("Options:");
   writeln("  --parent-type   Use parent features for grouping instead of ID attr");

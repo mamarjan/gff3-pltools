@@ -84,6 +84,27 @@ task :utilities => :bin do
   sh "ln -s gff3-to-json bin/gtf-to-json"
 end
 
+#### Man pages
+# (borrowed from csw/bioruby-maf,
+#  who borrowed it from matthewtodd/shoe)
+ronn_avail = begin
+               require 'ronn'
+               true
+             rescue LoadError
+               false
+             end
+
+if ronn_avail
+  RONN_FILES = Rake::FileList["man/*.?.ronn"]
+
+  desc "Generate man pages"
+  task :man do
+    file_spec = RONN_FILES.join(' ')
+    sh "ronn --roff --html --style toc --markdown --date #{Time.now.strftime('%Y-%m-%d')} --manual='BioRuby Manual' --organization='BioRuby' #{file_spec}"
+  end
+
+end # if ronn_avail
+
 directory "dev_bin"
 CLEAN.include("dev_bin/")
 
