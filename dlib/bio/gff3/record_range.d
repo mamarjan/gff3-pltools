@@ -24,6 +24,14 @@ class GenericRecordRange : RangeWithCache!Record {
   }
 
   /**
+   * Return the filename which is the source of this data. Returns null
+   * if something else was used as the source of this data.
+   */
+  string get_filename() {
+    return this.filename;
+  }
+
+  /**
    * Set the validation delegate which will be used for validation. Or
    * NO_VALIDATION if no validation should be done.
    */

@@ -44,8 +44,14 @@ void to_fasta(GenericRecordRange records, string feature_type, string parent_fea
   }
 
   // Fetch fasta from end of GFF3 file if no fasta data provided
-  if (fasta_data is null)
-    fasta_data = records.get_fasta_range().all;
+  if (fasta_data is null) {
+    auto fasta_range = records.get_fasta_range();
+    if (fasta_range is null) {
+      error("No FASTA data found at the end of GFF3 file: " ~ records.get_filename());
+    } else {
+      fasta_data = records.get_fasta_range().all;
+    }
+  }
 
   // Output features in fasta format
   foreach(feature; features) {
