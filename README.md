@@ -4,18 +4,14 @@
 
 Note: this software is under active development!
 
-This is currently an early work in progress to create parallel GFF3
-and GTF parser library and tools in D.
+gff3-pltools is a fast GFF3 and GTF parser library, with command line tools.
 
 ## Installation
 
 ### Requirements
 
-The binary builds are self-contained.
-
-To build the tools from source, you'll need the DMDv2 compiler in
-your path. You can check here if there is a build of DMD available
-for your platform:
+To build the tools from source, you'll need a DMDv2 or gdc compiler.
+Download DMD from
 
   http://dlang.org/download.html
 
@@ -25,24 +21,17 @@ OS X users can install DMD using homebrew:
     brew install dmd
 ```
 
-Also, the rake utility is necessary to run the automated build
-scripts.
-
-There is also some support for the GDC compiler. There seems currently
-to be a bug with this compiler on 64-bit Linux, because of which the
-unit tests fail with a segmentation fault in the garbage collector.
-However, the utilities seem to be working properly.
+Optionally, rake is used to run the automated build scripts.
 
 ### Build and install instructions
 
-Users of 32-bit and 64-bit Linux can download pre-build binar packages
-and install them by copying the binaries to somewhere in the PATH.
+Users of 32-bit and 64-bit Linux can download pre-build binary
+packages.
 
-Users of other plaforms can download the source package, and build
-it themselves given the DMD compiler is available for their platform.
+For other plaforms download the source package, and build
+with dmd or gdc.
 
-To build the binaries using DMD, download the source and use the "utilities"
-task:
+For example 
 
 ```sh
     tar -zxvf gff3-pltools-X.Y.Z.tar.gz
@@ -69,8 +58,7 @@ to binaries built with DMD.
 
 ### Run tests
 
-The DMD compiler and rake utility are required to run the tests. You
-can use the "unittests" rake task to run D unittests, like this:
+Run
 
 ```sh
     rake unittests
@@ -80,8 +68,21 @@ can use the "unittests" rake task to run D unittests, like this:
 
 ### gff3-ffetch utility
 
-This utility supports filtering a file, with GFF3 and GTF input and
-output, and JSON and table output. For example, you can use the
+gff3-ffetch assembles sequences from a GFF3/GTF plus FASTA contig
+file, and can produce FASTA, JSON and table output. Example
+
+```sh
+  gff3-ffetch CDS --parent-type mRNA m_hapla.WS232.genomic.fa m_hapla.WS232.annotations.gff3 
+```
+
+and translated to amino acids
+
+```sh
+  gff3-ffetch CDS --translate --parent-type mRNA m_hapla.WS232.genomic.fa m_hapla.WS232.annotations.gff3 
+```
+
+gff3-ffetch can also filter a GFF3/GTF file, rendering GFF3/GTF
+output, as well as, JSON and table output. For example, you can use the
 following command to filter out records with a CDS feature from
 a GFF3 file:
 
@@ -196,7 +197,7 @@ To keep the comments and/or pragmas in the output, you can use the
 The validation utility can be used like this:
 
 ```sh
-    ./gff3-validate path/to/file.gff3
+    gff3-validate path/to/file.gff3
 ```
 
 It will output any errors it finds to standard output. However, the
@@ -212,7 +213,7 @@ There is a D application for performance benchmarking.
 You can run it like this:
 
 ```sh
-    ./gff3-benchmark path/to/file.gff3
+    gff3-benchmark path/to/file.gff3
 ```
 
 The most basic case for the banchmarking utility is to parse the
@@ -248,7 +249,7 @@ To get the correct number of features in a file, use the following
 command:
 
 ```sh
-    ./gff3-count-features path/to/file.gff3
+    gff3-count-features path/to/file.gff3
 ```
 
 ### Format conversion utilities
@@ -271,7 +272,7 @@ But the expected worst-case memory footprint is less then half the size
 of the input file.
 
 ```sh
-    ./gff3-sort path/to/file.gff3
+    gff3-sort path/to/file.gff3
 ```
 
 ## Project home page
