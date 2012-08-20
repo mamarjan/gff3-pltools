@@ -103,7 +103,7 @@ if ronn_avail
   desc "Generate man pages"
   task :man do
     file_spec = RONN_FILES.join(' ')
-    sh "ronn --roff --html --style toc --markdown --date #{Time.now.strftime('%Y-%m-%d')} --manual='BioRuby Manual' --organization='BioRuby' #{file_spec}"
+    sh "ronn --roff --html --style toc --markdown --date #{Time.now.strftime('%Y-%m-%d')} --manual='gff3-pltools Manual' --organization='OpenBio' #{file_spec}"
   end
 
 end # if ronn_avail

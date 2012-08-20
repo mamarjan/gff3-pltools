@@ -107,5 +107,5 @@ See https://github.com/mamarjan/gff3-pltools/issues
 
 ## SEE ALSO
 
-gff3-tools(1), gff3-filter(1), gff3-select(1)
+gff3-filter(1), gff3-select(1)
 

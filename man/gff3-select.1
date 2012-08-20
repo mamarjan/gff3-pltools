@@ -1,0 +1,94 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GFF3\-SELECT" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.
+.SH "NAME"
+\fBgff3\-select\fR \- converting GFF3/GTF files into table format
+.
+.SH "SYNOPSIS"
+\fBgff3\-select\fR SELECTION [\-|GFF3_FILE] \fI\-o OUTPUT_FILE\fR
+.
+.P
+\fBgff3\-select\fR \-\-help
+.
+.P
+\fBgff3\-select\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgff3\-select\fR extracts the selected GFF3 fields and/or attributes from a file and outputs them in a tab\-separated table format, one line per one GFF3 line\.
+.
+.P
+Beside the defaults, it supports GTF as input, and JSON as output format\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-o\fR, \fB\-\-output OUT\fR
+Output will be written to the file \fIout\fR, instead of stdout\.
+.
+.TP
+\fB\-\-gtf\-input\fR
+Input data is in GTF format\.
+.
+.TP
+\fB\-\-json\fR
+Output in JSON format\.
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.TP
+\fB\-\-help\fR
+Print usage information and exit\.
+.
+.SH "EXAMPLES"
+To extract the feature type, start and stop coordinates, and the ID attribute:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-select "feature,start,end,attr ID"  m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+The same for GTF data:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-select "feature,start,end,attr geneid"  m_hapla\.annotations\.gtf \e
+      \-\-gtf\-input
+.
+.fi
+.
+.IP "" 0
+.
+.P
+or:
+.
+.IP "" 4
+.
+.nf
+
+$ gtf\-select "feature,start,end,attr geneid"  m_hapla\.annotations\.gtf
+.
+.fi
+.
+.IP "" 0
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgff3\-select\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-filter(1), gff3\-ffetch(1)

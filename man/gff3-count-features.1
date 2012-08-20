@@ -1,0 +1,45 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GFF3\-COUNT\-FEATURES" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.
+.SH "NAME"
+\fBgff3\-count\-features\fR \- correctly count GFF3 features
+.
+.SH "SYNOPSIS"
+\fBgff3\-count\-features\fR GFF3_FILE
+.
+.P
+\fBgff3\-count\-features\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgff3\-count\-features\fR correctly counts the number of features in a GFF3 file\. This can be important for testing if the choosen size of the feature cache while parsing a GFF3 file is big enough\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.SH "EXAMPLES"
+To count the number of features in a GFF3 file:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-count\-features m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgff3\-count\-features\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-filter(1), gff3\-ffetch(1), gff3\-select(1)

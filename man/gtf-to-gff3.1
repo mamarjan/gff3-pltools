@@ -1,0 +1,42 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GTF\-TO\-GFF3" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.
+.SH "NAME"
+\fBgtf\-to\-gff3\fR \- convert GTF file to GFF3 format
+.
+.SH "SYNOPSIS"
+\fBgtf\-to\-gff3\fR GTF_FILE \fIOPTIONS\fR
+.
+.P
+\fBgtf\-to\-gff3\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgtf\-to\-gff3\fR takes a GTF file and converts the data in that file to GFF3 format\. The default output is stdout, but the \fB\-o\fR option can be used to use an output file instead\.
+.
+.P
+The difference between these two formats is in the format of the ninth column, and all this tool is doing is to change the attributes column from the GTF format to GFF3 format\.
+.
+.P
+stdin can be used as the data source if "\-" is specified instead of the input file\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-o\fR, \fB\-\-output OUT\fR
+Output will be written to the file \fIout\fR, instead of stdout\.
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgtf\-to\-gff3\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-filter(1), gff3\-ffetch(1), gff3\-select(1)

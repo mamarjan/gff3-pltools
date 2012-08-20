@@ -1,0 +1,174 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GFF3\-FILTER" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.
+.SH "NAME"
+\fBgff3\-filter\fR \- filter GFF3/GTF files
+.
+.SH "SYNOPSIS"
+\fBgff3\-filter\fR FILTER_EXPR [\-|GFF3_FILE] \fI\-o OUTPUT_FILE\fR
+.
+.P
+\fBgtf\-filter\fR FILTER_EXPR [\-|GTF_FILE] \fI\-o OUTPUT_FILE\fR
+.
+.P
+\fBgff3\-filter\fR \-\-help
+.
+.P
+\fBgff3\-filter\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgff3\-filter\fR uses the filtering expression to select which records will be written to the output\. The filtering expression is specified using a mini language designed for this purpose\.
+.
+.P
+Supported output formats are GFF3, GTF, JSON and table output (using the \fB\-\-select\fR option)\.
+.
+.SH "FILTER LANGUAGE"
+A basic example looks like:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-filter "field feature == CDS"  m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+A slightly more complicated example would be:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-filter "(field feature == CDS) and (attr ID != \e"\e")" \e
+      m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Quite a few keywords and operators are available for creating custom filtering expressions:
+.
+.P
+field
+.
+.P
+This operator takes one parameter to the right, a field name, and represents the field for the current record\. Possible field names are: seqname, source, feature, start, end, score, strand and phase\.
+.
+.P
+attr
+.
+.P
+This operator takes one parameter to the right, an attribute name\. In case the attribute is not defined for the current record, it equals to an empty string\.
+.
+.P
+==, !=
+.
+.P
+Equality and non\-equality operators can be used to compare strings, numbers, floats and boolean values\.
+.
+.P
+These operators can be used to compare integer and float values\. In case there is a field or attr operator as an operand, the value of the field/attribute is first converted to a value good for comparison\.
+.
+.P
+and, or, not
+.
+.P
+Boolean operators, with expected function\.
+.
+.P
+contains, starts_with
+.
+.P
+Operators accept only string values\.
+.
+.P
+()
+.
+.P
+Brackets, for setting custom operator precedence\.
+.
+.P
++, \-, *, /
+.
+.P
+Math operators for addition, subtracting, multiplication and division of integer and floating point values\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-o\fR, \fB\-\-output OUT\fR
+Output will be written to the file \fIout\fR, instead of stdout\.
+.
+.TP
+\fB\-\-gtf\-input\fR
+Input data is in GTF format\.
+.
+.TP
+\fB\-\-json\fR
+Output in JSON format\.
+.
+.TP
+\fB\-\-gtf\-output\fR
+Output in GTF format\.
+.
+.TP
+\fB\-\-gff3\-output\fR
+Output in GFF3 format\.
+.
+.TP
+\fB\-a\fR, \fB\-\-at\-most N\fR
+Output at most N+1 lines, with the last line indicating if there should have been more lines\.
+.
+.TP
+\fB\-\-select SEL_STRING\fR
+Output only selected fields and/or attributes\. If this options is present, default output format is tab\-separated table\. If \fB\-\-json\fR option is present, output format will be JSON\. See gff3\-select(1) for more information about the SEL_STRING format\.
+.
+.TP
+\fB\-\-keep\-fasta\fR
+Copy fasta data to output\.
+.
+.TP
+\fB\-\-keep\-comments\fR
+Copy comment lines to output\.
+.
+.TP
+\fB\-\-keep\-pragmas\fR
+Copy pragma lines to output\.
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.TP
+\fB\-\-help\fR
+Print usage information and exit\.
+.
+.SH "EXAMPLES"
+To extract CDS records with the ID attribute defined:
+.
+.IP "" 4
+.
+.nf
+
+$ gff3\-filter "(field feature == CDS) and (attr ID != \e"\e")" \e
+      m_hapla\.annotations\.gff3
+.
+.fi
+.
+.IP "" 0
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgff3\-filter\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-select(1), gff3\-ffetch(1)

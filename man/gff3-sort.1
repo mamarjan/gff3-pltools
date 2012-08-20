@@ -1,0 +1,52 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "GFF3\-SORT" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.
+.SH "NAME"
+\fBgff3\-sort\fR \- sort GFF3 file so records of a single feature are close to each\-other
+.
+.SH "SYNOPSIS"
+\fBgff3\-sort\fR GFF3_FILE
+.
+.P
+\fBgff3\-sort\fR \-\-version
+.
+.SH "DESCRIPTION"
+\fBgff3\-sort\fR takes a GFF3 file and sorts it in such a way that records which belong to the same feature and one after another\. The file is then ready to be parsed in a sequence order by the GFF3 parser which is part of the gff3\-pltools\.
+.
+.SH "OPTIONS"
+General options:
+.
+.TP
+\fB\-o\fR, \fB\-\-output OUT\fR
+Output will be written to the file \fIout\fR, instead of stdout\.
+.
+.TP
+\fB\-\-keep\-fasta\fR
+Copy fasta data to output\.
+.
+.TP
+\fB\-\-keep\-comments\fR
+Copy comment lines to output\.
+.
+.TP
+\fB\-\-keep\-pragmas\fR
+Copy pragma lines to output\.
+.
+.TP
+\fB\-\-json\fR
+Output in JSON format\.
+.
+.TP
+\fB\-\-version\fR
+Output version information and exit\.
+.
+.SH "BUGS"
+See https://github\.com/mamarjan/gff3\-pltools/issues
+.
+.SH "COPYRIGHT"
+\fBgff3\-sort\fR is copyright (C) 2012 Marjan Povolni\.
+.
+.SH "SEE ALSO"
+gff3\-filter(1), gff3\-ffetch(1), gff3\-select(1)

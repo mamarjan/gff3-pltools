@@ -1,0 +1,40 @@
+gff3-count-features(1) -- correctly count GFF3 features
+=======================================================
+
+## SYNOPSIS
+
+`gff3-count-features` GFF3_FILE
+
+`gff3-count-features` --version
+
+## DESCRIPTION
+
+**gff3-count-features** correctly counts the number of features in a
+GFF3 file. This can be important for testing if the choosen size of
+the feature cache while parsing a GFF3 file is big enough.
+
+## OPTIONS
+
+General options:
+
+ * `--version`:
+   Output version information and exit.
+
+## EXAMPLES
+
+To count the number of features in a GFF3 file:
+
+    $ gff3-count-features m_hapla.annotations.gff3
+
+## BUGS
+
+See https://github.com/mamarjan/gff3-pltools/issues
+
+## COPYRIGHT
+
+`gff3-count-features` is copyright (C) 2012 Marjan Povolni.
+
+## SEE ALSO
+
+gff3-filter(1), gff3-ffetch(1), gff3-select(1)
+

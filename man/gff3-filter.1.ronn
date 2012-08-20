@@ -1,0 +1,140 @@
+gff3-filter(1) -- filter GFF3/GTF files
+=======================================
+
+## SYNOPSIS
+
+`gff3-filter` FILTER_EXPR [-|GFF3_FILE] [-o OUTPUT_FILE] [OPTIONS]
+
+`gtf-filter` FILTER_EXPR [-|GTF_FILE] [-o OUTPUT_FILE] [OPTIONS]
+
+`gff3-filter` --help
+
+`gff3-filter` --version
+
+## DESCRIPTION
+
+**gff3-filter** uses the filtering expression to select which records
+will be written to the output. The filtering expression is specified
+using a mini language designed for this purpose.
+
+Supported output formats are GFF3, GTF, JSON and table output (using
+the `--select` option).
+
+## FILTER LANGUAGE
+
+A basic example looks like:
+
+    $ gff3-filter "field feature == CDS"  m_hapla.annotations.gff3
+
+A slightly more complicated example would be:
+
+    $ gff3-filter "(field feature == CDS) and (attr ID != \"\")" \
+          m_hapla.annotations.gff3
+
+Quite a few keywords and operators are available for creating custom
+filtering expressions:
+
+field
+
+  This operator takes one parameter to the right, a field name, and
+  represents the field for the current record. Possible field names
+  are: seqname, source, feature, start, end, score, strand and phase.
+
+attr
+
+  This operator takes one parameter to the right, an attribute name.
+  In case the attribute is not defined for the current record, it
+  equals to an empty string.
+
+==, !=
+
+  Equality and non-equality operators can be used to compare strings,
+  numbers, floats and boolean values.
+
+>, <, >=, <=
+
+  These operators can be used to compare integer and float values. In
+  case there is a field or attr operator as an operand, the value of
+  the field/attribute is first converted to a value good for
+  comparison.
+
+and, or, not
+
+  Boolean operators, with expected function.
+
+contains, starts_with
+
+  Operators accept only string values.
+
+()
+
+Brackets, for setting custom operator precedence.
+
++, -, *, /
+
+Math operators for addition, subtracting, multiplication and division
+of integer and floating point values.
+
+## OPTIONS
+
+General options:
+
+ * `-o`, `--output OUT`:
+   Output will be written to the file <out>, instead of stdout.
+
+ * `--gtf-input`:
+   Input data is in GTF format.
+
+ * `--json`:
+   Output in JSON format.
+
+ * `--gtf-output`:
+   Output in GTF format.
+
+ * `--gff3-output`:
+   Output in GFF3 format.
+
+ * `-a`, `--at-most N`:
+   Output at most N+1 lines, with the last line indicating if there
+   should have been more lines.
+
+ * `--select SEL_STRING`:
+   Output only selected fields and/or attributes. If this options is
+   present, default output format is tab-separated table. If `--json`
+   option is present, output format will be JSON. See gff3-select(1)
+   for more information about the SEL_STRING format.
+
+ * `--keep-fasta`:
+   Copy fasta data to output.
+
+ * `--keep-comments`:
+   Copy comment lines to output.
+
+ * `--keep-pragmas`:
+   Copy pragma lines to output.
+
+ * `--version`:
+   Output version information and exit.
+
+ * `--help`:
+   Print usage information and exit.
+
+## EXAMPLES
+
+To extract CDS records with the ID attribute defined:
+
+    $ gff3-filter "(field feature == CDS) and (attr ID != \"\")" \
+          m_hapla.annotations.gff3
+
+## BUGS
+
+See https://github.com/mamarjan/gff3-pltools/issues
+
+## COPYRIGHT
+
+`gff3-filter` is copyright (C) 2012 Marjan Povolni.
+
+## SEE ALSO
+
+gff3-select(1), gff3-ffetch(1)
+

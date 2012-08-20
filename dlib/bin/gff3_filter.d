@@ -10,14 +10,13 @@ import util.split_file, util.version_helper;
  * interested in CDS, you can use this utility to extract all CDS
  * records from a file like this:
  *
- *   gff3-filter --filter field:feature:equals:CDS path-to-file.gff3
+ *   gff3-filter "field feature == CDS" path-to-file.gff3
  *
- * See package README for more information.
+ * See manual page for more information.
  */
 
 int main(string[] args) {
   // Parse command line arguments
-  string filter_string = null;
   string output_filename = null;
   long at_most = -1;
   bool show_version = false;
@@ -37,7 +36,6 @@ int main(string[] args) {
   try {
     getopt(args,
         std.getopt.config.passThrough,
-        "filter|f", &filter_string,
         "output|o", &output_filename,
         "at-most|a", &at_most,
         "version", &show_version,
@@ -71,13 +69,15 @@ int main(string[] args) {
     gtf_output = false;
   }
 
-  // Only a filename should be left at this point
-  auto filename = args[1];
-  if (args.length != 2) {
+  // Only the filtering expression and filename should be left at this point
+  if (args.length != 3) {
     print_usage();
     return 2; // Exit the application
   }
 
+  string filter_string = args[1];
+
+  auto filename = args[2];
   // Check if file exists, if not stdin
   alias char[] array;
   if (filename != "-") {
@@ -111,11 +111,16 @@ int main(string[] args) {
       records = GTFFile.parse_by_records(filename);
   }
 
-  records.set_validate(NO_VALIDATION)
-         .set_replace_esc_chars(false)
-         .set_after_filter(new_string_to_filter(filter_string))
-         .set_keep_comments(keep_comments)
-         .set_keep_pragmas(keep_pragmas);
+  try {
+    records.set_validate(NO_VALIDATION)
+           .set_replace_esc_chars(false)
+           .set_after_filter(new_string_to_filter(filter_string))
+           .set_keep_comments(keep_comments)
+           .set_keep_pragmas(keep_pragmas);
+  } catch (Exception e) {
+    writeln(e.msg);
+    return -1;
+  }
 
   // Parsing, filtering and output
   bool at_most_reached = false;
@@ -155,8 +160,6 @@ void print_usage() {
   writeln("Filter GFF3 file and write records to stdout");
   writeln();
   writeln("Options:");
-  writeln("  -f, --filter    A filtering expresion. Only records which match the");
-  writeln("                  expression will be passed to stdout or output file.");
   writeln("  --select        Output data table format with columns specified by an argument");
   writeln("  -o, --output    Instead of writing results to stdout, write them to");
   writeln("                  this file.");

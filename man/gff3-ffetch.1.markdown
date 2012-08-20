@@ -107,7 +107,7 @@ See https://github.com/mamarjan/gff3-pltools/issues
 
 ## SEE ALSO
 
-gff3-tools(1), gff3-filter(1), gff3-select(1)
+gff3-filter(1), gff3-select(1)
 
 
 
@@ -120,4 +120,11 @@ gff3-tools(1), gff3-filter(1), gff3-select(1)
 [SEE ALSO]: #SEE-ALSO "SEE ALSO"
 
 
+[gff3-count-features(1)]: gff3-count-features.1.html
+[gff3-to-gtf(1)]: gff3-to-gtf.1.html
 [gff3-ffetch(1)]: gff3-ffetch.1.html
+[gff3-to-json(1)]: gff3-to-json.1.html
+[gff3-sort(1)]: gff3-sort.1.html
+[gtf-to-gff3(1)]: gtf-to-gff3.1.html
+[gff3-select(1)]: gff3-select.1.html
+[gff3-filter(1)]: gff3-filter.1.html
