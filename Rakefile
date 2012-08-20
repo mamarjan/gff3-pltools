@@ -58,6 +58,7 @@ CLEAN.include("unittests.o")
 desc "Compile GFF3 utilities"
 task :utilities => :bin do
   if dc == "dmd"
+    sh "dmd -O -release dlib/bin/gff3_select.d #{DFILES} -Idlib -J. -ofbin/gff3-select"
     sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
     sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
     sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
@@ -68,6 +69,7 @@ task :utilities => :bin do
     sh "dmd -O -release dlib/bin/gff3_to_json.d #{DFILES} -Idlib -J. -ofbin/gff3-to-json"
     sh "dmd -O -release dlib/bin/gff3_sort.d #{DFILES} -Idlib -J. -ofbin/gff3-sort"
   elsif dc == "gdc"
+    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_select.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-select"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
     sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
@@ -81,6 +83,7 @@ task :utilities => :bin do
   rm_f Dir.glob("bin/*.o")
   sh "ln -s gff3-benchmark bin/gtf-benchmark"
   sh "ln -s gff3-filter bin/gtf-filter"
+  sh "ln -s gff3-select bin/gtf-select"
   sh "ln -s gff3-to-json bin/gtf-to-json"
 end
 
@@ -118,6 +121,7 @@ task :dev_tools => :dev_bin do
     sh "dmd -g dlib/dev_tools/make_fasta_comparable.d #{DFILES} -Idlib -J. -ofdev_bin/make-fasta-comparable"
   elsif dc == "gdc"
     sh "gdc -fdebug dlib/dev_tools/combine_fasta.d #{DFILES} -lpthread -J. -o dev_bin/combine-fasta"
+    sh "gdc -fdebug dlib/dev_tools/fasta_rewrite.d #{DFILES} -lpthread -J. -o dev_bin/fasta-rewrite"
     sh "gdc -fdebug dlib/dev_tools/compare_fasta.d #{DFILES} -lpthread -J. -o dev_bin/compare-fasta"
     sh "gdc -fdebug dlib/dev_tools/fasta_stats.d #{DFILES} -lpthread -J. -o dev_bin/fasta-stats"
     sh "gdc -fdebug dlib/dev_tools/make_fasta_comparable.d #{DFILES} -lpthread -J. -o dev_bin/make-fasta-comparable"
