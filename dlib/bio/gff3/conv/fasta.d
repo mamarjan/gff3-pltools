@@ -1,6 +1,6 @@
 module bio.gff3.conv.fasta;
 
-import std.stdio, std.conv, std.array, std.algorithm, std.format;
+import std.stdio, std.conv, std.array, std.algorithm, std.format, std.string;
 import bio.gff3.record_range, bio.fasta;
 import util.split_into_lines, util.array_includes, util.equals, util.logger;
 
@@ -389,7 +389,7 @@ string translate_sequence(string sequence) {
   while(sequence.length >= 3) {
     string codon = sequence[0..3];
     char aa;
-    switch(codon) {
+    switch(toUpper(codon)) {
       case "TTT":
       case "TTC":
         aa = 'F';
