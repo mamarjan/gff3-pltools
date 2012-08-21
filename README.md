@@ -81,116 +81,57 @@ and translated to amino acids
   gff3-ffetch CDS --translate --parent-type mRNA m_hapla.WS232.genomic.fa m_hapla.WS232.annotations.gff3 
 ```
 
-gff3-ffetch can also filter a GFF3/GTF file, rendering GFF3/GTF
+See manual page for more options and examples.
+
+### gff3-filter utility
+
+gff3-filter can filter a GFF3/GTF file, and render GFF3/GTF
 output, as well as, JSON and table output. For example, you can use the
-following command to filter out records with a CDS feature from
-a GFF3 file:
+following command to keep only CDS features from a GFF3 file:
 
 ```sh
-    gff3-ffetch --filter field:feature:equals:CDS path-to-file.gff3
+    gff3-filter "field feature == CDS" path-to-file.gff3
 ```
 
 If you need to filter a GTF file instead, use --gtf-input and
---gtf-output options, or use the "gtf-ffetch" command instead.
+--gtf-output options, or use the "gtf-filter" command instead.
 
 The utility will use the fast (and soon parallel) D library to do the
 parsing and filtering. You can then parse the result using your
 programming language and library of choice.
 
-Currently supported filtering predicates are "field", "attribute",
-"equals", "contains", "starts_with" and "not". You can combine them
-in a way that makes sense. First, the utility needs to know what
-field or attribute should be used for filtering. In the previous
-example, that's the "field:feature" part. Next, the utility needs
-to know what you want to do with it. In the example, that's the
-"equals" part. And then the last part in the example is a parameter
-to the "equals", which tells the utility what the attribute or field
-should be compared to.
+The parsing language supports any logical combination of a few
+operators with values: field, attr,  ==, !=, >, <, >=, <=, +, -, *,
+/, (, ), "and" and "or".
 
-Parts of the expression are separated by a colon, ':', and if colon
-is suposed to be part of a field name or value, it can be escaped
-like this: "\\:".
-
-Valid field names are: seqname, source, feature, start, end, score,
-strand and phase.
-
-A few more examples...
+To keep only CDS features which have the ID attribute defined, use:
 
 ```sh
-    gff3-ffetch --filter attribute:ID:equals:gene1 path-to-file.gff3
+    gff3-filter "(field feature == CDS) and (attr ID != \"\"" path-to-file.gff3
 ```
 
-The previous example chooses records which have the ID attribute
-with the value gene1.
-
-To see which records have no ID value, or ID which is an empty
-string, use the following command:
+To keep records which are above 200 nucleotides in length, use this:
 
 ```sh
-    gff3-ffetch --filter attribute:ID:equals: path-to-file.gff3
+    gff3-filter "(field end - field start) > 200" path-to-file.gff3
 ```
 
-And to get records which have the ID attribute defined, you can use
-this command:
+See manual page for more options and examples.
+
+### gff3-select utility
+
+This tool can be used to convert a GFF3 or GTF file to a
+tab-separated table format with columns being selected fields
+and/or attributes.
+
+For example:
 
 ```sh
-    gff3-ffetch --filter attribute:ID:not:equals: path-to-file.gff3
+    gff3-select "feature,start,end,attr ID" path-to-file.gff3
 ```
 
-or
-
-```sh
-    gff3-ffetch --filter not:attribute:ID:equals: path-to-file.gff3
-```
-
-However, the last two commands are not completely the same. In cases
-where an attribute has multiple values, the Parent attribute for
-example, the "attribute" predicate first runs the contained predicate
-on all attribute's values and returns true when an operation
-returns true for a parent value. That is, it has an implicit "and"
-operation built-in.
-
-There is also an option for selecting which fields and attributes
-should be in output:
-
-```sh
-    gff3-ffetch --select "seqname,start,end,attr ID" path-to-file.gff3
-```
-
-The previous command will output all records from the GFF3 file in
-tab-separated table format with four columns. JSON output is
-supported with this option too.
-
-There are a few more options available. In the examples above, the
-data was comming from a GFF3 file which was specified on the command
-line and the output was the screen. To use the standard input as the
-source of the data, use "-" instead of a filename.
-
-The default for output is the screen, or stdout. To redirect the
-output to a file, you can use the "--output" option. Here is an
-example:
-
-```sh
-    gff3-ffetch --filter not:attribute:ID:equals: - --output tmp.gff3
-```
-
-To limit the number of records in the results, you can use the
-"--at-most" option. For example:
-
-```sh
-    gff3-ffetch --filter not:attribute:ID:equals: - --at-most 1000
-```
-
-If there are more then a 1000 records in the results, after the
-1000th record printed, a line is appended with the following content:
-"# ..." and the utility terminates.
-
-To pass through the FASTA data contained in a GFF3 file, you can use
-the "--keep-fasta" option. If there is FASTA data in it, it
-will be copies to output after the GFF3 records.
-
-To keep the comments and/or pragmas in the output, you can use the
---keep-comments/--keep-pragmas command line options.
+This will output a table with four columns, with the fields
+feature, start and end, and the attribute ID.
 
 ### GFF3 File validation
 
