@@ -180,7 +180,7 @@ class FeatureData {
     auto copy = records.dup;
     reverse(copy);
     foreach(rec; copy) {
-      auto sequence_part = sequence[rec.start-1..rec.end].dup;
+      auto sequence_part = sequence[cast(size_t)(rec.start-1)..cast(size_t)(rec.end)].dup;
       if (sequence_part.length == 0) {
         continue;
       } else {
@@ -205,7 +205,7 @@ class FeatureData {
     auto sequence = fasta_data[seqname];
 
     foreach(rec; records) {
-      auto sequence_part = sequence[rec.start-1..rec.end];
+      auto sequence_part = sequence[cast(size_t)(rec.start-1)..cast(size_t)(rec.end)];
       if (phase)
         sequence_part = adjust_for_phase(sequence_part, rec);
       if (frame)
