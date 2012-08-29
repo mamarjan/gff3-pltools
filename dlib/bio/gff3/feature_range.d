@@ -30,11 +30,11 @@ class FeatureRange : RangeWithCache!Feature {
     records.set_replace_esc_chars(replace); return this;
   }
 
-  auto set_before_filter(StringPredicate before_filter) {
+  auto set_before_filter(StringFilter before_filter) {
     records.set_before_filter(before_filter); return this;
   }
 
-  auto set_after_filter(RecordPredicate after_filter) {
+  auto set_after_filter(RecordFilter after_filter) {
     records.set_after_filter(after_filter); return this;
   }
 

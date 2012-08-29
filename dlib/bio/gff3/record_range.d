@@ -52,7 +52,7 @@ class GenericRecordRange : RangeWithCache!Record {
    * This filter will be invoked with a raw line before it is parsed.
    * The current line will be parsed only if it passes this filter.
    */
-  auto set_before_filter(StringPredicate before_filter) {
+  auto set_before_filter(StringFilter before_filter) {
     this.before_filter = before_filter; return this;
   }
 
@@ -61,7 +61,7 @@ class GenericRecordRange : RangeWithCache!Record {
    * line. If it passes the filter, the record will be the next record to
    * be returned.
    */
-  auto set_after_filter(RecordPredicate after_filter) {
+  auto set_after_filter(RecordFilter after_filter) {
     this.after_filter = after_filter; return this;
   }
 
@@ -105,8 +105,8 @@ class GenericRecordRange : RangeWithCache!Record {
     RecordValidator validate;
     bool replace_esc_chars = true;
 
-    StringPredicate before_filter;
-    RecordPredicate after_filter;
+    StringFilter before_filter;
+    RecordFilter after_filter;
     string filename;
 
     bool keep_comments = false;
