@@ -3,6 +3,7 @@
 require 'rake/clean'
 
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
+PREFIX=ENV["PREFIX"]
 
 DMD_RELEASE_FLAGS = "-O -release -Idlib -J."
 DMD_DEBUG_FLAGS = "-g -Idlib -J."
@@ -82,16 +83,16 @@ end
 
 def build_all_utilities compiler, flags
   all_utilities = [
-    { main_file: "dlib/bin/gff3_select.d", output_path: "bin/gff3-select" },
-    { main_file: "dlib/bin/gff3_ffetch.d", output_path: "bin/gff3-ffetch" },
-    { main_file: "dlib/bin/gff3_benchmark.d", output_path: "bin/gff3-benchmark" },
-    { main_file: "dlib/bin/gff3_validate.d", output_path: "bin/gff3-validate" },
-    { main_file: "dlib/bin/gff3_count_features.d", output_path: "bin/gff3-count-features" },
-    { main_file: "dlib/bin/gff3_filter.d", output_path: "bin/gff3-filter" },
-    { main_file: "dlib/bin/gff3_to_gtf.d", output_path: "bin/gff3-to-gtf" },
-    { main_file: "dlib/bin/gtf_to_gff3.d", output_path: "bin/gtf-to-gff3" },
-    { main_file: "dlib/bin/gff3_to_json.d", output_path: "bin/gff3-to-json" },
-    { main_file: "dlib/bin/gff3_sort.d", output_path: "bin/gff3-sort" } ]
+    { :main_file => "dlib/bin/gff3_select.d", :output_path => "bin/gff3-select" },
+    { :main_file => "dlib/bin/gff3_ffetch.d", :output_path => "bin/gff3-ffetch" },
+    { :main_file => "dlib/bin/gff3_benchmark.d", :output_path => "bin/gff3-benchmark" },
+    { :main_file => "dlib/bin/gff3_validate.d", :output_path => "bin/gff3-validate" },
+    { :main_file => "dlib/bin/gff3_count_features.d", :output_path => "bin/gff3-count-features" },
+    { :main_file => "dlib/bin/gff3_filter.d", :output_path => "bin/gff3-filter" },
+    { :main_file => "dlib/bin/gff3_to_gtf.d", :output_path => "bin/gff3-to-gtf" },
+    { :main_file => "dlib/bin/gtf_to_gff3.d", :output_path => "bin/gtf-to-gff3" },
+    { :main_file => "dlib/bin/gff3_to_json.d", :output_path => "bin/gff3-to-json" },
+    { :main_file => "dlib/bin/gff3_sort.d", :output_path => "bin/gff3-sort" } ]
   all_utilities.each do |utility|
     build_utility compiler, utility[:main_file], utility[:output_path], flags
   end
@@ -189,16 +190,26 @@ if ronn_avail
 
 end # if ronn_avail
 
+desc "Install binaries. Use PREFIX env variable to change the target path."
+task :install do
+  sh "mkdir -p #{PREFIX || "/usr/local"}/bin"
+  sh "cp -d bin/* #{PREFIX || "/usr/local"}/bin"
+  sh "mkdir -p #{PREFIX || "/usr/local"}/share/man/man1"
+  sh "cp man/*.1 #{PREFIX || "/usr/local"}/share/man/man1"
+  sh "mkdir -p #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
+  sh "cp LICENSE.txt README.md #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
+end
+
 directory "dev_bin"
 CLEAN.include("dev_bin/")
 
 def build_dev_tools compiler, flags
   all_tools = [
-    { main_file: "dlib/dev_tools/combine_fasta.d", output_path: "dev_bin/combine-fasta" },
-    { main_file: "dlib/dev_tools/fasta_rewrite.d", output_path: "dev_bin/fasta-rewrite" },
-    { main_file: "dlib/dev_tools/compare_fasta.d", output_path: "dev_bin/compare-fasta" },
-    { main_file: "dlib/dev_tools/fasta_stats.d", output_path: "dev_bin/fasta-stats" },
-    { main_file: "dlib/dev_tools/make_fasta_comparable.d", output_path: "dev_bin/make-fasta-comparable" } ]
+    { :main_file => "dlib/dev_tools/combine_fasta.d", :output_path => "dev_bin/combine-fasta" },
+    { :main_file => "dlib/dev_tools/fasta_rewrite.d", :output_path => "dev_bin/fasta-rewrite" },
+    { :main_file => "dlib/dev_tools/compare_fasta.d", :output_path => "dev_bin/compare-fasta" },
+    { :main_file => "dlib/dev_tools/fasta_stats.d", :output_path => "dev_bin/fasta-stats" },
+    { :main_file => "dlib/dev_tools/make_fasta_comparable.d", :output_path => "dev_bin/make-fasta-comparable" } ]
   all_tools.each do |tool|
     build_utility compiler, tool[:main_file], tool[:output_path], flags
   end
