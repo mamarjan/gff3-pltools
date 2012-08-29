@@ -4,8 +4,11 @@ require 'rake/clean'
 
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
 
-dc = ENV["DC"]
-dc = "dmd" if dc.nil?
+DMD_RELEASE_FLAGS = "-O -release -Idlib -J."
+DMD_DEBUG_FLAGS = "-g -Idlib -J."
+
+GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelease -lpthread -fno-assert -J."
+GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 
 directory "bin"
 CLEAN.include("bin/")
@@ -43,48 +46,126 @@ DFILES = ["dlib/bio/gff3/file.d",
           "dlib/util/logger.d",
           "dlib/bio/exceptions.d"].join(" ")
 
-desc "Compile and run D unit tests"
-task :unittests do
-  if dc == "dmd"
-    sh "dmd -g -unittest dlib/unittests.d #{DFILES} -Idlib -J. -ofunittests"
-  elsif dc == "gdc"
-    sh "gdc #{DFILES} -O0 -funittest -o unittests -lpthread -fdebug -fversion=serial -J. dlib/unittests.d"
+desc "Shorthand for test:dmd"
+task :test => ["test:dmd"]
+
+namespace :test do
+  desc "Compile and run unit tests with DMD compiler"
+  task :dmd do
+    sh "dmd #{DMD_DEBUG_FLAGS} #{DFILES} -unittest -ofunittests dlib/unittests.d"
+    sh "./unittests"
   end
-  sh "./unittests"
+
+  desc "Compile and run unit tests with GDC compiler"
+  task :gdc do
+    sh "gdc #{GDC_DEBUG_FLAGS} #{DFILES} -funittest -o unittests dlib/unittests.d"
+    sh "./unittests"
+  end
 end
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
-desc "Compile GFF3 utilities"
-task :utilities => :bin do
-  if dc == "dmd"
-    sh "dmd -O -release dlib/bin/gff3_select.d #{DFILES} -Idlib -J. -ofbin/gff3-select"
-    sh "dmd -O -release dlib/bin/gff3_ffetch.d #{DFILES} -Idlib -J. -ofbin/gff3-ffetch"
-    sh "dmd -O -release dlib/bin/gff3_benchmark.d #{DFILES} -Idlib -J. -ofbin/gff3-benchmark"
-    sh "dmd -O -release dlib/bin/gff3_validate.d #{DFILES} -Idlib -J. -ofbin/gff3-validate"
-    sh "dmd -O -release dlib/bin/gff3_count_features.d #{DFILES} -Idlib -J. -ofbin/gff3-count-features"
-    sh "dmd -O -release dlib/bin/gff3_filter.d #{DFILES} -Idlib -J. -ofbin/gff3-filter"
-    sh "dmd -O -release dlib/bin/gff3_to_gtf.d #{DFILES} -Idlib -J. -ofbin/gff3-to-gtf"
-    sh "dmd -O -release dlib/bin/gtf_to_gff3.d #{DFILES} -Idlib -J. -ofbin/gtf-to-gff3"
-    sh "dmd -O -release dlib/bin/gff3_to_json.d #{DFILES} -Idlib -J. -ofbin/gff3-to-json"
-    sh "dmd -O -release dlib/bin/gff3_sort.d #{DFILES} -Idlib -J. -ofbin/gff3-sort"
-  elsif dc == "gdc"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_select.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-select"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_ffetch.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-ffetch"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_benchmark.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-benchmark"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_validate.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-validate"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_count_features.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-count-features"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_filter.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-filter"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_gtf.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-gtf"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gtf_to_gff3.d #{DFILES} -lpthread -fno-assert -J. -o bin/gtf-to-gff3"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_to_json.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-to-json"
-    sh "gdc -O3 -finline -funroll-all-loops -finline-limit=8192 -frelease dlib/bin/gff3_sort.d #{DFILES} -lpthread -fno-assert -J. -o bin/gff3-sort"
+def build_utility compiler, main_file_path, output_path, flags
+  if compiler == :dmd
+    sh "dmd #{flags} #{DFILES} -of#{output_path} #{main_file_path}"
+  elsif compiler == :gdc
+    sh "gdc #{flags} #{DFILES} -o #{output_path} #{main_file_path}"
   end
-  rm_f Dir.glob("bin/*.o")
+end
+
+def create_symlinks
   sh "ln -s gff3-benchmark bin/gtf-benchmark"
   sh "ln -s gff3-filter bin/gtf-filter"
   sh "ln -s gff3-select bin/gtf-select"
   sh "ln -s gff3-to-json bin/gtf-to-json"
+end
+
+def build_all_utilities compiler, flags
+  all_utilities = [
+    { main_file: "dlib/bin/gff3_select.d", output_path: "bin/gff3-select" },
+    { main_file: "dlib/bin/gff3_ffetch.d", output_path: "bin/gff3-ffetch" },
+    { main_file: "dlib/bin/gff3_benchmark.d", output_path: "bin/gff3-benchmark" },
+    { main_file: "dlib/bin/gff3_validate.d", output_path: "bin/gff3-validate" },
+    { main_file: "dlib/bin/gff3_count_features.d", output_path: "bin/gff3-count-features" },
+    { main_file: "dlib/bin/gff3_filter.d", output_path: "bin/gff3-filter" },
+    { main_file: "dlib/bin/gff3_to_gtf.d", output_path: "bin/gff3-to-gtf" },
+    { main_file: "dlib/bin/gtf_to_gff3.d", output_path: "bin/gtf-to-gff3" },
+    { main_file: "dlib/bin/gff3_to_json.d", output_path: "bin/gff3-to-json" },
+    { main_file: "dlib/bin/gff3_sort.d", output_path: "bin/gff3-sort" } ]
+  all_utilities.each do |utility|
+    build_utility compiler, utility[:main_file], utility[:output_path], flags
+  end
+  rm_f Dir.glob("bin/*.o")
+  create_symlinks
+end
+
+namespace :utilities do
+  namespace :release do
+    desc "Compile GFF3 utilities with DMD with release flags"
+    task :dmd => :bin do
+      build_all_utilities :dmd, DMD_RELEASE_FLAGS
+    end
+
+    desc "Compile GFF3 utilities with GDC with release flags"
+    task :gdc => :bin do
+      build_all_utilities :gdc, GDC_RELEASE_FLAGS
+    end
+  end
+
+  desc "Shorthand for utilities:release:dmd"
+  task :dmd => ["utilities:release:dmd"]
+
+  desc "Shorthand for utilities:release:gdc"
+  task :gdc => ["utilities:release:gdc"]
+
+  namespace :debug do
+    desc "Compile GFF3 utilities with DMD with debug flags"
+    task :dmd => :bin do
+      build_all_utilities :dmd, DMD_DEBUG_FLAGS
+    end
+
+    desc "Compile GFF3 utilities with GDC with debug flags"
+    task :gdc => :bin do
+      build_all_utilities :gdc, GDC_DEBUG_FLAGS
+    end
+  end
+
+  desc "Shorthand for utilities:debug:dmd"
+  task :debug => ["utilities:debug:dmd"]
+end
+
+desc "Shorthand for test and utilities:release:dmd"
+task :default => [:test, :utilities]
+
+desc "Shorthand for utilities:release:dmd"
+task :utilities => ["utilities:release:dmd"]
+
+desc "Shorthand for utilities:debug:dmd"
+task :debug => ["utilities:debug:dmd"]
+
+desc "Shorthand for utilities:release:dmd"
+task :release => ["utilities:release:dmd"]
+
+desc "Shorthand for test and utilities:release:dmd"
+task :dmd => ["test", "utilities:release:dmd"]
+
+desc "Shorthand for test and utilities:release:gdc"
+task :gdc => ["test", "utilities:release:gdc"]
+
+namespace :debug do
+  desc "Shorthand for utilities:debug:dmd"
+  task :dmd => ["utilities:debug:dmd"]
+
+  desc "Shorthand for utilities:debug:gdc"
+  task :gdc => ["utilities:debug:gdc"]
+end
+
+namespace :release do
+  desc "Shorthand for utilities:release:dmd"
+  task :dmd => ["utilities:release:dmd"]
+
+  desc "Shorthand for utilities:release:gdc"
+  task :gdc => ["utilities:release:gdc"]
 end
 
 #### Man pages
@@ -111,23 +192,29 @@ end # if ronn_avail
 directory "dev_bin"
 CLEAN.include("dev_bin/")
 
-desc "Compile development utilities"
-task :dev_tools => :dev_bin do
-  if dc == "dmd"
-    sh "dmd -g dlib/dev_tools/combine_fasta.d #{DFILES} -Idlib -J. -ofdev_bin/combine-fasta"
-    sh "dmd -g dlib/dev_tools/fasta_rewrite.d #{DFILES} -Idlib -J. -ofdev_bin/fasta-rewrite"
-    sh "dmd -g dlib/dev_tools/compare_fasta.d #{DFILES} -Idlib -J. -ofdev_bin/compare-fasta"
-    sh "dmd -g dlib/dev_tools/fasta_stats.d #{DFILES} -Idlib -J. -ofdev_bin/fasta-stats"
-    sh "dmd -g dlib/dev_tools/make_fasta_comparable.d #{DFILES} -Idlib -J. -ofdev_bin/make-fasta-comparable"
-  elsif dc == "gdc"
-    sh "gdc -fdebug dlib/dev_tools/combine_fasta.d #{DFILES} -lpthread -J. -o dev_bin/combine-fasta"
-    sh "gdc -fdebug dlib/dev_tools/fasta_rewrite.d #{DFILES} -lpthread -J. -o dev_bin/fasta-rewrite"
-    sh "gdc -fdebug dlib/dev_tools/compare_fasta.d #{DFILES} -lpthread -J. -o dev_bin/compare-fasta"
-    sh "gdc -fdebug dlib/dev_tools/fasta_stats.d #{DFILES} -lpthread -J. -o dev_bin/fasta-stats"
-    sh "gdc -fdebug dlib/dev_tools/make_fasta_comparable.d #{DFILES} -lpthread -J. -o dev_bin/make-fasta-comparable"
+def build_dev_tools compiler, flags
+  all_tools = [
+    { main_file: "dlib/dev_tools/combine_fasta.d", output_path: "dev_bin/combine-fasta" },
+    { main_file: "dlib/dev_tools/fasta_rewrite.d", output_path: "dev_bin/fasta-rewrite" },
+    { main_file: "dlib/dev_tools/compare_fasta.d", output_path: "dev_bin/compare-fasta" },
+    { main_file: "dlib/dev_tools/fasta_stats.d", output_path: "dev_bin/fasta-stats" },
+    { main_file: "dlib/dev_tools/make_fasta_comparable.d", output_path: "dev_bin/make-fasta-comparable" } ]
+  all_tools.each do |tool|
+    build_utility compiler, tool[:main_file], tool[:output_path], flags
   end
   rm_f Dir.glob("dev_bin/*.o")
 end
 
-task :default => :unittests
+task :dev_tools => ["dev_tools:dmd"]
+
+namespace :dev_tools do
+  task :dmd => :dev_bin do
+    build_dev_tools :dmd, DMD_DEBUG_FLAGS
+  end
+
+  task :gdc do
+    build_dev_tools :gdc, GDC_DEBUG_FLAGS
+  end
+end
+
 
