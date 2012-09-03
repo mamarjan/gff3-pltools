@@ -78,7 +78,7 @@ alias bool function(char) InvalidCharProc;
  * to an appender, while escaping the characters using the url
  * escaping conventions.
  */
-void append_and_escape_chars(T)(Appender!T app, string field_value, InvalidCharProc is_invalid) {
+void escape_chars(T,P)(T field_value, InvalidCharProc is_invalid, Appender!P app) {
   foreach(character; field_value) {
     if (is_invalid(character) || (character == '%')) {
       app.put('%');
@@ -88,6 +88,12 @@ void append_and_escape_chars(T)(Appender!T app, string field_value, InvalidCharP
       app.put(character);
     }
   }
+}
+
+T[] escape_chars(T)(T[] field_value, InvalidCharProc is_invalid) {
+  auto app = appender!(T[])();
+  escape_chars(field_value, is_invalid, app);
+  return app.data;
 }
 
 /**
@@ -149,13 +155,13 @@ unittest {
             (character == ','));
   };
   auto app = appender!string();
-  append_and_escape_chars(app, "abc", is_invalid_char);
+  escape_chars("abc", is_invalid_char, app);
   assert(app.data == "abc");
-  append_and_escape_chars(app, "\0\t", is_invalid_char);
+  escape_chars("\0\t", is_invalid_char, app);
   assert(app.data == "abc%00%09");
-  append_and_escape_chars(app, "ab=,;", is_invalid_char);
+  escape_chars("ab=,;", is_invalid_char, app);
   assert(app.data == "abc%00%09ab%3D%2C%3B");
-  append_and_escape_chars(app, ">", is_invalid_char);
+  escape_chars(">", is_invalid_char, app);
   assert(app.data == "abc%00%09ab%3D%2C%3B>");
 }
 

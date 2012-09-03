@@ -1,9 +1,10 @@
 module bio.gff3.record;
 
-import std.conv, std.stdio, std.array, std.string, std.exception;
-import std.ascii;
-import bio.exceptions, bio.gff3.validation, bio.gff3.selection;
-import util.esc_char_conv, util.split_line;
+import std.conv, std.stdio, std.array, std.string, std.exception,
+       std.ascii, std.algorithm;
+import bio.exceptions, bio.gff3.validation, bio.gff3.selection,
+       bio.gff3.conv.gff3, bio.gff3.conv.gtf;
+import util.esc_char_conv, util.split_line, util.join_fields;
 
 public import bio.gff3.data_formats;
 
@@ -33,7 +34,7 @@ class Record {
     } else {
       record_type = RecordType.REGULAR;
       this.replace_esc_chars = replace_esc_chars;
-      if (replace_esc_chars && (line.indexOf('%') != -1))
+      if (replace_esc_chars && (std.string.indexOf(line, '%') != -1))
         parse_line_and_replace_esc_chars(line);
       else
         parse_line(line);
@@ -109,7 +110,8 @@ class Record {
   string score;
   string strand;
   string phase;
-  AttributeValue[string] attributes;
+  AttributeValue!(string)[string] attributes;
+  string comment_or_pragma;
 
   /**
    * Accessor methods for most important attributes:
@@ -158,7 +160,7 @@ class Record {
           if ((!replace_esc_chars) || (is_char_invalid is null))
             app.put(field_value);
           else
-            append_and_escape_chars(app, field_value, is_char_invalid);
+            escape_chars(field_value, is_char_invalid, app);
         }
         app.put('\t');
       }
@@ -183,9 +185,9 @@ class Record {
               first_attr = false;
             else
               app.put(';');
-            append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+            escape_chars(attr_name, is_invalid_in_attribute, app);
             app.put('=');
-            attr_value.append_to(app);
+            attr_value.to_string(app);
           }
         }
       } else {
@@ -200,9 +202,9 @@ class Record {
         foreach(attr_name, attr_value; attributes) {
           if ((attr_name != "gene_id") && (attr_name != "transcript_id")) {
             app.put(' ');
-            append_and_escape_chars(app, attr_name, is_invalid_in_attribute);
+            escape_chars(attr_name, is_invalid_in_attribute, app);
             app.put(" \"");
-            attr_value.append_to(app);
+            attr_value.to_string(app);
             app.put("\";");
           }
         }
@@ -219,24 +221,13 @@ class Record {
   }
 
   /**
-   * Converts this object to a GFF3 or GTF line. The default is to covert
-   * it to the same type it was parsed from.
-   */
-  string toString(DataFormat format) {
-    if (is_regular()) {
-      auto result = appender!(char[])();
-      append_to(result, false, format);
-      return cast(string)(result.data);
-    } else {
-      return comment_or_pragma;
-    }
-  }
-
-  /**
    * The following is required for compiler warnings.
    */
   string toString() {
-    return toString(DataFormat.DEFAULT);
+    if (data_format == DataFormat.GFF3)
+      return to_gff3(this);
+    else
+      return to_gtf(this);
   }
 
   /**
@@ -251,43 +242,42 @@ class Record {
     bool replace_esc_chars;
     RecordType record_type = RecordType.REGULAR;
     DataFormat data_format = DataFormat.GFF3;
-    string comment_or_pragma;
 
-    AttributeValue[string] parse_attributes(string attributes_field) {
-      AttributeValue[string] attributes;
+    AttributeValue!(string)[string] parse_attributes(string attributes_field) {
+      AttributeValue!(string)[string] attributes;
       if (attributes_field[0] != '.') {
         string attribute;
         while(attributes_field.length != 0) {
           attribute = get_and_skip_next_field(attributes_field, ';');
           if (attribute == "") continue;
           auto attribute_name = get_and_skip_next_field( attribute, '=');
-          attributes[attribute_name] = AttributeValue(attribute);
+          attributes[attribute_name] = AttributeValue!(string)(attribute);
         }
       }
       return attributes;
     }
 
-    AttributeValue[string] parse_attributes(char[] attributes_field) {
-      AttributeValue[string] attributes;
+    AttributeValue!(string)[string] parse_attributes(char[] attributes_field) {
+      AttributeValue!(string)[string] attributes;
       if (attributes_field[0] != '.') {
         char[] attribute;
         while(attributes_field.length != 0) {
           attribute = get_and_skip_next_field(attributes_field, ';');
           if (attribute == "") continue;
           auto attribute_name = cast(string) replace_url_escaped_chars( get_and_skip_next_field( attribute, '=') );
-          attributes[attribute_name] = AttributeValue(attribute);
+          attributes[attribute_name] = AttributeValue!(string)(cast(string)attribute, true);
         }
       }
       return attributes;
     }
 
-    AttributeValue[string] parse_gtf_attributes(string attributes_field) {
-      auto comment_start = attributes_field.indexOf('#');
+    AttributeValue!(string)[string] parse_gtf_attributes(string attributes_field) {
+      auto comment_start = std.string.indexOf(attributes_field, '#');
       if (comment_start != -1) {
         this.comment_or_pragma = attributes_field[comment_start..$];
         attributes_field = attributes_field[0..comment_start];
       }
-      AttributeValue[string] attributes;
+      AttributeValue!(string)[string] attributes;
       if (attributes_field[0] != '.') {
         string attribute;
         while(attributes_field.length != 0) {
@@ -300,19 +290,19 @@ class Record {
             attribute = attribute[1..$];
           if (attribute[$-1] == '"')
             attribute = attribute[0..$-1];
-          attributes[attribute_name] = AttributeValue(attribute);
+          attributes[attribute_name] = AttributeValue!(string)(attribute);
         }
       }
       return attributes;
     }
 
-    AttributeValue[string] parse_gtf_attributes(char[] attributes_field) {
-      auto comment_start = attributes_field.indexOf('#');
+    AttributeValue!(string)[string] parse_gtf_attributes(char[] attributes_field) {
+      auto comment_start = std.string.indexOf(attributes_field, '#');
       if (comment_start != -1) {
         this.comment_or_pragma = cast(string) (attributes_field[comment_start..$]);
         attributes_field = attributes_field[0..comment_start];
       }
-      AttributeValue[string] attributes;
+      AttributeValue!(string)[string] attributes;
       if (attributes_field[0] != '.') {
         char[] attribute;
         while(attributes_field.length != 0) {
@@ -325,7 +315,7 @@ class Record {
             attribute = attribute[1..$];
           if (attribute[1] == '"')
             attribute = attribute[0..$-1];
-          attributes[attribute_name] = AttributeValue(attribute);
+          attributes[attribute_name] = AttributeValue!(string)(cast(string)attribute, true);
         }
       }
       return attributes;
@@ -340,34 +330,19 @@ class Record {
  * commas. This struct can represent both attribute values with a single value
  * and multiple values.
  */
-struct AttributeValue {
-  /**
-   * This constructor doesn't do replacing of escaped characters.
-   */
-  this(string raw_attr_value) {
-    replace_esc_chars = false;
-    value_count = count_values(raw_attr_value);
-    this.raw_attr_value = raw_attr_value;
-    if (is_multi) {
-      parsed_attr_values = new string[value_count];
+struct AttributeValue(T) {
+  this(T raw_attr_value, bool replace_esc_chars = false) {
+    this.esc_chars = replace_esc_chars;
+    auto value_count = count_values(raw_attr_value);
+    values = new T[value_count];
+    foreach(i; 0..value_count)
+      values[i] = cast(T) get_and_skip_next_field(raw_attr_value, ',');
+    if (replace_esc_chars) {
       foreach(i; 0..value_count) {
-        parsed_attr_values[i] = get_and_skip_next_field(raw_attr_value, ',');
-      }
-    }
-  }
-
-  /**
-   * This constructo replaces escaped characters with their original char values.
-   */
-  this(char[] raw_attr_value) {
-    replace_esc_chars = true;
-    value_count = count_values(raw_attr_value);
-    if (!is_multi) {
-      this.raw_attr_value = cast(string) replace_url_escaped_chars(raw_attr_value);
-    } else {
-      parsed_attr_values = new string[value_count];
-      foreach(i; 0..value_count) {
-        parsed_attr_values[i] = cast(string) replace_url_escaped_chars(cast(char[]) get_and_skip_next_field(raw_attr_value, ','));
+        static if (is(T == string))
+          values[i] = cast(T) replace_url_escaped_chars(values[i].dup);
+        else
+          values[i] = replace_url_escaped_chars(values[i]);
       }
     }
   }
@@ -375,70 +350,55 @@ struct AttributeValue {
   /**
    * Returns true if the attribute has multiple values.
    */
-  @property bool is_multi() { return (value_count > 1); }
+  @property bool is_multi() { return values.length > 1; }
 
   /**
    * Returns the first attribute value.
    */
-  @property string first() {
-    return is_multi ? all[0] : raw_attr_value;
+  @property T first() {
+    return values[0];
   }
 
   /**
    * Returns all attribute values as a list of strings.
    */
-  @property string[] all() {
-    if (parsed_attr_values is null)
-      parsed_attr_values = [raw_attr_value];
-    return parsed_attr_values;
+  @property T[] all() {
+    return values;
   }
 
   /**
    * Appends the attribute values to the Appender object app.
    */
-  void append_to(T)(Appender!T app) {
+  void to_string(ArrayType)(Appender!ArrayType app) {
+    T helper(T value) { return escape_chars(value, is_invalid_in_attribute); }
     if (is_multi) {
-      if (replace_esc_chars) {
-        bool first_value = true;
-        foreach(value; all) {
-          if (first_value)
-            first_value = false;
-          else
-            app.put(',');
-          append_and_escape_chars(app, value, is_invalid_in_attribute);
-        }
-      } else {
-        app.put(raw_attr_value);
-      }
-    } else {
-      if (replace_esc_chars)
-        append_and_escape_chars(app, raw_attr_value, is_invalid_in_attribute);
+      if (esc_chars)
+        join_fields(map!(helper)(values), ',', app);
       else
-        app.put(raw_attr_value);
+        join_fields(values, ',', app);
+    } else {
+      if (esc_chars)
+        escape_chars(first, is_invalid_in_attribute, app);
+      else
+        app.put(first);
     }
   }
 
   /**
-   * Converts the attribute value to string, using append_to().
+   * Converts the attribute value to string.
    */
   string toString() {
-    if (is_multi) {
-      auto result = appender!(char[])();
-      append_to(result);
-      return cast(string)(result.data);
-    } else {
-      return first;
-    }
+    auto app = appender!(char[])();
+    this.to_string(app);
+    return cast(string)(app.data);
   }
 
   private {
-    bool replace_esc_chars;
-    int value_count;
-    string raw_attr_value;
-    string[] parsed_attr_values;
+    bool esc_chars;
+    T[] values;
 
-    int count_values(T)(T attr_value) { 
-      return cast(int)(attr_value.count(',')+1);
+    auto count_values(T)(T raw_attr_value) { 
+      return raw_attr_value.count(',') + 1;
     }
   }
 }
@@ -457,49 +417,50 @@ package {
 unittest {
   writeln("Testing AttributeValue...");
 
-  auto value = AttributeValue("abc");
+  auto value = AttributeValue!(string)("abc");
   assert(value.is_multi == false);
   assert(value.first == "abc");
   assert(value.all == ["abc"]);
 
-  value = AttributeValue("abc%3Df".dup);
+  value = AttributeValue!(string)("abc%3Df", true);
   assert(value.is_multi == false);
   assert(value.first == "abc=f");
   assert(value.all == ["abc=f"]);
   auto app = appender!string();
-  value.append_to(app);
+  value.to_string(app);
   assert(app.data == "abc%3Df");
 
-  value = AttributeValue("abc%3Df");
+  value = AttributeValue!(string)("abc%3Df");
   assert(value.is_multi == false);
   assert(value.first == "abc%3Df");
   assert(value.all == ["abc%3Df"]);
   app = appender!string();
-  value.append_to(app);
+  value.to_string(app);
   assert(app.data == "abc%3Df");
 
-  value = AttributeValue("ab,cd,e");
+  value = AttributeValue!(string)("ab,cd,e");
   assert(value.is_multi == true);
   assert(value.first == "ab");
   assert(value.all == ["ab", "cd", "e"]);
   app = appender!string();
-  value.append_to(app);
+  value.to_string(app);
   assert(app.data == "ab,cd,e");
 
-  value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij".dup);
+  value = AttributeValue!(string)("a%3Db,c%3Bd,e%2Cf,g%26h,ij", true);
   assert(value.is_multi == true);
   assert(value.first == "a=b");
   assert(value.all == ["a=b", "c;d", "e,f", "g&h", "ij"]);
   app = appender!string();
-  value.append_to(app);
+  value.to_string(app);
+  writeln(app.data);
   assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 
-  value = AttributeValue("a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+  value = AttributeValue!(string)("a%3Db,c%3Bd,e%2Cf,g%26h,ij");
   assert(value.is_multi == true);
   assert(value.first == "a%3Db");
   assert(value.all == ["a%3Db", "c%3Bd", "e%2Cf", "g%26h", "ij"]);
   app = appender!string();
-  value.append_to(app);
+  value.to_string(app);
   assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 }
 
@@ -604,59 +565,12 @@ unittest {
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
 
-  // Test toString()
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert(((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).toString()
-          == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239") ||
-         ((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).toString()
-          == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tParent=TRAN00000017239;ID=EXON00000131935"));
-  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
-  record.score = null;
-  assert(record.toString() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
-
-  // Test toString with GTF data
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr 1;", true, DataFormat.GTF)).toString() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"1\";");
-
-  // Test format conversion
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id=abc;transcript_id=def")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).toString(DataFormat.GFF3).indexOf("gene_id=abc") != -1);
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).toString(DataFormat.GTF) == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"\"; transcript_id \"\";");
-
   // Test to_table conversion
   auto selector = to_selector("seqname,start,end,attr ID");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_table(selector) == "\t\t\t");
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "\t\t\ttesting");
   assert((new Record("selected\tnothing should change\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t\t\ttesting");
   assert((new Record("selected\t\t.\t123\t456\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t123\t456\ttesting");
-
-  // Testing toString with escaping of characters
-  assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%00%01\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%00%01\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%7F\t.\t.\t.\t.\t.\t.\t.\t.")).toString() == "%7F\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record(".\t%7F\t.\t.\t.\t.\t.\t.\t.")).toString() == ".\t%7F\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record(".\t.\t%7F\t.\t.\t.\t.\t.\t.")).toString() == ".\t.\t%7F\t.\t.\t.\t.\t.\t.");
-
-  // The following fields should not contain any escaped characters, so to get
-  // maximum speed they're not even checked for escaped chars, that means they
-  // are stored as they are. toString() should not replace '%' with it's escaped
-  // value in those fields.
-  assert((new Record(".\t.\t.\t%7F\t.\t.\t.\t.\t.")).toString() == ".\t.\t.\t%7F\t.\t.\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t%7F\t.\t.\t.\t.")).toString() == ".\t.\t.\t.\t%7F\t.\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t%7F\t.\t.\t.")).toString() == ".\t.\t.\t.\t.\t%7F\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t.\t%7F\t.\t.")).toString() == ".\t.\t.\t.\t.\t.\t%7F\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t%7F\t.")).toString() == ".\t.\t.\t.\t.\t.\t.\t%7F\t.");
-
-  // Test toString with escaping of characters in the attributes
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).toString() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
 
   // Test comments
   assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);

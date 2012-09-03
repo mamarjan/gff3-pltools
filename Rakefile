@@ -45,6 +45,7 @@ DFILES = ["dlib/bio/gff3/file.d",
           "dlib/util/array_includes.d",
           "dlib/util/equals.d",
           "dlib/util/logger.d",
+          "dlib/util/join_fields.d",
           "dlib/bio/exceptions.d"].join(" ")
 
 desc "Shorthand for test:dmd"

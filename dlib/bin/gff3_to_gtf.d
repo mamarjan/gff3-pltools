@@ -1,5 +1,6 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation;
+import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation,
+       bio.gff3.conv.gtf;
 import util.version_helper;
 
 int main(string[] args) {
@@ -56,7 +57,7 @@ int main(string[] args) {
          .set_keep_pragmas(true)
          .set_keep_comments(true);
   foreach(rec; records) {
-    output.writeln(rec.toString(DataFormat.GTF));
+    output.writeln(rec.to_gtf());
   }
 
   return 0;
