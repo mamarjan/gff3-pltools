@@ -37,31 +37,27 @@ For example
     tar -zxvf gff3-pltools-X.Y.Z.tar.gz
     cd gff3-pltools-X.Y.Z
     rake utilities
+    rake install
 ```
 
 Given a recent version of the GDC compiler is installed, the utilities
-can be build with it by setting the DC env. variable to "gdc":
+can be build with it by using a different rake task:
 
 ```sh
-    DC="gdc" rake utilities
-```
-
-or
-
-```sh
-    export DC="gdc"
-    rake utilities
+    rake utilities:gdc
 ```
 
 The binaries built with GDC currently work twice as fast, when compared
 to binaries built with DMD.
 
+Run rake with the -T option to see available rake tasks.
+
 ### Run tests
 
-Run
+To run unittests execute the following command:
 
 ```sh
-    rake unittests
+    rake test
 ```
 
 ## Usage
