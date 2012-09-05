@@ -742,44 +742,45 @@ class Node {
 }
 
 import std.stdio;
+import bio.gff3.line;
 
 unittest {
   writeln("Testing string_to_filter()...");
   
-  auto record = new Record("test\t.\t.\t.\t.\t.\t.\t.\t.");
+  auto record = parse_line("test\t.\t.\t.\t.\t.\t.\t.\t.");
   assert(string_to_filter("")(record) == true);
   assert(string_to_filter("field seqname == test")(record) == true);
   assert(string_to_filter("field seqname == bad")(record) == false);
   assert(string_to_filter("field seqname == tes")(record) == false);
 
-  assert(string_to_filter("field seqname == 1")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field seqname == 1bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field source == 2")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field source == 2bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field feature == 3")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field feature == 3bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field start == 4")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field start == 4bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field end == 5")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field end == 5bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field score == 6")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field score == 6bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field strand == 7")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field strand == 7bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field phase == 8")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field phase == 8bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("attr ID == 9")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("attr ID == 9bad")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field seqname == 1")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field seqname == 1bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field source == 2")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field source == 2bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field feature == 3")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field feature == 3bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field start == 4")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field start == 4bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field end == 5")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field end == 5bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field score == 6")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field score == 6bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field strand == 7")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field strand == 7bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field phase == 8")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field phase == 8bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("attr ID == 9")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("attr ID == 9bad")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
 
-  assert(string_to_filter("attr ID starts_with ab")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == true);
-  assert(string_to_filter("attr ID starts_with b")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == false);
-  assert(string_to_filter("field seqname starts_with ab")(new Record("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field seqname starts_with c")(new Record("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("field seqname contains 01")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field seqname contains 12")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field seqname contains 1")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
-  assert(string_to_filter("field seqname contains 55")(new Record("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
-  assert(string_to_filter("not (attr ID == 9)")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
-  assert(string_to_filter("not (attr ID == 9)")(new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("attr ID starts_with ab")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == true);
+  assert(string_to_filter("attr ID starts_with b")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == false);
+  assert(string_to_filter("field seqname starts_with ab")(parse_line("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field seqname starts_with c")(parse_line("abc\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("field seqname contains 01")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field seqname contains 12")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field seqname contains 1")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(string_to_filter("field seqname contains 55")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(string_to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
+  assert(string_to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
 }
 

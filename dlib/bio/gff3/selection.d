@@ -71,11 +71,12 @@ auto create_attribute_extractor(string attr_name) {
 }
 
 import std.stdio;
+import bio.gff3.line;
 
 unittest {
   writeln("Testing ColumnSelector...");
 
-  auto record = new Record("a\tb\tc\td\te\tf\tg\th\ti=j");
+  auto record = parse_line("a\tb\tc\td\te\tf\tg\th\ti=j");
   assert(to_selector("seqname,source")(record) == ["a", "b"]);
   assert(to_selector("feature")(record) == ["c",]);
   assert(to_selector("start,end")(record) == ["d", "e"]);
@@ -84,7 +85,7 @@ unittest {
   assert(to_selector("score,strand,attr i")(record) == ["f", "g", "j"]);
   assert(to_selector("score,strand,attr i,attr k")(record) == ["f", "g", "j", ""]);
 
-  record = new Record("a\t.\tc\td\te\tf\tg\th\t.");
+  record = parse_line("a\t.\tc\td\te\tf\tg\th\t.");
   assert(to_selector("seqname,source,attr test")(record) == ["a", "", ""]);
 }
 

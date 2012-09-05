@@ -121,58 +121,59 @@ class Feature {
 }
 
 import std.stdio;
+import bio.gff3.line;
 
 unittest {
   writeln("Testing Feature...");
 
-  auto feature = new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  auto feature = new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.records.length == 1);
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.records.length == 2);
 
   feature = new Feature();
   assert(feature.records.length == 0);
   assert(feature.id is null);
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.records.length == 1);
 
   feature = new Feature();
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=2"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=2"));
   assert(feature.parent == "2");
-  feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1")));
-  feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=1")));
+  feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1")));
+  feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=1")));
   assert(feature.children.length == 2);
-  feature.set_parent_feature(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1")));
+  feature.set_parent_feature(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1")));
   assert(feature.parent_feature !is null);
   assert(feature.parent_feature.id == "1");
 
   // Testing to String()
   feature = new Feature();
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.toString() == ".\t.\t.\t.\t.\t.\t.\t.\tID=1");
 
   // Testing to append_to() with newline
   feature = new Feature();
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   auto app = appender!(char[])();
   feature.append_to(app, true);
   assert(app.data == ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n");
 
   // Testing toString() with a feature with multiple records
   feature = new Feature();
-  feature.add_record(new Record("1\t.\t.\t.\t.\t.\t.\t.\tID=1"));
-  feature.add_record(new Record("2\t.\t.\t.\t.\t.\t.\t.\tID=1"));
-  feature.add_record(new Record("3\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line("1\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line("2\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line("3\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.toString() == ("1\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
                                 "2\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
                                 "3\t.\t.\t.\t.\t.\t.\t.\tID=1"));
 
   // Testing recursive_to_string()
   feature = new Feature();
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
-  feature.add_record(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=2"));
-  feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=3")));
-  feature.add_child(new Feature(new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=4")));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
+  feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=2"));
+  feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=3")));
+  feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=4")));
   assert(feature.recursive_to_string() == (".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
                                            ".\t.\t.\t.\t.\t.\t.\t.\tID=2\n" ~
                                            ".\t.\t.\t.\t.\t.\t.\t.\tID=3\n" ~

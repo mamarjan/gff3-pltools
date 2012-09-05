@@ -14,7 +14,8 @@ GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 directory "bin"
 CLEAN.include("bin/")
 
-DFILES = ["dlib/bio/gff3/file.d",
+DFILES = ["dlib/bio/gff3/line.d",
+          "dlib/bio/gff3/file.d",
           "dlib/bio/gff3/data.d",
           "dlib/bio/gff3/record.d",
           "dlib/bio/gff3/record_range.d",

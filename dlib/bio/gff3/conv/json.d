@@ -283,17 +283,18 @@ string escape_invalid_chars(string json) {
 
 
 import std.stdio;
+import bio.gff3.line;
 
 unittest {
-  writeln("Testing to_json(Record)...");
+  writeln("Testing to_json()...");
 
-  auto record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  auto record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.");
   assert(record.to_json() == "{\"seqname\":\"\",\"source\":\"\",\"feature\":\"\",\"start\":\"\",\"end\":\"\",\"score\":\"\",\"strand\":\"\",\"phase\":\"\",\"attributes\":{}}");
 
-  record = new Record(".\t.\t.\t.\t.\t.\t.\t.\tID=testing");
+  record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=testing");
   assert(record.to_json() == "{\"seqname\":\"\",\"source\":\"\",\"feature\":\"\",\"start\":\"\",\"end\":\"\",\"score\":\"\",\"strand\":\"\",\"phase\":\"\",\"attributes\":{\"ID\":\"testing\"}}");
 
-  record = new Record("1\t2\t3\t4\t5\t6\t7\t8\tID=testing");
+  record = parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=testing");
   assert(record.to_json() == "{\"seqname\":\"1\",\"source\":\"2\",\"feature\":\"3\",\"start\":\"4\",\"end\":\"5\",\"score\":\"6\",\"strand\":\"7\",\"phase\":\"8\",\"attributes\":{\"ID\":\"testing\"}}");
 }
 

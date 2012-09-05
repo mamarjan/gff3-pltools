@@ -27,47 +27,49 @@ string to_gff3(Record record) {
     auto result = appender!(char[])();
     record.append_to(result, false, DataFormat.GFF3);
     return cast(string)(result.data);
+  } else if (record.is_comment) {
+    return record.comment_text;
+  } else if (record.is_pragma) {
+    return record.pragma_text;
   } else {
-    return record.comment_or_pragma;
+    return null;
   }
 }
 
+import bio.gff3.line;
+
 unittest {
-  // Test to_gff3()
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert(((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).to_gff3()
+  writeln("Testing to_gff3()...");
+
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert(((parse_line("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).to_gff3()
           == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239") ||
-         ((new Record("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).to_gff3()
+         ((parse_line("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).to_gff3()
           == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tParent=TRAN00000017239;ID=EXON00000131935"));
-  auto record = new Record(".\t.\t.\t.\t.\t.\t.\t.\t.");
+  auto record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.");
   record.score = null;
   assert(record.to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
 
   // Testing to_gff3() with escaping of characters
-  assert((new Record("%00\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%00%01\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%00%01\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record("%7F\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%7F\t.\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record(".\t%7F\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t%7F\t.\t.\t.\t.\t.\t.\t.");
-  assert((new Record(".\t.\t%7F\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t%7F\t.\t.\t.\t.\t.\t.");
-
-  // The following fields should not contain any escaped characters, so to get
-  // maximum speed they're not even checked for escaped chars, that means they
-  // are stored as they are. to_gff3() should not replace '%' with it's escaped
-  // value in those fields.
-  assert((new Record(".\t.\t.\t%7F\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t%7F\t.\t.\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t%7F\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t%7F\t.\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t%7F\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t%7F\t.\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t.\t%7F\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t%7F\t.\t.");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t%7F\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t%7F\t.");
+  assert((parse_line("%00\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%00\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("%00%01\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%00%01\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%3E_escaped_gt\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_0123456789\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_abcdefghijklmnopqrstuvwxyz\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "allowed_chars_.:^*$@!+?-|\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line("%7F\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == "%7F\t.\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line(".\t%7F\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t%7F\t.\t.\t.\t.\t.\t.\t.");
+  assert((parse_line(".\t.\t%7F\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t%7F\t.\t.\t.\t.\t.\t.");
+  assert((parse_line(".\t.\t.\t%7F\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t%7F\t.\t.\t.\t.\t.");
+  assert((parse_line(".\t.\t.\t.\t%7F\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t%7F\t.\t.\t.\t.");
+  assert((parse_line(".\t.\t.\t.\t.\t%7F\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t%7F\t.\t.\t.");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t%7F\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t%7F\t.\t.");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t%7F\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t%7F\t.");
 
   // Test to_gff3() with escaping of characters in the attributes
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
-  assert((new Record(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%3D=%3D");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%3B=%3B");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C");
+  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C;%3B=%3B");
 
 }

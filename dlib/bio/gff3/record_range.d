@@ -1,11 +1,11 @@
 module bio.gff3.record_range;
 
-import std.conv, std.stdio, std.array, std.string, std.range, std.exception;
-import std.ascii;
-import bio.fasta, bio.gff3.record, bio.gff3.validation;
-import bio.gff3.filtering;
-import util.join_lines, util.split_into_lines, util.read_file;
-import util.range_with_cache, util.split_file;
+import std.conv, std.stdio, std.array, std.string, std.range, std.exception,
+       std.ascii;
+import bio.fasta, bio.gff3.record, bio.gff3.validation,
+       bio.gff3.filtering, bio.gff3.line;
+import util.join_lines, util.split_into_lines, util.read_file,
+       util.range_with_cache, util.split_file;
 
 public import bio.gff3.data_formats;
 
@@ -189,20 +189,20 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
         break;
       } else if (line_is_pragma(line)) {
         if (keep_pragmas) {
-          result = new Record(line);
+          result = parse_line(line);
           dataPopFront();
           break;
         }
       } else if (line_is_comment(line)) {
         if (keep_comments) {
-          result = new Record(line);
+          result = parse_line(line);
           dataPopFront();
           break;
         }
       } else if (validate(filename, line_number, line)) {
         // Found line with a valid record
         if (before_filter(line)) {
-          result = new Record(line, replace_esc_chars, data_format);
+          result = parse_line(line, replace_esc_chars, data_format);
           if (after_filter(result)) {
             // Record passed all filters
             dataPopFront();
