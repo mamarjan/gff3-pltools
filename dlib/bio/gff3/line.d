@@ -6,20 +6,27 @@ import util.split_line, util.esc_char_conv;
 
 public import bio.gff3.data_formats;
 
+/**
+ * Parses a single line of text from GFF3 or GTF file or data.
+ */
 Record parse_line(string line, bool replace_esc_chars = true, DataFormat format = DataFormat.GFF3) {
   Record record;
 
-  if (line_is_pragma(line)) {
+  if (line_is_pragma(line))
     record = parse_pragma_line(line);
-  } else if (line_is_comment(line)) {
+  else if (line_is_comment(line))
     record = parse_comment_line(line);
-  } else {
+  else
     record = parse_regular_line(line, replace_esc_chars, format);
-  }
 
   return record;
 }
 
+/**
+ * Pragmas in GFF3 are lines which start with two # characters. Returns
+ * a pragma record object which has it's pragma_text attribute set to the
+ * whole line contents, including ##.
+ */
 Record parse_pragma_line(string line) {
   auto record = new Record;
   with(record) {
@@ -29,6 +36,11 @@ Record parse_pragma_line(string line) {
   return record;
 }
 
+/**
+ * Comments in GFF3 are lines which start with one # character. Returns
+ * a comment record object which has it's comment_text attribute set to the
+ * whole line contents, including #.
+ */
 Record parse_comment_line(string line) {
   auto record = new Record;
   with(record) {
@@ -101,9 +113,9 @@ auto parse_attributes(string attr_field, bool replace_esc_chars = true, DataForm
                                                     (format == DataFormat.GFF3) ? '=' : ' ');
       if (replace_esc_chars && (std.string.indexOf(attribute_name, '%') != -1))
         attribute_name = cast(string) replace_url_escaped_chars(attribute_name.dup);
-      if ((attribute.length > 0) && (attribute[0] == '"'))
+      if ((format == DataFormat.GTF) && (attribute.length > 0) && (attribute[0] == '"'))
         attribute = attribute[1..$];
-      if ((attribute.length > 0) && (attribute[$-1] == '"'))
+      if ((format == DataFormat.GTF) && (attribute.length > 0) && (attribute[$-1] == '"'))
         attribute = attribute[0..$-1];
       attributes[attribute_name] = parse_attr_value(attribute, replace_esc_chars);
     }
@@ -128,10 +140,18 @@ auto parse_attr_value(string attr_value, bool replace_esc_chars = true) {
 
 
 package {
+  /**
+   * By definition a line is a pragma if the first two characters
+   * are ##.
+   */
   bool line_is_pragma(T)(T[] line) {
     return (line.length >= 2) && (line[0..2] == "##");
   }
 
+  /**
+   * By definition a line is a comment if the first character is #
+   * and the second character is not a #.
+   */
   bool line_is_comment(T)(T[] line) {
     return (line.length >= 1) && (line[0] == '#') &&
            ((line.length == 1) || (line[1] != '#'));
@@ -144,11 +164,17 @@ import bio.gff3.conv.gtf;
 unittest {
   writeln("Testing line_is_comment...");
   assert(line_is_comment("# test") == true);
+  assert(line_is_comment("## test") == false);
+  assert(line_is_comment("### test") == false);
+  assert(line_is_comment("test") == false);
+  assert(line_is_comment(" # test") == false);
   assert(line_is_comment("# test\n") == true);
 
   writeln("Testing line_is_pragma...");
   assert(line_is_pragma("# test") == false);
   assert(line_is_pragma("## test") == true);
+  assert(line_is_pragma(" ## test") == false);
+  assert(line_is_pragma("## test\n") == true);
   assert(line_is_pragma("test") == false);
   assert(line_is_pragma("### test") == true);
 }
@@ -165,41 +191,26 @@ unittest {
   assert(value.is_multi == false);
   assert(value.first == "abc=f");
   assert(value.all == ["abc=f"]);
-  auto app = appender!string();
-  value.to_string(app);
-  assert(app.data == "abc%3Df");
 
   value = parse_attr_value("abc%3Df", false);
   assert(value.is_multi == false);
   assert(value.first == "abc%3Df");
   assert(value.all == ["abc%3Df"]);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "abc%3Df");
 
   value = parse_attr_value("ab,cd,e");
   assert(value.is_multi == true);
   assert(value.first == "ab");
   assert(value.all == ["ab", "cd", "e"]);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "ab,cd,e");
 
   value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", true);
   assert(value.is_multi == true);
   assert(value.first == "a=b");
   assert(value.all == ["a=b", "c;d", "e,f", "g&h", "ij"]);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 
   value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", false);
   assert(value.is_multi == true);
   assert(value.first == "a%3Db");
   assert(value.all == ["a%3Db", "c%3Bd", "e%2Cf", "g%26h", "ij"]);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
 }
 
 unittest {
@@ -247,9 +258,43 @@ unittest {
 unittest {
   writeln("Testing parse_line()...");
 
-  // Test line parsing with a normal line
-  auto record = parse_line("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
+  // Test parsing pragmas
+  assert(parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.").is_pragma == false);
+  assert(parse_line("# test").is_pragma == false);
+  assert(parse_line("## test").is_pragma == true);
+  assert(parse_line("## test").is_comment == false);
+  assert(parse_line("## test").is_regular == false);
+  assert(parse_line("## test").pragma_text == "## test");
+  assert(parse_line("## test").toString == "## test");
+
+  // Test parsing comments
+  assert(parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.").is_comment == false);
+  assert(parse_line("# test").is_comment == true);
+  assert(parse_line("# test").is_pragma == false);
+  assert(parse_line("# test").is_regular == false);
+  assert(parse_line("## test").is_comment == false);
+  assert(parse_line("# test").comment_text == "# test");
+  assert(parse_line("# test").toString == "# test");
+
+  /////// Test line parsing with a normal line \\\\\\\
+
+  // Test parsing lines with dots - undefined values
+  auto record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.");
   with (record) {
+    assert(is_regular == true);
+    assert(is_pragma == false);
+    assert(is_comment == false);
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["", "", "", "", "", "", "", ""]);
+    assert(attributes.length == 0);
+  }
+
+  // Test with an example line form real data
+  record = parse_line("ENSRNOG00000019422\tEnsembl\tgene\t27333567\t27357352\t1.0\t+\t2\tID=ENSRNOG00000019422;Dbxref=taxon:10116;organism=Rattus norvegicus;chromosome=18;name=EGR1_RAT;source=UniProtKB/Swiss-Prot;Is_circular=true");
+  with (record) {
+    assert(is_regular == true);
+    assert(is_pragma == false);
+    assert(is_comment == false);
     assert([seqname, source, feature, start, end, score, strand, phase] ==
            ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
     assert(attributes.length == 7);
@@ -262,14 +307,6 @@ unittest {
     assert(attributes["Is_circular"].all == ["true"]);
   }
 
-  // Test parsing lines with dots - undefined values
-  record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.");
-  with (record) {
-    assert([seqname, source, feature, start, end, score, strand, phase] ==
-           ["", "", "", "", "", "", "", ""]);
-    assert(attributes.length == 0);
-  }
-
   // Test parsing lines with escaped characters
   record = parse_line("EXON%3D00000131935\tASTD%25\texon%26\t27344088\t27344141\t.\t+\t.\tID=EXON%3D00000131935;Parent=TRAN%3B000000%3D17239");
   with (record) {
@@ -279,22 +316,5 @@ unittest {
     assert(attributes["ID"].all == ["EXON=00000131935"]);
     assert(attributes["Parent"].all == ["TRAN;000000=17239"]);
   }
-
-  // Test parsing comments
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);
-  assert((parse_line("# test")).is_comment == true);
-  assert((parse_line("## test")).is_comment == false);
-  assert((parse_line("# test")).toString == "# test");
-
-  // Test parsing pragmas
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_pragma == false);
-  assert((parse_line("# test")).is_pragma == false);
-  assert((parse_line("## test")).is_pragma == true);
-  assert((parse_line("## test")).toString == "## test");
-
-  // Test parsing regular records
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_regular == true);
-  assert((parse_line("# test")).is_regular == false);
-  assert((parse_line("## test")).is_regular == false);
 }
 

@@ -194,18 +194,14 @@ struct AttributeValue {
    * Appends the attribute values to the Appender object app.
    */
   void to_string(ArrayType)(Appender!ArrayType app) {
-    string helper(string value) { return escape_chars(value, is_invalid_in_attribute); }
-    if (is_multi) {
-      if (esc_chars)
-        join_fields(map!(helper)(values), ',', app);
-      else
-        join_fields(values, ',', app);
-    } else {
-      if (esc_chars)
-        escape_chars(first, is_invalid_in_attribute, app);
-      else
-        app.put(first);
+    string helper(string value) {
+      return escape_chars(value, is_invalid_in_attribute);
     }
+
+    if (esc_chars)
+      join_fields(map!(helper)(values), ',', app);
+    else
+      join_fields(values, ',', app);
   }
 
   /**
@@ -223,7 +219,33 @@ struct AttributeValue {
   }
 }
 
+unittest {
+  writeln("Testing AttributeValue...");
 
+  // Testing to_string()/toString()
+  auto value = parse_attr_value("abc%3Df", true);
+  auto app = appender!string();
+  value.to_string(app);
+  assert(app.data == "abc%3Df");
+
+  value = parse_attr_value("abc%3Df", false);
+  assert(value.toString() == "abc%3Df");
+
+  value = parse_attr_value("ab,cd,e");
+  app = appender!string();
+  value.to_string(app);
+  assert(app.data == "ab,cd,e");
+
+  value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", true);
+  app = appender!string();
+  value.to_string(app);
+  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+
+  value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", false);
+  app = appender!string();
+  value.to_string(app);
+  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
+}
 
 unittest {
   writeln("Testing GFF3 Record...");

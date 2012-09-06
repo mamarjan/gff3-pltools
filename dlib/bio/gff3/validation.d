@@ -73,7 +73,8 @@ auto is_invalid_in_attribute = function bool(char character) {
           (character == '=') ||
           (character == ';') ||
           (character == '&') ||
-          (character == ','));
+          (character == ',') ||
+          (character == '"') );
 };
 
 
