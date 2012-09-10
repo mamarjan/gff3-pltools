@@ -114,7 +114,12 @@ void to_json(GenericRecordRange records, ref Appender!string app) {
   app.put("]}");
 }
 
-bool to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null) {
+private {
+  bool ignore;
+}
+
+void to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null, ref bool limit_reached = ignore) {
+  limit_reached = false;
   // First prepare the selector delegate
   ColumnsSelector selector = null;
   string[] columns = null;
@@ -143,13 +148,12 @@ bool to_json(GenericRecordRange records, File output, long at_most = -1, string 
     // Check if the "at_most" limit has been reached
     if (counter == at_most) {
       output.write(",{\"limit_reached\":\"yes\"}]}");
-      return true;
+      limit_reached = true;
+      break;
     }
   }
 
   output.write("]}");
-
-  return false;
 }
 
 

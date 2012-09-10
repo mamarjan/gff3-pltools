@@ -126,17 +126,17 @@ int main(string[] args) {
   bool at_most_reached = false;
   if (selection is null) {
     if (gtf_output) {
-      at_most_reached = records.to_gtf(output, at_most);
+      records.to_gtf(output, at_most, at_most_reached);
     } else if (json) {
-      at_most_reached = records.to_json(output, at_most);
+      records.to_json(output, at_most, null, at_most_reached);
     } else {
-      at_most_reached = records.to_gff3(output, at_most);
+      records.to_gff3(output, at_most, at_most_reached);
     }
   } else {
     if (json) {
-      at_most_reached = records.to_json(output, at_most, selection);
+      records.to_json(output, at_most, selection, at_most_reached);
     } else {
-      at_most_reached = records.to_table(output, at_most, selection);
+      records.to_table(output, at_most, selection, at_most_reached);
     }
   }
 

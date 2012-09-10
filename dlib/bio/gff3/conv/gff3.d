@@ -1,9 +1,15 @@
 module bio.gff3.conv.gff3;
 
 import std.stdio, std.array;
-import bio.gff3.record_range, bio.gff3.record;
+import bio.gff3.record_range, bio.gff3.record, bio.gff3.validation;
+import util.esc_char_conv;
 
-bool to_gff3(GenericRecordRange records, File output, long at_most = -1) {
+private {
+  bool ignore;
+}
+
+void to_gff3(GenericRecordRange records, File output, long at_most = -1, out bool limit_reached = ignore) {
+  limit_reached = false;
   long counter = 0;
   foreach(rec; records) {
     output.writeln(rec.to_gff3());
@@ -12,11 +18,10 @@ bool to_gff3(GenericRecordRange records, File output, long at_most = -1) {
     // Check if the "at_most" limit has been reached
     if (counter == at_most) {
       output.write("# ...");
-      return true;
+      limit_reached = true;
+      break;
     }
   }
-
-  return false;
 }
 
 /**
@@ -24,8 +29,8 @@ bool to_gff3(GenericRecordRange records, File output, long at_most = -1) {
  */
 string to_gff3(Record record) {
   if (record.is_regular) {
-    auto result = appender!(char[])();
-    record.append_to(result, false, DataFormat.GFF3);
+    auto result = appender!(string)();
+    record.to_gff3(false, result);
     return cast(string)(result.data);
   } else if (record.is_comment) {
     return record.comment_text;
@@ -33,6 +38,64 @@ string to_gff3(Record record) {
     return record.pragma_text;
   } else {
     return null;
+  }
+}
+
+/**
+ * Converts a record to a string representstion in GFF3 format,
+ * and appends the result to an Appender object.
+ */
+void to_gff3(Record record, bool add_newline, Appender!string app) {
+  with (record) {
+    if (is_regular) {
+      append_fields(record, app);
+      append_attributes(record, app);
+    } else if (is_comment) {
+      app.put(comment_text);
+    } else if (is_pragma) {
+      app.put(pragma_text);
+    }
+  }
+
+  if (add_newline)
+    app.put('\n');
+}
+
+void append_fields(T)(Record record, Appender!T app) {
+    void append_field(string field_value, InvalidCharProc is_char_invalid) {
+      if (field_value.length == 0)
+        app.put(".");
+      else
+        escape_chars(field_value, is_char_invalid, app);
+      app.put('\t');
+    }
+
+    with(record) {
+      append_field(seqname, esc_chars ? is_invalid_in_seqname : null);
+      append_field(source, esc_chars ? is_invalid_in_any_field : null);
+      append_field(feature, esc_chars ? is_invalid_in_any_field : null);
+      append_field(start, esc_chars ? is_invalid_in_any_field : null);
+      append_field(end, esc_chars ? is_invalid_in_any_field : null);
+      append_field(score, esc_chars ? is_invalid_in_any_field : null);
+      append_field(strand, esc_chars ? is_invalid_in_any_field : null);
+      append_field(phase, esc_chars ? is_invalid_in_any_field : null);
+    }
+}
+
+void append_attributes(T)(Record record, Appender!T app) {
+  if (record.attributes.length == 0) {
+    app.put('.');
+  } else {
+    bool first_attr = true;
+    foreach(attr_name, attr_value; record.attributes) {
+      if (first_attr)
+        first_attr = false;
+      else
+        app.put(';');
+      escape_chars(attr_name, is_invalid_in_attribute, app);
+      app.put('=');
+      attr_value.to_string(app);
+    }
   }
 }
 

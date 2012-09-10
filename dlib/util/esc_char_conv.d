@@ -79,13 +79,17 @@ alias bool function(char) InvalidCharProc;
  * escaping conventions.
  */
 void escape_chars(T,P)(T field_value, InvalidCharProc is_invalid, Appender!P app) {
-  foreach(character; field_value) {
-    if (is_invalid(character) || (character == '%')) {
-      app.put('%');
-      app.put(upper_4bits_to_hex(character));
-      app.put(lower_4bits_to_hex(character));
-    } else {
-      app.put(character);
+  if (is_invalid is null) {
+    app.put(field_value);
+  } else {
+    foreach(character; field_value) {
+      if (is_invalid(character) || (character == '%')) {
+        app.put('%');
+        app.put(upper_4bits_to_hex(character));
+        app.put(lower_4bits_to_hex(character));
+      } else {
+        app.put(character);
+      }
     }
   }
 }

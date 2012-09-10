@@ -3,7 +3,8 @@ module bio.gff3.record;
 import std.conv, std.stdio, std.array, std.string, std.exception,
        std.ascii, std.algorithm;
 import bio.exceptions, bio.gff3.validation, bio.gff3.selection,
-       bio.gff3.conv.gff3, bio.gff3.conv.gtf, bio.gff3.line;
+       bio.gff3.conv.gff3, bio.gff3.conv.gtf, bio.gff3.conv.table,
+       bio.gff3.line;
 import util.esc_char_conv, util.split_line, util.join_fields;
 
 public import bio.gff3.data_formats;
@@ -77,7 +78,7 @@ class Record {
         if (field_value.length == 0) {
           app.put(".");
         } else {
-          if ((!esc_chars) || (is_char_invalid is null))
+          if (is_char_invalid is null)
             app.put(field_value);
           else
             escape_chars(field_value, is_char_invalid, app);
@@ -85,14 +86,14 @@ class Record {
         app.put('\t');
       }
 
-      append_field(seqname, is_invalid_in_seqname);
-      append_field(source, is_invalid_in_any_field);
-      append_field(feature, is_invalid_in_any_field);
-      append_field(start, is_invalid_in_any_field);
-      append_field(end, is_invalid_in_any_field);
-      append_field(score, is_invalid_in_any_field);
-      append_field(strand, is_invalid_in_any_field);
-      append_field(phase, is_invalid_in_any_field);
+      append_field(seqname, esc_chars ? is_invalid_in_seqname : null);
+      append_field(source, esc_chars ? is_invalid_in_any_field : null);
+      append_field(feature, esc_chars ? is_invalid_in_any_field : null);
+      append_field(start, esc_chars ? is_invalid_in_any_field : null);
+      append_field(end, esc_chars ? is_invalid_in_any_field : null);
+      append_field(score, esc_chars ? is_invalid_in_any_field : null);
+      append_field(strand, esc_chars ? is_invalid_in_any_field : null);
+      append_field(phase, esc_chars ? is_invalid_in_any_field : null);
 
       if (format == DataFormat.GFF3) {
         // Print attributes in GFF3 style
@@ -147,14 +148,6 @@ class Record {
    */
   string toString() {
     return to_gff3(this);
-  }
-
-  /**
-   * Returns the fields selected by the selector separated by tab
-   * characters in one string.
-   */
-  string to_table(ColumnsSelector selector) {
-    return selector(this).join("\t");
   }
 
   bool esc_chars;
