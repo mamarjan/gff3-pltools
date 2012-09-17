@@ -17,6 +17,17 @@ CLEAN.include("bin/")
 DFILES = (Dir.glob("dlib/bio/**/*.d") +
           Dir.glob("dlib/util/**/*.d")).join(" ")
 
+ALL_UTILITIES = [ "gff3-select", "gff3-ffetch", "gff3-benchmark",
+    "gff3-validate", "gff3-count-features", "gff3-filter", "gff3-to-gtf",
+    "gtf-to-gff3", "gff3-to-json", "gff3-sort" ]
+
+ALL_SYMLINKS = [
+  # "----target----", "----link_name---"
+  [ "gff3-benchmark", "gtf-benchmark"],
+  [ "gff3-filter", "gtf-filter"],
+  [ "gff3-select", "gtf-select"],
+  [ "gff3-to-json", "gtf-to-json"] ]
+
 desc "Shorthand for test:dmd"
 task :test => ["test:dmd"]
 
@@ -45,10 +56,7 @@ def build_utility compiler, main_file_path, output_path, flags
 end
 
 def create_symlinks
-  create_symlink "gff3-benchmark", "bin/gtf-benchmark"
-  create_symlink "gff3-filter", "bin/gtf-filter"
-  create_symlink "gff3-select", "bin/gtf-select"
-  create_symlink "gff3-to-json", "bin/gtf-to-json"
+  ALL_SYMLINKS.each { |symlink| create_symlink symlink[0], "bin/" + symlink[1] }
 end
 
 def create_symlink target, link_path
@@ -56,10 +64,7 @@ def create_symlink target, link_path
 end
 
 def build_all_utilities compiler, flags
-  all_utilities = [ "gff3-select", "gff3-ffetch", "gff3-benchmark",
-    "gff3-validate", "gff3-count-features", "gff3-filter", "gff3-to-gtf",
-    "gtf-to-gff3", "gff3-to-json", "gff3-sort" ]
-  all_utilities.each do |utility|
+  ALL_UTILITIES.each do |utility|
     build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
   end
   rm_f Dir.glob("bin/*.o")
@@ -147,6 +152,20 @@ namespace :release do
   task :gdc => ["utilities:release:gdc"]
 end
 
+ALL_UTILITIES.each do |utility|
+  desc "Build the #{utility} utility with dmd"
+  task utility do |t|
+    build_utility :dmd, bin_main_path(t.name), bin_output_path(t.name), DMD_DEBUG_FLAGS
+  end
+
+  namespace :gdc do
+    desc "Build the #{utility} utility with gdc"
+    task utility do |t|
+      build_utility :gdc, bin_main_path(t.name), bin_output_path(t.name), GDC_DEBUG_FLAGS
+    end
+  end
+end
+
 #### Man pages
 # (borrowed from csw/bioruby-maf,
 #  who borrowed it from matthewtodd/shoe)
@@ -178,23 +197,29 @@ task :install do
   sh "cp LICENSE.txt README.md #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
 end
 
-def create_dir path
-end
-
 directory "dev_bin"
 CLEAN.include("dev_bin/")
 
+ALL_TOOLS = [
+    "combine-fasta",
+    "fasta-rewrite",
+    "compare-fasta",
+    "fasta-stats",
+    "make-fasta-comparable" ]
+
 def build_dev_tools compiler, flags
-  all_tools = [
-    { :main_file => "dlib/dev_tools/combine_fasta.d", :output_path => "dev_bin/combine-fasta" },
-    { :main_file => "dlib/dev_tools/fasta_rewrite.d", :output_path => "dev_bin/fasta-rewrite" },
-    { :main_file => "dlib/dev_tools/compare_fasta.d", :output_path => "dev_bin/compare-fasta" },
-    { :main_file => "dlib/dev_tools/fasta_stats.d", :output_path => "dev_bin/fasta-stats" },
-    { :main_file => "dlib/dev_tools/make_fasta_comparable.d", :output_path => "dev_bin/make-fasta-comparable" } ]
-  all_tools.each do |tool|
-    build_utility compiler, tool[:main_file], tool[:output_path], flags
+  ALL_TOOLS.each do |tool|
+    build_utility compiler, tool_main_file(tool), tool_output_path(tool), flags
   end
   rm_f Dir.glob("dev_bin/*.o")
+end
+
+def tool_main_file tool_name
+  "dlib/dev_tools/" + hyphens_to_underscores(tool_name) + ".d"
+end
+
+def tool_output_path tool_name
+  "dev_bin/" + tool_name
 end
 
 task :dev_tools => ["dev_tools:dmd"]
