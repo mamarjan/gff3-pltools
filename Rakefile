@@ -77,29 +77,37 @@ def build_utility compiler, main_file_path, output_path, flags
 end
 
 def create_symlinks
-  sh "ln -s gff3-benchmark bin/gtf-benchmark"
-  sh "ln -s gff3-filter bin/gtf-filter"
-  sh "ln -s gff3-select bin/gtf-select"
-  sh "ln -s gff3-to-json bin/gtf-to-json"
+  create_symlink "gff3-benchmark", "bin/gtf-benchmark"
+  create_symlink "gff3-filter", "bin/gtf-filter"
+  create_symlink "gff3-select", "bin/gtf-select"
+  create_symlink "gff3-to-json", "bin/gtf-to-json"
+end
+
+def create_symlink target, link_path
+  sh "ln -s #{target} #{link_path}"
 end
 
 def build_all_utilities compiler, flags
-  all_utilities = [
-    { :main_file => "dlib/bin/gff3_select.d", :output_path => "bin/gff3-select" },
-    { :main_file => "dlib/bin/gff3_ffetch.d", :output_path => "bin/gff3-ffetch" },
-    { :main_file => "dlib/bin/gff3_benchmark.d", :output_path => "bin/gff3-benchmark" },
-    { :main_file => "dlib/bin/gff3_validate.d", :output_path => "bin/gff3-validate" },
-    { :main_file => "dlib/bin/gff3_count_features.d", :output_path => "bin/gff3-count-features" },
-    { :main_file => "dlib/bin/gff3_filter.d", :output_path => "bin/gff3-filter" },
-    { :main_file => "dlib/bin/gff3_to_gtf.d", :output_path => "bin/gff3-to-gtf" },
-    { :main_file => "dlib/bin/gtf_to_gff3.d", :output_path => "bin/gtf-to-gff3" },
-    { :main_file => "dlib/bin/gff3_to_json.d", :output_path => "bin/gff3-to-json" },
-    { :main_file => "dlib/bin/gff3_sort.d", :output_path => "bin/gff3-sort" } ]
+  all_utilities = [ "gff3-select", "gff3-ffetch", "gff3-benchmark",
+    "gff3-validate", "gff3-count-features", "gff3-filter", "gff3-to-gtf",
+    "gtf-to-gff3", "gff3-to-json", "gff3-sort" ]
   all_utilities.each do |utility|
-    build_utility compiler, utility[:main_file], utility[:output_path], flags
+    build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
   end
   rm_f Dir.glob("bin/*.o")
   create_symlinks
+end
+
+def bin_main_path util_name
+  "dlib/bin/" + hyphens_to_underscores(util_name) + ".d"
+end
+
+def bin_output_path util_name
+  "bin/" + util_name
+end
+
+def hyphens_to_underscores text
+  text.gsub("-", "_")
 end
 
 namespace :utilities do
@@ -200,6 +208,9 @@ task :install do
   sh "cp man/*.1 #{PREFIX || "/usr/local"}/share/man/man1"
   sh "mkdir -p #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
   sh "cp LICENSE.txt README.md #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
+end
+
+def create_dir path
 end
 
 directory "dev_bin"
