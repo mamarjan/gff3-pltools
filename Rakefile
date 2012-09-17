@@ -154,13 +154,13 @@ end
 
 ALL_UTILITIES.each do |utility|
   desc "Build the #{utility} utility with dmd"
-  task utility do |t|
+  task utility => :bin do |t|
     build_utility :dmd, bin_main_path(t.name), bin_output_path(t.name), DMD_DEBUG_FLAGS
   end
 
   namespace :gdc do
     desc "Build the #{utility} utility with gdc"
-    task utility do |t|
+    task utility => :bin do |t|
       build_utility :gdc, bin_main_path(t.name), bin_output_path(t.name), GDC_DEBUG_FLAGS
     end
   end
