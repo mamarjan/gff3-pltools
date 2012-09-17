@@ -14,40 +14,8 @@ GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 directory "bin"
 CLEAN.include("bin/")
 
-DFILES = ["dlib/bio/gff3/line.d",
-          "dlib/bio/gff3/file.d",
-          "dlib/bio/gff3/data.d",
-          "dlib/bio/gff3/record.d",
-          "dlib/bio/gff3/record_range.d",
-          "dlib/bio/gff3/validation.d",
-          "dlib/bio/fasta.d",
-          "dlib/bio/gff3/feature.d",
-          "dlib/bio/gff3/feature_range.d",
-          "dlib/bio/gff3/filtering.d",
-          "dlib/bio/gff3/data_formats.d",
-          "dlib/bio/gff3/selection.d",
-          "dlib/bio/gff3/conv/json.d",
-          "dlib/bio/gff3/conv/table.d",
-          "dlib/bio/gff3/conv/gff3.d",
-          "dlib/bio/gff3/conv/gtf.d",
-          "dlib/bio/gff3/conv/fasta.d",
-          "dlib/util/esc_char_conv.d",
-          "dlib/util/join_lines.d",
-          "dlib/util/read_file.d",
-          "dlib/util/split_into_lines.d",
-          "dlib/util/range_with_cache.d",
-          "dlib/util/split_file.d",
-          "dlib/util/split_line.d",
-          "dlib/util/dlist.d",
-          "dlib/util/string_hash.d",
-          "dlib/util/version_helper.d",
-          "dlib/util/is_float.d",
-          "dlib/util/is_integer.d",
-          "dlib/util/array_includes.d",
-          "dlib/util/equals.d",
-          "dlib/util/logger.d",
-          "dlib/util/join_fields.d",
-          "dlib/bio/exceptions.d"].join(" ")
+DFILES = (Dir.glob("dlib/bio/**/*.d") +
+          Dir.glob("dlib/util/**/*.d")).join(" ")
 
 desc "Shorthand for test:dmd"
 task :test => ["test:dmd"]
@@ -202,11 +170,11 @@ end # if ronn_avail
 
 desc "Install binaries. Use PREFIX env variable to change the target path."
 task :install do
-  sh "mkdir -p #{PREFIX || "/usr/local"}/bin"
+  mkdir_p "#{PREFIX || "/usr/local"}/bin"
   sh "cp -d bin/* #{PREFIX || "/usr/local"}/bin"
-  sh "mkdir -p #{PREFIX || "/usr/local"}/share/man/man1"
+  mkdir_p "#{PREFIX || "/usr/local"}/share/man/man1"
   sh "cp man/*.1 #{PREFIX || "/usr/local"}/share/man/man1"
-  sh "mkdir -p #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
+  mkdir_p "#{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
   sh "cp LICENSE.txt README.md #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
 end
 
