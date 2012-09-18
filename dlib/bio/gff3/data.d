@@ -92,6 +92,6 @@ unittest {
       "aggctcagcgctcgatttaactaaaagtggaaagctggacgaaagtcata\n" ~
       "tcgctgtgattcttcgcgaaattttgaaaggtctcgagtatctgcatagt\n" ~
       "gaaagaaaaatccacagagatattaaaggagccaacgttttgttggaccg\n" ~
-      "tcaaacagcggctgtaaaaatttgtgattatggttaaagg\n\n\n");
+      "tcaaacagcggctgtaaaaatttgtgattatggttaaagg\n\n");
 }
 

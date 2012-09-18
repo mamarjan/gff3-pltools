@@ -3,18 +3,21 @@ module util.join_lines;
 import std.array;
 
 /**
- * Joins a range of strings or char arrays into lines.
+ * Joins a range of strings or char arrays into one string with delim between them.
  */
 string join_lines(T)(T range) {
-  alias typeof(range.front()) ArrayType;
-
-  auto result = appender!(ArrayType)();
-  while (!range.empty) {
-    result.put(range.front);
-    result.put("\n");
-    range.popFront();
-  }
-  return cast(immutable)(result.data);
+  return join(range, "\n");
 }
 
+import std.stdio;
+
+unittest {
+  writeln("Testing join_lines()...");
+
+  alias string[] string_array;
+  assert((new string[0]).join_lines == "");
+  assert(["abc"].join_lines == "abc");
+  assert(["abc", "def"].join_lines == "abc\ndef");
+  assert(["abc", "def", "ghi"].join_lines == "abc\ndef\nghi");
+}
 
