@@ -2,7 +2,7 @@ module bio.gff3.conv.fasta;
 
 import std.stdio, std.conv, std.array, std.algorithm, std.format, std.string;
 import bio.gff3.record_range, bio.fasta;
-import util.split_into_lines, util.array_includes, util.equals, util.logger;
+import util.split_into_lines, util.array_includes, util.equals_ci, util.logger;
 
 /**
  * Converts the passed records range to one fasta sequence per feature.

@@ -1,7 +1,7 @@
 module util.array_includes;
 
 import std.algorithm;
-import util.equals;
+import util.equals_ci;
 
 /**
  * Returns true if needle is found in haystack. Comparison is
