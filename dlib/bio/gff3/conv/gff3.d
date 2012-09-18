@@ -102,8 +102,7 @@ void append_attributes(T)(Record record, Appender!T app) {
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing to_gff3()...");
-
+  // Testing to_gff3()
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_gff3() == ".\t.\t.\t.\t.\t.\t.\t.\t.");
   assert(((parse_line("EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239")).to_gff3()
           == "EXON00000131935\tASTD\texon\t27344088\t27344141\t.\t+\t.\tID=EXON00000131935;Parent=TRAN00000017239") ||

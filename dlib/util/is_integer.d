@@ -29,11 +29,7 @@ bool is_integer(T)(T[] data) {
   return (data.length == 0);
 }
 
-import std.stdio;
-
 unittest {
-  writeln("Testing is_integer()...");
-
   assert(is_integer("1") == true);
   assert(is_integer(" 1") == true);
   assert(is_integer("1 ") == true);

@@ -36,8 +36,6 @@ private {
 import bio.gff3.line, bio.gff3.selection;
 
 unittest {
-  writeln("Testing to_table...");
-
   auto selector = to_selector("seqname,start,end,attr ID");
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_table(selector) == "\t\t\t");
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "\t\t\ttesting");

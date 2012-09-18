@@ -290,8 +290,6 @@ import std.stdio;
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing to_json()...");
-
   auto record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.");
   assert(record.to_json() == "{\"seqname\":\"\",\"source\":\"\",\"feature\":\"\",\"start\":\"\",\"end\":\"\",\"score\":\"\",\"strand\":\"\",\"phase\":\"\",\"attributes\":{}}");
 

@@ -70,12 +70,9 @@ auto create_attribute_extractor(string attr_name) {
   };
 }
 
-import std.stdio;
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing ColumnSelector...");
-
   auto record = parse_line("a\tb\tc\td\te\tf\tg\th\ti=j");
   assert(to_selector("seqname,source")(record) == ["a", "b"]);
   assert(to_selector("feature")(record) == ["c",]);

@@ -33,8 +33,6 @@ import std.stdio;
 import util.read_file;
 
 unittest {
-  writeln("Testing parsing strings with parse function and RecordRange...");
-
   // Retrieve test file into a string
   File gff3_file;
   gff3_file.open("./test/data/records.gff3", "r");

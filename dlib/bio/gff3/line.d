@@ -158,11 +158,10 @@ package {
   }
 }
 
-import std.stdio, std.array;
+import std.array;
 import bio.gff3.conv.gtf;
 
 unittest {
-  writeln("Testing line_is_comment...");
   assert(line_is_comment("# test") == true);
   assert(line_is_comment("## test") == false);
   assert(line_is_comment("### test") == false);
@@ -170,7 +169,6 @@ unittest {
   assert(line_is_comment(" # test") == false);
   assert(line_is_comment("# test\n") == true);
 
-  writeln("Testing line_is_pragma...");
   assert(line_is_pragma("# test") == false);
   assert(line_is_pragma("## test") == true);
   assert(line_is_pragma(" ## test") == false);
@@ -180,8 +178,6 @@ unittest {
 }
 
 unittest {
-  writeln("Testing AttributeValue...");
-
   auto value = parse_attr_value("abc");
   assert(value.is_multi == false);
   assert(value.first == "abc");
@@ -214,8 +210,6 @@ unittest {
 }
 
 unittest {
-  writeln("Testing parse_attributes...");
-
   // Minimal test
   auto record = parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1");
   assert(record.attributes.length == 1);
@@ -256,8 +250,6 @@ unittest {
 }
 
 unittest {
-  writeln("Testing parse_line()...");
-
   // Test parsing pragmas
   assert(parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.").is_pragma == false);
   assert(parse_line("# test").is_pragma == false);

@@ -120,12 +120,9 @@ class Feature {
   }
 }
 
-import std.stdio;
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing Feature...");
-
   auto feature = new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   assert(feature.records.length == 1);
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));

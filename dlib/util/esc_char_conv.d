@@ -126,19 +126,15 @@ char lower_4bits_to_hex(char character) {
 }
 
 
-import std.stdio, std.exception;
+import std.exception;
 
 unittest {
-  writeln("Testing convert_url_escaped_char...");
-
   assert(convert_url_escaped_char("3D") == '=');
   assert(convert_url_escaped_char("00") == '\0');
   assertThrown!ConvException(convert_url_escaped_char("0H") == '\0');
 }
 
 unittest {
-  writeln("Testing replace_url_escaped_chars...");
-
   assert(replace_url_escaped_chars("%3D".dup) == "=");
   assert(replace_url_escaped_chars("Testing %3D".dup) == "Testing =");
   assert(replace_url_escaped_chars("Multiple %3B replacements %00 and some %25 more".dup) == "Multiple ; replacements \0 and some % more");
@@ -148,8 +144,6 @@ unittest {
 }
 
 unittest {
-  writeln("Testing append_and_escape_chars()...");
-  
   auto is_invalid_char = function bool(char character) {
     return (std.ascii.isControl(character) ||
             (character == '%') ||

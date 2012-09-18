@@ -1,7 +1,5 @@
 module util.is_float;
 
-import std.stdio;
-
 /**
  * Returns true if the string contains a valid floating point number.
  */
@@ -88,8 +86,6 @@ bool is_float(T)(T[] data) {
 }
 
 unittest {
-  writeln("Testing is_float()...");
-
   assert(is_float("1") == true);
   assert(is_float("123") == true);
   assert(is_float("123a") == false);

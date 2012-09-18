@@ -47,8 +47,6 @@ class GTFFile {
 import std.stdio;
 
 unittest {
-  writeln("Testing parsing strings with open function and RecordRange...");
-
   // Parse file
   auto records = GFF3File.parse_by_records("./test/data/records.gff3");
   auto record1 = records.front; records.popFront();
@@ -98,7 +96,6 @@ unittest {
       "spec_eden.gff3" : 23,
       "spec_match.gff3" : 3 ];
   foreach(filename, records_n; file_records_n) {
-    writeln("  Parsing file ./test/data/" ~ filename ~ "...");
     uint counter = 0;
     foreach(rec; GFF3File.parse_by_records("./test/data/" ~ filename))
       counter++;

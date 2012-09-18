@@ -1,6 +1,6 @@
 module bio.gff3.record;
 
-import std.conv, std.stdio, std.array, std.string, std.exception,
+import std.conv, std.array, std.string, std.exception,
        std.ascii, std.algorithm;
 import bio.exceptions, bio.gff3.validation, bio.gff3.selection,
        bio.gff3.conv.gff3, bio.gff3.conv.gtf, bio.gff3.conv.table,
@@ -213,8 +213,6 @@ struct AttributeValue {
 }
 
 unittest {
-  writeln("Testing AttributeValue...");
-
   // Testing to_string()/toString()
   auto value = parse_attr_value("abc%3Df", true);
   auto app = appender!string();
@@ -241,8 +239,6 @@ unittest {
 }
 
 unittest {
-  writeln("Testing GFF3 Record...");
-
   // Test id() method/property
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1")).id == "1");
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=")).id == "");

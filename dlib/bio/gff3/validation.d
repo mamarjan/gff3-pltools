@@ -334,8 +334,6 @@ string check_for_characters_invalid_in_any_field(string field_name, string field
 
 
 unittest {
-  writeln("Testing validate_gff3_line...");
-
   // Minimal test
   assert(validate_gff3_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1") is null);
   // Test splitting multiple attributes

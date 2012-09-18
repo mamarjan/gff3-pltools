@@ -1,6 +1,6 @@
 module util.split_into_lines;
 
-import std.string, std.stdio, std.conv;
+import std.string, std.conv;
 import util.range_with_cache;
 
 /**
@@ -51,7 +51,6 @@ string detect_newline_delim(string data) {
 }
 
 unittest {
-  writeln("Testing SplitIntoLines...");
   auto lines = new SplitIntoLines("Test\n1\n2\n3");
   assert(lines.empty == false);
   assert(lines.front == "Test"); lines.popFront();

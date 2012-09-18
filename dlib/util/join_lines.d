@@ -9,11 +9,7 @@ string join_lines(T)(T range) {
   return join(range, "\n");
 }
 
-import std.stdio;
-
 unittest {
-  writeln("Testing join_lines()...");
-
   alias string[] string_array;
   assert((new string[0]).join_lines == "");
   assert(["abc"].join_lines == "abc");

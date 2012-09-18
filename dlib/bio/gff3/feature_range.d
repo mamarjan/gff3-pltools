@@ -191,13 +191,11 @@ struct FeatureCacheItem {
   FeatureCacheItem * next;
 }
 
-import std.stdio, std.conv;
+import std.conv;
 import bio.gff3.record_range;
 import util.split_into_lines;
 
 unittest {
-  writeln("Testing FeatureRange...");
-
   // Test with only one feature
   string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~

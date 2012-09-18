@@ -91,8 +91,6 @@ void append_attributes(T)(Record record, Appender!T app) {
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing to_gtf()...");
-
   // Test to_gtf() with GTF data
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";", true, DataFormat.GTF)).to_gtf() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\";");
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";", true, DataFormat.GTF)).to_gtf() == ".\t.\t.\t.\t.\t.\t.\t.\tgene_id \"abc\"; transcript_id \"def\"; test_attr \"gha\";");

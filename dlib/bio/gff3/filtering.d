@@ -503,8 +503,6 @@ Node generate_tree(string[] tokens) {
 }
 
 unittest {
-  writeln("Testing generate_tree()...");
-
   assert(generate_tree(extract_tokens("")) !is null);
 }
 
@@ -669,8 +667,6 @@ string[] extract_tokens(string expression) {
 }
 
 unittest {
-  writeln("Testing extract_tokens()...");
-
   assert(extract_tokens("").length == 0);
   assert(extract_tokens("field seqname == test") == ["field", "seqname", "==", "test"] );
   assert(extract_tokens("(field seqname) == test") == ["(", "field", "seqname", ")", "==", "test"] );
@@ -700,8 +696,6 @@ string reduce_double_whitespace(string expression) {
 }
 
 unittest {
-  writeln("Testing reduce_double_whitespace()...");
-
   assert(reduce_double_whitespace("  aa  bb\t  c   ") == "aa bb c");
   assert(reduce_double_whitespace("  (aa  bb  )   c   ") == "(aa bb ) c");
 }
@@ -718,8 +712,6 @@ size_t first_of(string data, string what) {
 }
 
 unittest {
-  writeln("Testing fist_of()...");
-
   assert(first_of("abc", "bc") == 1);
   assert(first_of("abc", "bd") == 1);
   assert(first_of("abc", "cb") == 1);
@@ -741,12 +733,9 @@ class Node {
   Node[] children;
 }
 
-import std.stdio;
 import bio.gff3.line;
 
 unittest {
-  writeln("Testing string_to_filter()...");
-  
   auto record = parse_line("test\t.\t.\t.\t.\t.\t.\t.\t.");
   assert(string_to_filter("")(record) == true);
   assert(string_to_filter("field seqname == test")(record) == true);

@@ -105,8 +105,6 @@ private {
 
 
 unittest {
-  writeln("Testing parsing FASTA data...");
-
   auto fasta = new FastaRange!(typeof(File.byLine()))(File("./test/data/fasta.fa", "r").byLine());
   assert(fasta.empty == false);
   auto seq1 = fasta.front; fasta.popFront();

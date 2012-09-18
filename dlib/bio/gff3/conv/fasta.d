@@ -371,8 +371,6 @@ int min_pos(int[] values) {
 }
 
 unittest {
-  writeln("Testing min_pos()...");
-
   assert(min_pos([1, 2, 3]) == 0);
   assert(min_pos([2, 1, 3]) == 1);
   assert(min_pos([6, 5, 4]) == 2);

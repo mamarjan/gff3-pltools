@@ -1,6 +1,6 @@
 module bio.gff3.record_range;
 
-import std.conv, std.stdio, std.array, std.string, std.range, std.exception,
+import std.conv, std.array, std.string, std.range, std.exception,
        std.ascii;
 import bio.fasta, bio.gff3.record, bio.gff3.validation,
        bio.gff3.filtering, bio.gff3.line;
@@ -245,18 +245,15 @@ private {
 }
 
 unittest {
-  writeln("Testing line_is_empty...");
   assert(line_is_empty("") == true);
   assert(line_is_empty("    ") == true);
 
-  writeln("Testing is_start_of_fasta...");
   assert(is_start_of_fasta("##FASTA") == true);
   assert(is_start_of_fasta(">ctg123") == true);
   assert(is_start_of_fasta("Test 123") == false);
 }
 
 unittest {
-  writeln("Testing RecordRange...");
   string test_data = q"EOS
 # example data set
 ##gff-version 3

@@ -18,11 +18,7 @@ bool equals_ci(string a, string b) {
   return equal;
 }
 
-import std.stdio;
-
 unittest {
-  writeln("Testing equals_ci()...");
-
   assert(equals_ci("", "") == true);
   assert(equals_ci("abc", "abc") == true);
   assert(equals_ci("abc", "ABC") == true);
