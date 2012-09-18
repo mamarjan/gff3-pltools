@@ -11,9 +11,6 @@ DMD_DEBUG_FLAGS = "-g -Idlib -J."
 GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelease -lpthread -fno-assert -J."
 GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 
-directory "bin"
-CLEAN.include("bin/")
-
 DFILES = (Dir.glob("dlib/bio/**/*.d") +
           Dir.glob("dlib/util/**/*.d")).join(" ")
 
@@ -47,6 +44,26 @@ end
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
+def build_all_utilities compiler, flags
+  ALL_UTILITIES.each do |utility|
+    build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
+  end
+  rm_f Dir.glob("bin/*.o")
+  create_symlinks
+end
+
+def bin_main_path util_name
+  "dlib/bin/" + hyphens_to_underscores(util_name) + ".d"
+end
+
+def hyphens_to_underscores text
+  text.gsub("-", "_")
+end
+
+def bin_output_path util_name
+  "bin/" + util_name
+end
+
 def build_utility compiler, main_file_path, output_path, flags
   if compiler == :dmd
     sh "dmd #{flags} #{DFILES} -of#{output_path} #{main_file_path}"
@@ -63,25 +80,8 @@ def create_symlink target, link_path
   sh "ln -s #{target} #{link_path}"
 end
 
-def build_all_utilities compiler, flags
-  ALL_UTILITIES.each do |utility|
-    build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
-  end
-  rm_f Dir.glob("bin/*.o")
-  create_symlinks
-end
-
-def bin_main_path util_name
-  "dlib/bin/" + hyphens_to_underscores(util_name) + ".d"
-end
-
-def bin_output_path util_name
-  "bin/" + util_name
-end
-
-def hyphens_to_underscores text
-  text.gsub("-", "_")
-end
+directory "bin"
+CLEAN.include("bin/")
 
 namespace :utilities do
   namespace :release do
@@ -152,6 +152,7 @@ namespace :release do
   task :gdc => ["utilities:release:gdc"]
 end
 
+# Per-utility tasks for building:
 ALL_UTILITIES.each do |utility|
   desc "Build the #{utility} utility with dmd"
   task utility => :bin do |t|
@@ -197,15 +198,15 @@ task :install do
   sh "cp LICENSE.txt README.md #{PREFIX || "/usr/local"}/share/doc/gff3-pltools"
 end
 
-directory "dev_bin"
-CLEAN.include("dev_bin/")
-
 ALL_TOOLS = [
     "combine-fasta",
     "fasta-rewrite",
     "compare-fasta",
     "fasta-stats",
     "make-fasta-comparable" ]
+
+directory "dev_bin"
+CLEAN.include("dev_bin/")
 
 def build_dev_tools compiler, flags
   ALL_TOOLS.each do |tool|
@@ -229,7 +230,7 @@ namespace :dev_tools do
     build_dev_tools :dmd, DMD_DEBUG_FLAGS
   end
 
-  task :gdc do
+  task :gdc => :dev_bin do
     build_dev_tools :gdc, GDC_DEBUG_FLAGS
   end
 end
