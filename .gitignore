@@ -3,6 +3,7 @@
 /dev_bin
 unittests
 *.o
+*.a
 
 # rcov generated
 coverage

@@ -44,6 +44,13 @@ end
 CLEAN.include("unittests")
 CLEAN.include("unittests.o")
 
+def build_lib compiler, flags
+  if compiler == :dmd
+    sh "dmd #{flags} #{DFILES} -lib -oflibgff3pl.a"
+  elsif compiler == :gdc
+  end
+end
+
 def build_all_utilities compiler, flags
   ALL_UTILITIES.each do |utility|
     build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
@@ -66,7 +73,7 @@ end
 
 def build_utility compiler, main_file_path, output_path, flags
   if compiler == :dmd
-    sh "dmd #{flags} #{DFILES} -of#{output_path} #{main_file_path}"
+    sh "dmd #{flags} libgff3pl.a -of#{output_path} #{main_file_path}"
   elsif compiler == :gdc
     sh "gdc #{flags} #{DFILES} -o #{output_path} #{main_file_path}"
   end
@@ -80,13 +87,38 @@ def create_symlink target, link_path
   sh "ln -s #{target} #{link_path}"
 end
 
+CLEAN.include("libgff3pl.a")
+
+namespace :libs do
+  namespace :release do
+    desc "Build library with DMD with release flags"
+    task :dmd do
+      build_lib :dmd, DMD_RELEASE_FLAGS
+    end
+  end
+
+  desc "Shorthand for libs:release:dmd"
+  task :release => "libs:release:dmd"
+
+  namespace :debug do
+    desc "Build library with DMD with debug flags"
+    task :dmd do
+      build_lib :dmd, DMD_DEBUG_FLAGS
+    end
+  end
+end
+
+desc "Shorthand for libs:release:dmd"
+task :libs => "libs:release:dmd"
+
 directory "bin"
 CLEAN.include("bin/")
 
 namespace :utilities do
+
   namespace :release do
     desc "Compile GFF3 utilities with DMD with release flags"
-    task :dmd => :bin do
+    task :dmd => [:bin, "libs:release:dmd"] do
       build_all_utilities :dmd, DMD_RELEASE_FLAGS
     end
 
@@ -104,7 +136,7 @@ namespace :utilities do
 
   namespace :debug do
     desc "Compile GFF3 utilities with DMD with debug flags"
-    task :dmd => :bin do
+    task :dmd => [:bin, "libs:debug:dmd"] do
       build_all_utilities :dmd, DMD_DEBUG_FLAGS
     end
 
@@ -155,7 +187,7 @@ end
 # Per-utility tasks for building:
 ALL_UTILITIES.each do |utility|
   desc "Build the #{utility} utility with dmd"
-  task utility => :bin do |t|
+  task utility => [:bin, "libs:debug:dmd"] do |t|
     build_utility :dmd, bin_main_path(t.name), bin_output_path(t.name), DMD_DEBUG_FLAGS
   end
 
@@ -226,7 +258,7 @@ end
 task :dev_tools => ["dev_tools:dmd"]
 
 namespace :dev_tools do
-  task :dmd => :dev_bin do
+  task :dmd => [:dev_bin, "libs:debug:dmd"] do
     build_dev_tools :dmd, DMD_DEBUG_FLAGS
   end
 
