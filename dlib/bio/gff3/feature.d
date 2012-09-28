@@ -1,7 +1,7 @@
 module bio.gff3.feature;
 
 import std.array;
-import bio.gff3.record;
+import bio.gff3.record, bio.gff3.conv.gff3;
 
 class Feature {
   this(Record first_record = null) {
@@ -68,13 +68,13 @@ class Feature {
   /**
    * Appends the feature to an Appender object.
    */
-  void append_to(Appender!(char[]) app, bool add_newline = false) {
+  void append_to(Appender!(string) app, bool add_newline = false) {
     foreach(i, rec; _records) {
       if (i != (_records.length - 1))
-        rec.append_to(app, true);
+        rec.to_gff3(true, app);
       else
         // don't add newline to last line
-        rec.append_to(app, false);
+        rec.to_gff3(false, app);
     }
 
     if (add_newline)
@@ -85,21 +85,20 @@ class Feature {
    * Converts this object to one or more GFF3 lines.
    */
   string toString() {
-    auto result = appender!(char[])();
+    auto result = appender!(string)();
     append_to(result);
-    return cast(string)(result.data);
+    return result.data;
   }
 
-  void recursive_append_to(Appender!(char[]) app, bool add_newline = false) {
-    append_to(app, true);
+  void recursive_append_to(Appender!(string) app, bool add_newline = false) {
+    append_to(app, false);
     foreach(child; _children) {
-      child.recursive_append_to(app, true);
+      app.put('\n');
+      child.recursive_append_to(app, false);
     }
 
-    if (!add_newline) {
-      // remove the trailing newline char
-      app.shrinkTo(app.data.length-1);
-    }
+    if (add_newline)
+        app.put('\n');
   }
 
   /**
@@ -108,9 +107,9 @@ class Feature {
    * file.
    */
   string recursive_to_string() {
-    auto result = appender!(char[])();
+    auto result = appender!(string)();
     recursive_append_to(result);
-    return cast(string)(result.data);
+    return result.data;
   }
 
   private {
@@ -152,7 +151,7 @@ unittest {
   // Testing to append_to() with newline
   feature = new Feature();
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
-  auto app = appender!(char[])();
+  auto app = appender!(string)();
   feature.append_to(app, true);
   assert(app.data == ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n");
 
