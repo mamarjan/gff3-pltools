@@ -15,3 +15,18 @@ bool includes_ci(string[] haystack, string needle) {
     return reduce!("a || b")(false, map!(is_requested)(haystack));
 }
 
+unittest {
+  assert(includes_ci(["hello", "you", "there"], "hello") == true);
+  assert(includes_ci(["hello", "you", "there"], "you") == true);
+  assert(includes_ci(["hello", "you", "there"], "there") == true);
+  assert(includes_ci(["hello", "YOU", "there"], "you") == true);
+  assert(includes_ci(["hello", "You", "there"], "you") == true);
+  assert(includes_ci(["hello", "you", "there"], "YOU") == true);
+
+  assert(includes_ci(["hello", "you", "there"], "anybody") == false);
+  assert(includes_ci(["hello", "you", "there"], "you too") == false);
+  assert(includes_ci(["hello", "you", "there"], "you ") == false);
+  assert(includes_ci(["hello", "you", "there"], " you ") == false);
+  assert(includes_ci(["hello", "you", "there"], "YOU ") == false);
+}
+
