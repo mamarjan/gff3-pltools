@@ -48,14 +48,16 @@ int main(string[] args) {
     return 0;
   }
 
-  string selection = args[1];
-
-  // Only a filename should be left at this point
-  auto filename = args[2];
   if (args.length != 3) {
     print_usage();
     return 2; // Exit the application
   }
+
+  // A selection string should be the first parameter left
+  string selection = args[1];
+
+  // A filename should be the last parameter
+  auto filename = args[2];
 
   // Check if file exists, if not stdin
   alias char[] array;
