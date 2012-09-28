@@ -106,6 +106,9 @@ namespace :libs do
       build_lib :dmd, DMD_DEBUG_FLAGS
     end
   end
+
+  desc "Shorthand for libs:debug:dmd"
+  task :debug => "libs:debug:dmd"
 end
 
 desc "Shorthand for libs:release:dmd"
