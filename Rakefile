@@ -8,11 +8,13 @@ PREFIX=ENV["PREFIX"]
 DMD_RELEASE_FLAGS = "-O -release -Idlib -J."
 DMD_DEBUG_FLAGS = "-g -Idlib -J."
 
-GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelease -lpthread -fno-assert -J."
-GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
+GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelease -lpthread -fno-assert -J. -Idlib"
+GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J. -Idlib"
 
-DFILES = (Dir.glob("dlib/bio/**/*.d") +
-          Dir.glob("dlib/util/**/*.d")).join(" ")
+DFILES_LIST = (Dir.glob("dlib/bio/**/*.d") +
+               Dir.glob("dlib/util/**/*.d"))
+
+DFILES = DFILES_LIST.join(" ")
 
 ALL_UTILITIES = [ "gff3-select", "gff3-ffetch", "gff3-benchmark",
     "gff3-validate", "gff3-count-features", "gff3-filter", "gff3-to-gtf",
@@ -48,6 +50,12 @@ def build_lib compiler, flags
   if compiler == :dmd
     sh "dmd #{flags} #{DFILES} -lib -oflibgff3pl.a"
   elsif compiler == :gdc
+    DFILES_LIST.each_with_index do |dfile, index|
+      puts dfile
+      sh "gdc -c #{flags} #{dfile} -o obj/dfile#{index.to_s}.o"
+    end
+    #sh "gdc -c #{flags} #{DFILES}"
+    sh "ar rcs libgff3pl.a obj/*.o"
   end
 end
 
@@ -75,7 +83,7 @@ def build_utility compiler, main_file_path, output_path, flags
   if compiler == :dmd
     sh "dmd #{flags} libgff3pl.a -of#{output_path} #{main_file_path}"
   elsif compiler == :gdc
-    sh "gdc #{flags} #{DFILES} -o #{output_path} #{main_file_path}"
+    sh "gdc -L. #{flags} -lgff3pl libgff3pl.a -o #{output_path} #{main_file_path}"
   end
 end
 
@@ -87,6 +95,8 @@ def create_symlink target, link_path
   sh "ln -s #{target} #{link_path}"
 end
 
+directory "obj"
+CLEAN.include("obj/")
 CLEAN.include("libgff3pl.a")
 
 namespace :libs do
@@ -94,6 +104,11 @@ namespace :libs do
     desc "Build library with DMD with release flags"
     task :dmd do
       build_lib :dmd, DMD_RELEASE_FLAGS
+    end
+    
+    desc "Build library with GDC with release flags"
+    task :gdc => :obj do
+      build_lib :gdc, GDC_RELEASE_FLAGS
     end
   end
 
@@ -104,6 +119,11 @@ namespace :libs do
     desc "Build library with DMD with debug flags"
     task :dmd do
       build_lib :dmd, DMD_DEBUG_FLAGS
+    end
+
+    desc "Build library with GDC with debug flags"
+    task :gdc => :obj do
+      build_lib :gdc, GDC_DEBUG_FLAGS
     end
   end
 
