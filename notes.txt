@@ -1,4 +1,0 @@
-Filtering order:
- - filter out records without ID,
- - filter out records with fgene in their ID,
- - filter out records without frz3 in their ID
