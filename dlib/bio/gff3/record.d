@@ -1,11 +1,6 @@
 module bio.gff3.record;
 
-import std.conv, std.array, std.string, std.exception,
-       std.ascii, std.algorithm;
-import bio.exceptions, bio.gff3.validation, bio.gff3.selection,
-       bio.gff3.conv.gff3, bio.gff3.conv.gtf, bio.gff3.conv.table,
-       bio.gff3.line;
-import util.esc_char_conv, util.split_line, util.join_fields;
+import bio.gff3.conv.gff3, bio.gff3.attribute;
 
 public import bio.gff3.data_formats;
 
@@ -78,90 +73,7 @@ class Record {
   bool esc_chars;
 }
 
-/**
- * An attribute in a GFF3 or GTF record can have multiple values, separated by
- * commas. This struct can represent both attribute values with a single value
- * and multiple values.
- */
-struct AttributeValue {
-  this(string[] values, bool esc_chars) {
-    this.values = values;
-    this.esc_chars = esc_chars;
-  }
-
-  /**
-   * Returns true if the attribute has multiple values.
-   */
-  @property bool is_multi() { return values.length > 1; }
-
-  /**
-   * Returns the first attribute value.
-   */
-  @property string first() {
-    return values[0];
-  }
-
-  /**
-   * Returns all attribute values as a list of strings.
-   */
-  @property string[] all() {
-    return values;
-  }
-
-  /**
-   * Appends the attribute values to the Appender object app.
-   */
-  void to_string(ArrayType)(Appender!ArrayType app) {
-    string helper(string value) {
-      return escape_chars(value, is_invalid_in_attribute);
-    }
-
-    if (esc_chars)
-      join_fields(map!(helper)(values), ',', app);
-    else
-      join_fields(values, ',', app);
-  }
-
-  /**
-   * Converts the attribute value to string.
-   */
-  string toString() {
-    auto app = appender!(char[])();
-    this.to_string(app);
-    return cast(string)(app.data);
-  }
-
-  private {
-    bool esc_chars;
-    string[] values;
-  }
-}
-
-unittest {
-  // Testing to_string()/toString()
-  auto value = parse_attr_value("abc%3Df", true);
-  auto app = appender!string();
-  value.to_string(app);
-  assert(app.data == "abc%3Df");
-
-  value = parse_attr_value("abc%3Df", false);
-  assert(value.toString() == "abc%3Df");
-
-  value = parse_attr_value("ab,cd,e");
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "ab,cd,e");
-
-  value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", true);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
-
-  value = parse_attr_value("a%3Db,c%3Bd,e%2Cf,g%26h,ij", false);
-  app = appender!string();
-  value.to_string(app);
-  assert(app.data == "a%3Db,c%3Bd,e%2Cf,g%26h,ij");
-}
+import bio.gff3.line;
 
 unittest {
   // Test id() method/property
@@ -183,13 +95,6 @@ unittest {
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).parent is null);
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
-
-  // Test to_table conversion
-  auto selector = to_selector("seqname,start,end,attr ID");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).to_table(selector) == "\t\t\t");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "\t\t\ttesting");
-  assert((parse_line("selected\tnothing should change\t.\t.\t.\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t\t\ttesting");
-  assert((parse_line("selected\t\t.\t123\t456\t.\t.\t.\tID=testing")).to_table(selector) == "selected\t123\t456\ttesting");
 
   // Test is_comment
   assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);

@@ -1,7 +1,7 @@
 module bio.gff3.line;
 
 import std.string;
-import bio.gff3.record;
+import bio.gff3.record, bio.gff3.attribute;
 import util.split_line, util.esc_char_conv;
 
 public import bio.gff3.data_formats;
