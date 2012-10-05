@@ -2,7 +2,7 @@ module bio.gff3.filtering;
 
 import std.algorithm, std.string, std.conv, std.array, std.ascii;
 import bio.gff3.record;
-import util.split_line, util.is_float, util.is_integer;
+import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace;
 
 alias bool delegate(Record r) RecordFilter;
 alias bool delegate(string s) StringFilter;
@@ -53,6 +53,8 @@ RecordFilter string_to_filter(string filtering_expression) {
 
   return filter;
 }
+
+private:
 
 BooleanDelegate get_bool_delegate(Node node) {
   BooleanDelegate filter;
@@ -636,7 +638,7 @@ unittest {
 string[] extract_tokens(string expression) {
   Appender!(string[]) tokens;
 
-  expression = reduce_double_whitespace(expression);
+  expression = reduce_whitespace(expression);
 
   while(expression.length != 0) {
     if ((expression[0] == '(') || (expression[0] == ')')) {
@@ -677,27 +679,6 @@ unittest {
   assert(extract_tokens("field seqname == \"test data\"") == ["field", "seqname", "==", "test data"] );
   assert(extract_tokens("((field \" seqname\") == test) and (attrib \"ID test\" == test2)") ==
            ["(", "(", "field", " seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID test", "==", "test2", ")"] );
-}
-
-string reduce_double_whitespace(string expression) {
-  Appender!string app;
-
-  foreach(i, c; expression) {
-    if (c.isWhite())
-      if ((i == 0) || (expression[i-1].isWhite()))
-        continue;
-      else
-        app.put(' ');
-    else
-      app.put(c);
-  }
-
-  return app.data.stripRight();
-}
-
-unittest {
-  assert(reduce_double_whitespace("  aa  bb\t  c   ") == "aa bb c");
-  assert(reduce_double_whitespace("  (aa  bb  )   c   ") == "(aa bb ) c");
 }
 
 size_t first_of(string data, string what) {
