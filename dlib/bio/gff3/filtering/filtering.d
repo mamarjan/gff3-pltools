@@ -1,7 +1,7 @@
 module bio.gff3.filtering.filtering;
 
 import std.algorithm, std.string, std.conv, std.array, std.ascii;
-import bio.gff3.record, bio.gff3.field;
+import bio.gff3.field, bio.gff3.filtering.field_accessor;
 import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace,
        util.first_of;
 
@@ -230,7 +230,7 @@ DoubleDelegate get_double_delegate(Node node) {
       filter = (record) { return to!double(field_accessor(record)); };
       break;
     case NodeType.ATTR_OPERATOR:
-      filter = (Record record) { return (node.parameter in record.attributes) ? to!double(record.attributes[node.parameter].first) : 0.0; };
+      filter = (record) { return (node.parameter in record.attributes) ? to!double(record.attributes[node.parameter].first) : 0.0; };
       break;
     case NodeType.BRACKETS:
       filter = get_double_delegate(node.children[0]);
@@ -335,41 +335,6 @@ LongDelegate get_long_delegate(Node node) {
   }
 
   return filter;
-}
-
-StringDelegate get_field_accessor(string field_name) {
-  StringDelegate field_accessor;
-  switch(field_name) {
-    case FIELD_SEQNAME:
-      field_accessor = (record) { return record.seqname; };
-      break;
-    case FIELD_SOURCE:
-      field_accessor = (record) { return record.source; };
-      break;
-    case FIELD_FEATURE:
-      field_accessor = (record) { return record.feature; };
-      break;
-    case FIELD_START:
-      field_accessor = (record) { return record.start; };
-      break;
-    case FIELD_END:
-      field_accessor = (record) { return record.end; };
-      break;
-    case FIELD_SCORE:
-      field_accessor = (record) { return record.score; };
-      break;
-    case FIELD_STRAND:
-      field_accessor = (record) { return record.strand; };
-      break;
-    case FIELD_PHASE:
-      field_accessor = (record) { return record.phase; };
-      break;
-    default:
-      throw new Exception("Invalid field name: " ~ field_name);
-      break;
-  }
-
-  return field_accessor;
 }
 
 /*******************************************************************************
