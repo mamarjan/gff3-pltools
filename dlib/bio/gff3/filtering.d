@@ -2,7 +2,8 @@ module bio.gff3.filtering;
 
 import std.algorithm, std.string, std.conv, std.array, std.ascii;
 import bio.gff3.record;
-import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace;
+import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace,
+       util.first_of;
 
 alias bool delegate(Record r) RecordFilter;
 alias bool delegate(string s) StringFilter;
@@ -20,24 +21,6 @@ enum
    FIELD_STRAND  = "strand",
    FIELD_PHASE   = "phase";
 
-static this() {
-  NO_BEFORE_FILTER = get_NO_BEFORE_FILTER();
-  NO_AFTER_FILTER = get_NO_AFTER_FILTER();
-}
-
-StringFilter get_NO_BEFORE_FILTER() {
- return delegate bool(string s) { return true; };
-}
-
-RecordFilter get_NO_AFTER_FILTER() {
- return delegate bool(Record r) { return true; };
-}
-
-alias RecordFilter BooleanDelegate;
-alias string delegate(Record r) StringDelegate;
-alias long delegate(Record r) LongDelegate;
-alias double delegate(Record r) DoubleDelegate;
-
 RecordFilter string_to_filter(string filtering_expression) {
   RecordFilter filter = extract_tokens(filtering_expression)
                             .generate_tree()
@@ -50,6 +33,24 @@ RecordFilter string_to_filter(string filtering_expression) {
 }
 
 private:
+
+alias RecordFilter BooleanDelegate;
+alias string delegate(Record r) StringDelegate;
+alias long delegate(Record r) LongDelegate;
+alias double delegate(Record r) DoubleDelegate;
+
+static this() {
+  NO_BEFORE_FILTER = get_NO_BEFORE_FILTER();
+  NO_AFTER_FILTER = get_NO_AFTER_FILTER();
+}
+
+StringFilter get_NO_BEFORE_FILTER() {
+ return delegate bool(string s) { return true; };
+}
+
+RecordFilter get_NO_AFTER_FILTER() {
+ return delegate bool(Record r) { return true; };
+}
 
 BooleanDelegate get_bool_delegate(Node node) {
   BooleanDelegate filter;
@@ -571,7 +572,7 @@ string[] extract_tokens(string expression) {
       expression = expression[1..$].stripLeft();
     } else if (expression[0] == '"') {
       expression = expression[1..$];
-      size_t end_index = std.string.indexOf(expression[0..$], '\"');
+      auto end_index = std.string.indexOf(expression[0..$], '\"');
       if (end_index == -1)
         throw new Exception("Could not find second \"");
       else {
@@ -579,7 +580,7 @@ string[] extract_tokens(string expression) {
         expression = expression[(end_index+1)..$].stripLeft();
       }
     } else {
-      size_t next_delim_index = expression.first_of("() ");
+      auto next_delim_index = expression.first_of("() ");
       if (next_delim_index == -1) {
         tokens.put(expression);
         expression = null;
@@ -604,27 +605,6 @@ unittest {
   assert(extract_tokens("field seqname == \"test data\"") == ["field", "seqname", "==", "test data"] );
   assert(extract_tokens("((field \" seqname\") == test) and (attrib \"ID test\" == test2)") ==
            ["(", "(", "field", " seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID test", "==", "test2", ")"] );
-}
-
-size_t first_of(string data, string what) {
-  size_t current_index = -1;
-  foreach(c; what) {
-    auto index = std.string.indexOf(data, c);
-    if (index != -1)
-      current_index = min(index, current_index);
-  }
-  
-  return current_index;
-}
-
-unittest {
-  assert(first_of("abc", "bc") == 1);
-  assert(first_of("abc", "bd") == 1);
-  assert(first_of("abc", "cb") == 1);
-  assert(first_of("abc", "cd") == 2);
-  assert(first_of("abc", "abc") == 0);
-  assert(first_of("abc", "abcd") == 0);
-  assert(first_of("abc", "cdb") == 1);
 }
 
 class Node {
