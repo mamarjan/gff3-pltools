@@ -1,5 +1,5 @@
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.validation, bio.gff3.filtering,
+import bio.gff3.file, bio.gff3.validation,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
        bio.gff3.conv.gtf, bio.gff3.conv.fasta, bio.fasta;

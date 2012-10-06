@@ -18,7 +18,6 @@ long first_of(string data, string what) {
 }
 
 unittest {
-  assert(first_of("test2)", "() ") == 5);
   assert(first_of("abc", "d") == -1);
   assert(first_of("abc", "a") == 0);
   assert(first_of("abc", "b") == 1);
@@ -30,5 +29,6 @@ unittest {
   assert(first_of("abc", "abc") == 0);
   assert(first_of("abc", "abcd") == 0);
   assert(first_of("abc", "cdb") == 1);
+  assert(first_of("test2)", "() ") == 5);
 }
 

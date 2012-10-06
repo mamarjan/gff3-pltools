@@ -1,12 +1,11 @@
 module bio.gff3.selection;
 
 import std.string;
-import bio.gff3.record, bio.gff3.filtering;
+import bio.gff3.record, bio.gff3.field;
 import util.split_line;
 
 alias string[] delegate(Record record) ColumnsSelector;
 alias string delegate(Record record) ColumnExtractor;
-
 
 ColumnsSelector to_selector(string column_list) {
   auto extractors = parse_columns_spec(column_list);

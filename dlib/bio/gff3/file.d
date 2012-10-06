@@ -1,7 +1,6 @@
 module bio.gff3.file;
 
 import bio.gff3.validation, bio.gff3.record_range, bio.gff3.feature_range;
-import bio.gff3.filtering;
 import util.split_file;
 
 class GFF3File {

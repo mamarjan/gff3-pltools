@@ -1,7 +1,7 @@
 module bio.gff3.feature_range;
 
 import bio.gff3.feature, bio.gff3.record, bio.gff3.validation;
-import bio.gff3.filtering;
+import bio.gff3.filtering.filtering;
 import util.range_with_cache, util.dlist, util.string_hash;
 
 /**

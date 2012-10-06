@@ -1,7 +1,7 @@
-module bio.gff3.filtering;
+module bio.gff3.filtering.filtering;
 
 import std.algorithm, std.string, std.conv, std.array, std.ascii;
-import bio.gff3.record;
+import bio.gff3.record, bio.gff3.field;
 import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace,
        util.first_of;
 
@@ -10,16 +10,6 @@ alias bool delegate(string s) StringFilter;
 
 StringFilter NO_BEFORE_FILTER;
 RecordFilter NO_AFTER_FILTER;
-
-enum
-   FIELD_SEQNAME = "seqname",
-   FIELD_SOURCE  = "source",
-   FIELD_FEATURE = "feature",
-   FIELD_START   = "start",
-   FIELD_END     = "end",
-   FIELD_SCORE   = "score",
-   FIELD_STRAND  = "strand",
-   FIELD_PHASE   = "phase";
 
 RecordFilter string_to_filter(string filtering_expression) {
   RecordFilter filter = extract_tokens(filtering_expression)
@@ -52,6 +42,10 @@ RecordFilter get_NO_AFTER_FILTER() {
  return delegate bool(Record r) { return true; };
 }
 
+/*******************************************************************************
+ * The following part is about getting a delegate out of a tree of nodes, which
+ * can then be used for filtering.
+ ******************************************************************************/
 BooleanDelegate get_bool_delegate(Node node) {
   BooleanDelegate filter;
 
@@ -357,29 +351,6 @@ LongDelegate get_long_delegate(Node node) {
   return filter;
 }
 
-enum NodeType {
-  NONE,
-  VALUE,
-  FIELD_OPERATOR,
-  ATTR_OPERATOR,
-  AND_OPERATOR,
-  OR_OPERATOR,
-  NOT_OPERATOR,
-  CONTAINS_OPERATOR,
-  STARTS_WITH_OPERATOR,
-  EQUALS_OPERATOR,
-  NOT_EQUALS_OPERATOR,
-  GREATER_THAN_OPERATOR,
-  LOWER_THAN_OPERATOR,
-  GREATER_THAN_OR_EQUALS_OPERATOR,
-  LOWER_THAN_OR_EQUALS_OPERATOR,
-  BRACKETS,
-  PLUS_OPERATOR,
-  MINUS_OPERATOR,
-  MULTIPLICATION_OPERATOR,
-  DIVISION_OPERATOR
-}
-
 StringDelegate get_field_accessor(string field_name) {
   StringDelegate field_accessor;
   switch(field_name) {
@@ -413,6 +384,46 @@ StringDelegate get_field_accessor(string field_name) {
   }
 
   return field_accessor;
+}
+
+/*******************************************************************************
+ * The following part if about generating a tree structure from a list
+ * of tokens.
+ ******************************************************************************/
+
+enum NodeType {
+  NONE,
+  VALUE,
+  FIELD_OPERATOR,
+  ATTR_OPERATOR,
+  AND_OPERATOR,
+  OR_OPERATOR,
+  NOT_OPERATOR,
+  CONTAINS_OPERATOR,
+  STARTS_WITH_OPERATOR,
+  EQUALS_OPERATOR,
+  NOT_EQUALS_OPERATOR,
+  GREATER_THAN_OPERATOR,
+  LOWER_THAN_OPERATOR,
+  GREATER_THAN_OR_EQUALS_OPERATOR,
+  LOWER_THAN_OR_EQUALS_OPERATOR,
+  BRACKETS,
+  PLUS_OPERATOR,
+  MINUS_OPERATOR,
+  MULTIPLICATION_OPERATOR,
+  DIVISION_OPERATOR
+}
+
+class Node {
+  this(NodeType type) {
+    this.type = type;
+  }
+
+  NodeType type;
+  string text;
+  string parameter;
+  Node parent;
+  Node[] children;
 }
 
 Node generate_tree(string[] tokens) {
@@ -561,6 +572,10 @@ unittest {
   assert(node.children.length == 0);
 }
 
+/*******************************************************************************
+ * Generating a list of tokens from the filtering expression
+ ******************************************************************************/
+
 string[] extract_tokens(string expression) {
   Appender!(string[]) tokens;
 
@@ -605,18 +620,6 @@ unittest {
   assert(extract_tokens("field seqname == \"test data\"") == ["field", "seqname", "==", "test data"] );
   assert(extract_tokens("((field \" seqname\") == test) and (attrib \"ID test\" == test2)") ==
            ["(", "(", "field", " seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID test", "==", "test2", ")"] );
-}
-
-class Node {
-  this(NodeType type) {
-    this.type = type;
-  }
-
-  NodeType type;
-  string text;
-  string parameter;
-  Node parent;
-  Node[] children;
 }
 
 import bio.gff3.line;
