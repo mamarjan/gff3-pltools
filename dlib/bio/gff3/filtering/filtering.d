@@ -5,12 +5,16 @@ import bio.gff3.record, bio.gff3.field;
 import util.split_line, util.is_float, util.is_integer, util.reduce_whitespace,
        util.first_of;
 
-alias bool delegate(Record r) RecordFilter;
-alias bool delegate(string s) StringFilter;
+public import bio.gff3.filtering.common;
 
-StringFilter NO_BEFORE_FILTER;
-RecordFilter NO_AFTER_FILTER;
-
+/**
+ * Converts a filtering expression to a RecordFilter delegate, which
+ * is a delegate which takes one Record object and returns true or
+ * false, which is equivalent to whether the objects fulfills the
+ * criteria stated in the filtering expression.
+ *
+ * An example of a filtering expression would be "field feature == CDS".
+ */
 RecordFilter string_to_filter(string filtering_expression) {
   RecordFilter filter = extract_tokens(filtering_expression)
                             .generate_tree()
@@ -22,25 +26,7 @@ RecordFilter string_to_filter(string filtering_expression) {
   return filter;
 }
 
-private:
-
-alias RecordFilter BooleanDelegate;
-alias string delegate(Record r) StringDelegate;
-alias long delegate(Record r) LongDelegate;
-alias double delegate(Record r) DoubleDelegate;
-
-static this() {
-  NO_BEFORE_FILTER = get_NO_BEFORE_FILTER();
-  NO_AFTER_FILTER = get_NO_AFTER_FILTER();
-}
-
-StringFilter get_NO_BEFORE_FILTER() {
- return delegate bool(string s) { return true; };
-}
-
-RecordFilter get_NO_AFTER_FILTER() {
- return delegate bool(Record r) { return true; };
-}
+package:
 
 /*******************************************************************************
  * The following part is about getting a delegate out of a tree of nodes, which
