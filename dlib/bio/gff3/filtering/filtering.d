@@ -496,6 +496,8 @@ Node parse_next_token(Node left, ref string[] tokens) {
       throw new Exception("Unexpected )");
       break;
     default:
+      if (left !is null)
+        throw new Exception("Unknown operator: " ~ token);
       node = new Node(NodeType.VALUE);
       node.text = token;
       break;
@@ -573,6 +575,7 @@ unittest {
            ["(", "(", "field", " seqname", ")", "==", "test", ")", "and", "(", "attrib", "ID test", "==", "test2", ")"] );
 }
 
+import std.exception;
 import bio.gff3.line;
 
 unittest {
@@ -612,5 +615,12 @@ unittest {
   assert(string_to_filter("field seqname contains 55")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
   assert(string_to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
   assert(string_to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+
+  // Test with invalid operators
+  assertThrown(string_to_filter("(field source == 2) bad (field feature == 3)"));
+  assertThrown(string_to_filter("(field source == 2 bad) and (field feature == 3)"));
+  assertThrown(string_to_filter("(field source bad == 2) and (field feature == 3)"));
+  assertThrown(string_to_filter("bad (field source == 2) and (field feature == 3)"));
+  assertThrown(string_to_filter("bad (field source == 2) and (field feature == 3) bad"));
 }
 
