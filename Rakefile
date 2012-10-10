@@ -5,7 +5,8 @@ require 'rake/clean'
 ENV["PATH"] = File.join(File.dirname(__FILE__), "bin") + ":" + ENV["PATH"]
 PREFIX=ENV["PREFIX"]
 
-DMD_RELEASE_FLAGS = "-O -release -Idlib -J."
+# Removed -O option because gff3-filter is not working correctly without it
+DMD_RELEASE_FLAGS = "-release -Idlib -J."
 DMD_DEBUG_FLAGS = "-g -Idlib -J."
 
 GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelease -lpthread -fno-assert -J."
