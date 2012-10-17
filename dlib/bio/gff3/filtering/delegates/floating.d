@@ -10,16 +10,10 @@ DoubleDelegate get_double_delegate(Node node) {
 
   final switch(node.type) {
     case NodeType.VALUE:
-      if (is_float(node.text)) {
-        double double_value = to!double(node.text);
-        filter = (record) { return double_value; };
-      } else {
-        filter = null;
-      }
+      filter = get_value_delegate(node);
       break;
     case NodeType.FIELD_OPERATOR:
-      auto field_accessor = get_field_accessor(node.parameter);
-      filter = (record) { return to!double(field_accessor(record)); };
+      filter = get_field_delegate(node);
       break;
     case NodeType.ATTR_OPERATOR:
       filter = (record) { return (node.parameter in record.attributes) ? to!double(record.attributes[node.parameter].first) : 0.0; };
@@ -31,22 +25,7 @@ DoubleDelegate get_double_delegate(Node node) {
     case NodeType.MINUS_OPERATOR:
     case NodeType.MULTIPLICATION_OPERATOR:
     case NodeType.DIVISION_OPERATOR:
-      if (node.children.length != 2)
-        throw new Exception(node.text ~ " requires two operands");
-      auto left_operand = get_double_delegate(node.children[0]);
-      auto right_operand = get_double_delegate(node.children[1]);
-      if ((left_operand is null) || (right_operand is null)) {
-        filter = null;
-      } else {
-        if (node.type == NodeType.PLUS_OPERATOR)
-          filter = (record) { return left_operand(record) + right_operand(record); };
-        if (node.type == NodeType.MINUS_OPERATOR)
-          filter = (record) { return left_operand(record) - right_operand(record); };
-        if (node.type == NodeType.MULTIPLICATION_OPERATOR)
-          filter = (record) { return left_operand(record) * right_operand(record); };
-        if (node.type == NodeType.DIVISION_OPERATOR)
-          filter = (record) { return left_operand(record) / right_operand(record); };
-      }
+      filter = get_binary_delegate(node);
       break;
     case NodeType.NONE:
     case NodeType.AND_OPERATOR:
@@ -62,6 +41,45 @@ DoubleDelegate get_double_delegate(Node node) {
     case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
       filter = null;
       break;
+  }
+
+  return filter;
+}
+
+DoubleDelegate get_value_delegate(Node node) {
+  if (is_float(node.text)) {
+    double double_value = to!double(node.text);
+    return (record) { return double_value; };
+  } else {
+    return null;
+  }
+}
+
+DoubleDelegate get_field_delegate(Node node) {
+  auto field_accessor = get_field_accessor(node.parameter);
+  return (record) { return to!double(field_accessor(record)); };
+}
+
+DoubleDelegate get_binary_delegate(Node node) {
+  DoubleDelegate filter;
+
+  if (node.children.length != 2)
+    throw new Exception(node.text ~ " requires two operands");
+
+  auto left_operand = get_double_delegate(node.children[0]);
+  auto right_operand = get_double_delegate(node.children[1]);
+
+  if ((left_operand is null) || (right_operand is null)) {
+    filter = null;
+  } else {
+    if (node.type == NodeType.PLUS_OPERATOR)
+      filter = (record) { return left_operand(record) + right_operand(record); };
+    if (node.type == NodeType.MINUS_OPERATOR)
+      filter = (record) { return left_operand(record) - right_operand(record); };
+    if (node.type == NodeType.MULTIPLICATION_OPERATOR)
+      filter = (record) { return left_operand(record) * right_operand(record); };
+    if (node.type == NodeType.DIVISION_OPERATOR)
+      filter = (record) { return left_operand(record) / right_operand(record); };
   }
 
   return filter;
