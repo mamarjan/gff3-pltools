@@ -2,11 +2,11 @@ module bio.gff3.filtering.delegates.integer;
 
 import std.conv;
 import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
-       bio.gff3.filtering.field_accessor;
+       bio.gff3.field_accessor, bio.gff3.record;
 import util.is_integer;
 
-IntegerDelegate get_integer_delegate(Node node) {
-  IntegerDelegate filter;
+RecordToInteger get_integer_delegate(Node node) {
+  RecordToInteger filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -48,7 +48,7 @@ IntegerDelegate get_integer_delegate(Node node) {
 
 private:
 
-IntegerDelegate get_value_delegate(Node node) {
+RecordToInteger get_value_delegate(Node node) {
   if (is_integer(node.text)) {
     long integer_value = to!long(node.text);
     return (record) { return integer_value; };
@@ -57,13 +57,13 @@ IntegerDelegate get_value_delegate(Node node) {
   }
 }
 
-IntegerDelegate get_field_delegate(Node node) {
+RecordToInteger get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
   return (record) { return to!long(field_accessor(record)); };
 }
 
-IntegerDelegate get_binary_delegate(Node node) {
-  IntegerDelegate filter;
+RecordToInteger get_binary_delegate(Node node) {
+  RecordToInteger filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");

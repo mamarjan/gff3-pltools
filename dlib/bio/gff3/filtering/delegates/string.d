@@ -1,12 +1,10 @@
 module bio.gff3.filtering.delegates.string;
 
 import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
-       bio.gff3.filtering.field_accessor;
+       bio.gff3.field_accessor, bio.gff3.record;
 
-package:
-
-StringDelegate get_string_delegate(Node node) {
-  StringDelegate filter;
+RecordToString get_string_delegate(Node node) {
+  RecordToString filter;
 
   final switch(node.type) {
     case NodeType.VALUE:

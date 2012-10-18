@@ -3,10 +3,10 @@ module bio.gff3.filtering.delegates.boolean;
 import std.string;
 import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
        bio.gff3.filtering.delegates.string, bio.gff3.filtering.delegates.floating,
-       bio.gff3.filtering.delegates.integer;
+       bio.gff3.filtering.delegates.integer, bio.gff3.record;
 
-BooleanDelegate get_bool_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_bool_delegate(Node node) {
+  RecordToBoolean filter;
 
   final switch(node.type) {
     case NodeType.NONE:
@@ -50,8 +50,8 @@ BooleanDelegate get_bool_delegate(Node node) {
 
 private:
 
-BooleanDelegate get_and_or_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_and_or_delegate(Node node) {
+  RecordToBoolean filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -74,7 +74,7 @@ BooleanDelegate get_and_or_delegate(Node node) {
   return filter;
 }
 
-BooleanDelegate get_not_delegate(Node node) {
+RecordToBoolean get_not_delegate(Node node) {
   if (node.children.length != 1)
     throw new Exception("not requires one operand");
 
@@ -85,8 +85,8 @@ BooleanDelegate get_not_delegate(Node node) {
   return (record) { return !right(record); };
 }
 
-BooleanDelegate get_str_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_str_delegate(Node node) {
+  RecordToBoolean filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -111,11 +111,11 @@ BooleanDelegate get_str_delegate(Node node) {
   return filter;
 }
 
-BooleanDelegate get_cmp_delegate(Node node) {
+RecordToBoolean get_cmp_delegate(Node node) {
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
 
-  BooleanDelegate filter;
+  RecordToBoolean filter;
 
   filter = get_cmp_float_delegate(node);
   if (filter !is null) return filter;
@@ -131,8 +131,8 @@ BooleanDelegate get_cmp_delegate(Node node) {
   return null;
 }
 
-BooleanDelegate get_cmp_float_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_cmp_float_delegate(Node node) {
+  RecordToBoolean filter;
 
   auto left = get_floating_delegate(node.children[0]);
   auto right = get_floating_delegate(node.children[1]);
@@ -160,8 +160,8 @@ BooleanDelegate get_cmp_float_delegate(Node node) {
   return filter;
 }
 
-BooleanDelegate get_cmp_int_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_cmp_int_delegate(Node node) {
+  RecordToBoolean filter;
 
   auto left = get_integer_delegate(node.children[0]);
   auto right = get_integer_delegate(node.children[1]);
@@ -189,8 +189,8 @@ BooleanDelegate get_cmp_int_delegate(Node node) {
   return filter;
 }
 
-BooleanDelegate get_cmp_bool_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_cmp_bool_delegate(Node node) {
+  RecordToBoolean filter;
 
   auto left = get_bool_delegate(node.children[0]);
   auto right = get_bool_delegate(node.children[1]);
@@ -218,8 +218,8 @@ BooleanDelegate get_cmp_bool_delegate(Node node) {
   return filter;
 }
 
-BooleanDelegate get_cmp_string_delegate(Node node) {
-  BooleanDelegate filter;
+RecordToBoolean get_cmp_string_delegate(Node node) {
+  RecordToBoolean filter;
 
   auto left = get_string_delegate(node.children[0]);
   auto right = get_string_delegate(node.children[1]);

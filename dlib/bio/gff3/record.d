@@ -10,6 +10,12 @@ enum RecordType {
   PRAGMA
 }
 
+// Aliases for conversion delegates
+alias string delegate(Record) RecordToString;
+alias bool delegate(Record) RecordToBoolean;
+alias long delegate(Record) RecordToInteger;
+alias double delegate(Record) RecordToFloating;
+
 /**
  * Represents a parsed line in a GFF3 file.
  */

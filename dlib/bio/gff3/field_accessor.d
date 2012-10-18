@@ -1,6 +1,6 @@
-module bio.gff3.filtering.field_accessor;
+module bio.gff3.field_accessor;
 
-import bio.gff3.filtering.common, bio.gff3.field;
+import bio.gff3.record, bio.gff3.field;
 
 /**
  * Returns a delegate which when given a Record object returns
@@ -8,33 +8,26 @@ import bio.gff3.filtering.common, bio.gff3.field;
  * It supports only lower case field names, and allowed field
  * names can be found in bio.gff3.field module.
  */
-StringDelegate get_field_accessor(string field_name) {
-  StringDelegate field_accessor;
+RecordToString get_field_accessor(string field_name) {
+  RecordToString field_accessor;
+
   switch(field_name) {
     case FIELD_SEQNAME:
-      field_accessor = (record) { return record.seqname; };
-      break;
+      field_accessor = (record) { return record.seqname; }; break;
     case FIELD_SOURCE:
-      field_accessor = (record) { return record.source; };
-      break;
+      field_accessor = (record) { return record.source; }; break;
     case FIELD_FEATURE:
-      field_accessor = (record) { return record.feature; };
-      break;
+      field_accessor = (record) { return record.feature; }; break;
     case FIELD_START:
-      field_accessor = (record) { return record.start; };
-      break;
+      field_accessor = (record) { return record.start; }; break;
     case FIELD_END:
-      field_accessor = (record) { return record.end; };
-      break;
+      field_accessor = (record) { return record.end; }; break;
     case FIELD_SCORE:
-      field_accessor = (record) { return record.score; };
-      break;
+      field_accessor = (record) { return record.score; }; break;
     case FIELD_STRAND:
-      field_accessor = (record) { return record.strand; };
-      break;
+      field_accessor = (record) { return record.strand; }; break;
     case FIELD_PHASE:
-      field_accessor = (record) { return record.phase; };
-      break;
+      field_accessor = (record) { return record.phase; }; break;
     default:
       throw new Exception("Invalid field name: " ~ field_name);
       break;
@@ -43,8 +36,10 @@ StringDelegate get_field_accessor(string field_name) {
   return field_accessor;
 }
 
-import std.exception;
-import bio.gff3.record;
+version(unittest){
+  import std.exception;
+  import bio.gff3.record;
+}
 
 unittest {
   auto record = new Record();
@@ -73,6 +68,7 @@ unittest {
   assertThrown(get_field_accessor("SEQNAME"));
 
   // Also, any other word should result in an exception
+  assertThrown(get_field_accessor("seqn"));
   assertThrown(get_field_accessor("badfieldname"));
 }
 

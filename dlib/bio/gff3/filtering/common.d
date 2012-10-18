@@ -2,7 +2,7 @@ module bio.gff3.filtering.common;
 
 import bio.gff3.record;
 
-alias bool delegate(Record r) RecordFilter;
+alias RecordToBoolean RecordFilter;
 alias bool delegate(string s) StringFilter;
 
 StringFilter NO_BEFORE_FILTER;
@@ -17,15 +17,10 @@ static this() {
 }
 
 StringFilter get_NO_BEFORE_FILTER() {
- return delegate bool(string s) { return true; };
+ return (s) { return true; };
 }
 
 RecordFilter get_NO_AFTER_FILTER() {
- return delegate bool(Record r) { return true; };
+ return (r) { return true; };
 }
-
-alias RecordFilter BooleanDelegate;
-alias string delegate(Record r) StringDelegate;
-alias long delegate(Record r) IntegerDelegate;
-alias double delegate(Record r) FloatingDelegate;
 

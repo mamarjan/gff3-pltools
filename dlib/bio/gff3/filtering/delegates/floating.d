@@ -2,11 +2,11 @@ module bio.gff3.filtering.delegates.floating;
 
 import std.conv;
 import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
-       bio.gff3.filtering.field_accessor;
+       bio.gff3.field_accessor, bio.gff3.record;
 import util.is_float;
 
-FloatingDelegate get_floating_delegate(Node node) {
-  FloatingDelegate filter;
+RecordToFloating get_floating_delegate(Node node) {
+  RecordToFloating filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -48,7 +48,7 @@ FloatingDelegate get_floating_delegate(Node node) {
 
 private:
 
-FloatingDelegate get_value_delegate(Node node) {
+RecordToFloating get_value_delegate(Node node) {
   if (is_float(node.text)) {
     double double_value = to!double(node.text);
     return (record) { return double_value; };
@@ -57,13 +57,13 @@ FloatingDelegate get_value_delegate(Node node) {
   }
 }
 
-FloatingDelegate get_field_delegate(Node node) {
+RecordToFloating get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
   return (record) { return to!double(field_accessor(record)); };
 }
 
-FloatingDelegate get_binary_delegate(Node node) {
-  FloatingDelegate filter;
+RecordToFloating get_binary_delegate(Node node) {
+  RecordToFloating filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");

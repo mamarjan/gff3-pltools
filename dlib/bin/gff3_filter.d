@@ -114,11 +114,11 @@ int main(string[] args) {
   try {
     records.set_validate(NO_VALIDATION)
            .set_replace_esc_chars(false)
-           .set_after_filter(string_to_filter(filter_string))
+           .set_after_filter(filter_string.to_filter())
            .set_keep_comments(keep_comments)
            .set_keep_pragmas(keep_pragmas);
   } catch (Exception e) {
-    writeln(e.msg);
+    writeln("Error: ", e.msg);
     return -1;
   }
 
