@@ -5,8 +5,8 @@ import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
        bio.gff3.filtering.field_accessor;
 import util.is_integer;
 
-LongDelegate get_long_delegate(Node node) {
-  LongDelegate filter;
+IntegerDelegate get_integer_delegate(Node node) {
+  IntegerDelegate filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -19,7 +19,7 @@ LongDelegate get_long_delegate(Node node) {
       filter = (record) { return (node.parameter in record.attributes) ? to!long(node.parameter) : 0; };
       break;
     case NodeType.BRACKETS:
-      filter = get_long_delegate(node.children[0]);
+      filter = get_integer_delegate(node.children[0]);
       break;
     case NodeType.PLUS_OPERATOR:
     case NodeType.MINUS_OPERATOR:
@@ -46,8 +46,9 @@ LongDelegate get_long_delegate(Node node) {
   return filter;
 }
 
+private:
 
-LongDelegate get_value_delegate(Node node) {
+IntegerDelegate get_value_delegate(Node node) {
   if (is_integer(node.text)) {
     long integer_value = to!long(node.text);
     return (record) { return integer_value; };
@@ -56,31 +57,40 @@ LongDelegate get_value_delegate(Node node) {
   }
 }
 
-LongDelegate get_field_delegate(Node node) {
+IntegerDelegate get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
   return (record) { return to!long(field_accessor(record)); };
 }
 
-LongDelegate get_binary_delegate(Node node) {
-  LongDelegate filter;
+IntegerDelegate get_binary_delegate(Node node) {
+  IntegerDelegate filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
 
-  auto left_operand = get_long_delegate(node.children[0]);
-  auto right_operand = get_long_delegate(node.children[1]);
+  auto left_operand = get_integer_delegate(node.children[0]);
+  auto right_operand = get_integer_delegate(node.children[1]);
 
   if ((left_operand is null) || (right_operand is null)) {
     filter = null;
   } else {
-    if (node.type == NodeType.PLUS_OPERATOR)
-      filter = (record) { return left_operand(record) + right_operand(record); };
-    if (node.type == NodeType.MINUS_OPERATOR)
-      filter = (record) { return left_operand(record) - right_operand(record); };
-    if (node.type == NodeType.MULTIPLICATION_OPERATOR)
-      filter = (record) { return left_operand(record) * right_operand(record); };
-    if (node.type == NodeType.DIVISION_OPERATOR)
-      filter = (record) { return left_operand(record) / right_operand(record); };
+    switch(node.type) {
+      case NodeType.PLUS_OPERATOR:
+        filter = (record) { return left_operand(record) + right_operand(record); };
+        break;
+      case NodeType.MINUS_OPERATOR:
+        filter = (record) { return left_operand(record) - right_operand(record); };
+        break;
+      case NodeType.MULTIPLICATION_OPERATOR:
+        filter = (record) { return left_operand(record) * right_operand(record); };
+        break;
+      case NodeType.DIVISION_OPERATOR:
+        filter = (record) { return left_operand(record) / right_operand(record); };
+        break;
+      default:
+        throw new Exception("This should never happen.");
+        break;
+    }
   }
 
   return filter;

@@ -5,8 +5,8 @@ import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
        bio.gff3.filtering.field_accessor;
 import util.is_float;
 
-DoubleDelegate get_double_delegate(Node node) {
-  DoubleDelegate filter;
+FloatingDelegate get_floating_delegate(Node node) {
+  FloatingDelegate filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -19,7 +19,7 @@ DoubleDelegate get_double_delegate(Node node) {
       filter = (record) { return (node.parameter in record.attributes) ? to!double(record.attributes[node.parameter].first) : 0.0; };
       break;
     case NodeType.BRACKETS:
-      filter = get_double_delegate(node.children[0]);
+      filter = get_floating_delegate(node.children[0]);
       break;
     case NodeType.PLUS_OPERATOR:
     case NodeType.MINUS_OPERATOR:
@@ -46,7 +46,9 @@ DoubleDelegate get_double_delegate(Node node) {
   return filter;
 }
 
-DoubleDelegate get_value_delegate(Node node) {
+private:
+
+FloatingDelegate get_value_delegate(Node node) {
   if (is_float(node.text)) {
     double double_value = to!double(node.text);
     return (record) { return double_value; };
@@ -55,19 +57,19 @@ DoubleDelegate get_value_delegate(Node node) {
   }
 }
 
-DoubleDelegate get_field_delegate(Node node) {
+FloatingDelegate get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
   return (record) { return to!double(field_accessor(record)); };
 }
 
-DoubleDelegate get_binary_delegate(Node node) {
-  DoubleDelegate filter;
+FloatingDelegate get_binary_delegate(Node node) {
+  FloatingDelegate filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
 
-  auto left_operand = get_double_delegate(node.children[0]);
-  auto right_operand = get_double_delegate(node.children[1]);
+  auto left_operand = get_floating_delegate(node.children[0]);
+  auto right_operand = get_floating_delegate(node.children[1]);
 
   if ((left_operand is null) || (right_operand is null)) {
     filter = null;

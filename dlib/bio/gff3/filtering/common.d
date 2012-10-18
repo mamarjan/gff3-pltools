@@ -26,6 +26,6 @@ RecordFilter get_NO_AFTER_FILTER() {
 
 alias RecordFilter BooleanDelegate;
 alias string delegate(Record r) StringDelegate;
-alias long delegate(Record r) LongDelegate;
-alias double delegate(Record r) DoubleDelegate;
+alias long delegate(Record r) IntegerDelegate;
+alias double delegate(Record r) FloatingDelegate;
 
