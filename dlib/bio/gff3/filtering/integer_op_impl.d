@@ -1,9 +1,11 @@
-module bio.gff3.filtering.delegates.integer;
+module bio.gff3.filtering.integer_op_impl;
 
 import std.conv;
-import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
+import bio.gff3.filtering.common, bio.gff3.filtering.node,
        bio.gff3.field_accessor, bio.gff3.record;
 import util.is_integer;
+
+package:
 
 RecordToInteger get_integer_delegate(Node node) {
   RecordToInteger filter;

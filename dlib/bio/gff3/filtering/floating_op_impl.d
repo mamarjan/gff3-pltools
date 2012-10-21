@@ -1,9 +1,11 @@
-module bio.gff3.filtering.delegates.floating;
+module bio.gff3.filtering.floating_op_impl;
 
 import std.conv;
-import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
+import bio.gff3.filtering.common, bio.gff3.filtering.node,
        bio.gff3.field_accessor, bio.gff3.record;
 import util.is_float;
+
+package:
 
 RecordToFloating get_floating_delegate(Node node) {
   RecordToFloating filter;

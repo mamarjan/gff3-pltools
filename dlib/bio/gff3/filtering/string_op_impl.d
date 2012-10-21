@@ -1,7 +1,9 @@
-module bio.gff3.filtering.delegates.string;
+module bio.gff3.filtering.string_op_impl;
 
-import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
+import bio.gff3.filtering.common, bio.gff3.filtering.node,
        bio.gff3.field_accessor, bio.gff3.record;
+
+package:
 
 RecordToString get_string_delegate(Node node) {
   RecordToString filter;

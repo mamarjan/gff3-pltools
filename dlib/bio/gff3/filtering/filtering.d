@@ -1,7 +1,7 @@
 module bio.gff3.filtering.filtering;
 
-import bio.gff3.filtering.tokenizer, bio.gff3.filtering.node_tree.generate,
-       bio.gff3.filtering.delegates.boolean;
+import bio.gff3.filtering.tokenizer, bio.gff3.filtering.generate_tree,
+       bio.gff3.filtering.boolean_op_impl;
 
 public import bio.gff3.filtering.common;
 

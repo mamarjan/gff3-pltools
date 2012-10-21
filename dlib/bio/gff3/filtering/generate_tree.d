@@ -1,11 +1,13 @@
-module bio.gff3.filtering.node_tree.generate;
+module bio.gff3.filtering.generate_tree;
 
-import bio.gff3.filtering.node_tree.node;
+import bio.gff3.filtering.node;
 
 /*******************************************************************************
  * The following part if about generating a tree structure from a list
  * of tokens.
  ******************************************************************************/
+
+package:
 
 Node generate_tree(string[] tokens) {
   Node root;

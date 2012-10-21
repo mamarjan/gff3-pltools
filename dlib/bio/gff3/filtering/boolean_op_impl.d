@@ -1,9 +1,11 @@
-module bio.gff3.filtering.delegates.boolean;
+module bio.gff3.filtering.boolean_op_impl;
 
 import std.string;
-import bio.gff3.filtering.common, bio.gff3.filtering.node_tree.node,
-       bio.gff3.filtering.delegates.string, bio.gff3.filtering.delegates.floating,
-       bio.gff3.filtering.delegates.integer, bio.gff3.record;
+import bio.gff3.filtering.common, bio.gff3.filtering.node,
+       bio.gff3.filtering.string_op_impl, bio.gff3.filtering.floating_op_impl,
+       bio.gff3.filtering.integer_op_impl, bio.gff3.record;
+
+package:
 
 RecordToBoolean get_bool_delegate(Node node) {
   RecordToBoolean filter;

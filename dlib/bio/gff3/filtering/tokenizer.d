@@ -41,7 +41,9 @@ string[] extract_tokens(string expression) {
   return tokens.data;
 }
 
-import std.stdio;
+version (unittest) {
+  import std.stdio;
+}
 
 unittest {
   assert(extract_tokens("").length == 0);

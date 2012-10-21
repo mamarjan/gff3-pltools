@@ -1,4 +1,4 @@
-module bio.gff3.filtering.node_tree.node;
+module bio.gff3.filtering.node;
 
 package:
 
