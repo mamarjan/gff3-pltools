@@ -12,14 +12,11 @@ package:
 Node generate_tree(string[] tokens) {
   Node root;
 
-  if (tokens.length == 0) {
+  if (tokens.length == 0)
     root = new Node(NodeType.NONE);
-  } else {
-    Node current_root;
+  else
     while (tokens.length != 0)
-      current_root = parse_next_token(current_root, tokens);
-    root = current_root;
-  }
+      root = parse_next_token(root, tokens);
 
   return root;
 }
@@ -27,6 +24,20 @@ Node generate_tree(string[] tokens) {
 unittest {
   assert(generate_tree([]) !is null);
   assert(generate_tree(null) !is null);
+  assert(generate_tree(null).type == NodeType.NONE);
+
+  auto tree_root = generate_tree(["field", "feature"]);
+  assert(tree_root.type == NodeType.FIELD_OPERATOR);
+  assert(tree_root.children.length == 0);
+
+  tree_root = generate_tree(["field", "feature", "==", "CDS"]);
+  assert(tree_root.type == NodeType.EQUALS_OPERATOR);
+  assert(tree_root.parent is null);
+  assert(tree_root.children.length == 2);
+  assert(tree_root.children[0].type == NodeType.FIELD_OPERATOR);
+  assert(tree_root.children[0].children.length == 0);
+  assert(tree_root.children[1].type == NodeType.VALUE);
+  assert(tree_root.children[1].children.length == 0);
 }
 
 Node parse_next_token(Node left, ref string[] tokens) {
