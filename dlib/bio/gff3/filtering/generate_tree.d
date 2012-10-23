@@ -47,94 +47,19 @@ Node parse_next_token(Node left, ref string[] tokens) {
   tokens = tokens[1..$];
   switch(token) {
     case "field":
-      node = new Node(NodeType.FIELD_OPERATOR);
-      node.text = token;
-      if (left !is null) {
-        throw new Exception(token ~ "operator doesn't accept a value on the left");
-      } else if (tokens.length == 0) {
-        throw new Exception(token ~ " operator needs a field name to the right of it");
-      } else {
-        node.parameter = tokens[0];
-        tokens = tokens[1..$];
-      }
+      node = parse_field_token(left, tokens);
       break;
     case "attr", "attrib", "attribute":
-      node = new Node(NodeType.ATTR_OPERATOR);
-      node.text = token;
-      if (left !is null) {
-        throw new Exception(token ~ "operator doesn't accept a value on the left");
-      } else if (tokens.length == 0) {
-        throw new Exception(token ~ " operator needs an attribute name to the right of it");
-      } else {
-        node.parameter = tokens[0];
-        tokens = tokens[1..$];
-      }
+      node = parse_attr_token(left, tokens);
       break;
     case "not":
-      node = new Node(NodeType.NOT_OPERATOR);
-      node.text = token;
-      if (left !is null) {
-        throw new Exception(token ~ "operator doesn't accept a value on the left");
-      } else if (tokens.length == 0) {
-        throw new Exception(token ~ " operator requires a boolean value to to the right of it");
-      } else {
-        auto right = parse_next_token(null, tokens);
-        node.children = [right];
-        right.parent = node;
-      }
+      node = parse_not_token(left, tokens);
       break;
     case "==", "!=", ">=", "<=", ">", "<", "and", "or", "+", "-", "*", "/", "contains", "starts_with":
-      switch(token) {
-        case "=="  : node = new Node(NodeType.EQUALS_OPERATOR); break;
-        case "!="  : node = new Node(NodeType.NOT_EQUALS_OPERATOR); break;
-        case "<="  : node = new Node(NodeType.LOWER_THAN_OR_EQUALS_OPERATOR); break;
-        case ">="  : node = new Node(NodeType.GREATER_THAN_OR_EQUALS_OPERATOR); break;
-        case ">"   : node = new Node(NodeType.GREATER_THAN_OPERATOR); break;
-        case "<"   : node = new Node(NodeType.LOWER_THAN_OPERATOR); break;
-        case "and" : node = new Node(NodeType.AND_OPERATOR); break;
-        case "or"  : node = new Node(NodeType.OR_OPERATOR); break;
-        case "+"   : node = new Node(NodeType.PLUS_OPERATOR); break;
-        case "-"   : node = new Node(NodeType.MINUS_OPERATOR); break;
-        case "*"   : node = new Node(NodeType.MULTIPLICATION_OPERATOR); break;
-        case "/"   : node = new Node(NodeType.DIVISION_OPERATOR); break;
-        case "contains"    : node = new Node(NodeType.CONTAINS_OPERATOR); break;
-        case "starts_with" : node = new Node(NodeType.STARTS_WITH_OPERATOR); break;
-        default:
-          throw new Exception("Error in the code, please report to the maintainer");
-          break;
-      }
-      node.text = token;
-      if (left is null) {
-        throw new Exception(token ~ " operator requires a value on the left");
-      } else if (tokens.length == 0) {
-        throw new Exception(token ~ " operator requires a value on the right");
-      } else {
-        auto right = parse_next_token(null, tokens);
-        node.children = [left, right];
-        left.parent = node;
-        right.parent = node;
-      }
+      node = parse_binary_token(left, token, tokens);
       break;
     case "(":
-      node = new Node(NodeType.BRACKETS);
-      node.text = token;
-      if (left !is null) {
-        throw new Exception("brackets can't have a value on the left");
-      } else if (tokens.length == 0) {
-        throw new Exception("no closing bracket");
-      } else if (tokens[0] == ")") {
-        throw new Exception("brackets can't work without a value being devised inside them");
-      } else {
-        Node right;
-        while ((tokens.length != 0) && (tokens[0] != ")")) {
-          right = parse_next_token(right, tokens);
-        }
-        if (tokens.length == 0)
-          throw new Exception("no closing bracket");
-        tokens = tokens[1..$];
-        node.children = [right];
-        right.parent = node;
-      }
+      node = parse_brackets_token(left, tokens);
       break;
     case ")":
       throw new Exception("Unexpected )");
@@ -169,5 +94,268 @@ unittest {
   assert(node.children.length == 0);
 }
 
+Node parse_field_token(Node left, ref string[] tokens) {
+  // Check if everything ok
+  if (left !is null)
+    throw new Exception("field operator doesn't accept a value on the left");
+  if (tokens.length == 0)
+    throw new Exception("field operator needs a field name to the right of it");
+
+  // Setup a new node
+  auto node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = tokens[0];
+  tokens = tokens[1..$];
+
+  return node;
+}
+
+version(unittest) {
+  import std.exception;
+}
+
+unittest {
+  auto tokens = ["feature"];
+  auto node = parse_field_token(null, tokens);
+  assert(node.type == NodeType.FIELD_OPERATOR);
+  assert(node.parameter == "feature");
+  assert(tokens.length == 0);
+
+  tokens = ["feature", "==", "field"];
+  node = parse_field_token(null, tokens);
+  assert(node.type == NodeType.FIELD_OPERATOR);
+  assert(node.parameter == "feature");
+  assert(tokens.length == 2);
+  assert(tokens[0] == "==");
+  assert(tokens[1] == "field");
+
+  tokens = ["feature"];
+  assertThrown(parse_field_token(new Node(NodeType.VALUE), tokens));
+
+  tokens = null;
+  assertThrown(parse_field_token(null, tokens));
+}
+
+Node parse_attr_token(Node left, ref string[] tokens) {
+  if (left !is null)
+    throw new Exception("attr operator doesn't accept a value on the left");
+  if (tokens.length == 0)
+    throw new Exception("attr operator needs an attribute name to the right of it");
+
+  auto node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = tokens[0];
+  tokens = tokens[1..$];
+
+  return node;
+}
+
+unittest {
+  auto tokens = ["ID"];
+  auto node = parse_attr_token(null, tokens);
+  assert(node.type == NodeType.ATTR_OPERATOR);
+  assert(node.parameter == "ID");
+  assert(tokens.length == 0);
+
+  tokens = ["ID", "==", "field"];
+  node = parse_attr_token(null, tokens);
+  assert(node.type == NodeType.ATTR_OPERATOR);
+  assert(node.parameter == "ID");
+  assert(tokens.length == 2);
+  assert(tokens[0] == "==");
+  assert(tokens[1] == "field");
+
+  tokens = ["ID"];
+  assertThrown(parse_attr_token(new Node(NodeType.VALUE), tokens));
+
+  tokens = null;
+  assertThrown(parse_attr_token(null, tokens));
+}
+
+Node parse_not_token(Node left, ref string[] tokens) {
+  if (left !is null)
+    throw new Exception("not operator doesn't accept a value on the left");
+  if (tokens.length == 0)
+    throw new Exception("not operator requires a boolean value to to the right of it");
+
+  auto node = new Node(NodeType.NOT_OPERATOR);
+  node.text = "not";
+
+  auto right = parse_next_token(null, tokens);
+  node.children = [right];
+  right.parent = node;
+
+  return node;
+}
+
+unittest {
+  auto tokens = ["field", "feature"];
+  auto node = parse_not_token(null, tokens);
+  assert(node.type == NodeType.NOT_OPERATOR);
+  assert(tokens.length == 0);
+  assert(node.children.length == 1);
+  assert(node.children[0].type == NodeType.FIELD_OPERATOR);
+
+  tokens = ["field", "feature", "==", "CDS"];
+  node = parse_not_token(null, tokens);
+  assert(node.type == NodeType.NOT_OPERATOR);
+  assert(node.children.length == 1);
+  assert(node.children[0].type == NodeType.FIELD_OPERATOR);
+  assert(tokens.length == 2);
+  assert(tokens[0] == "==");
+  assert(tokens[1] == "CDS");
+
+  tokens = ["field", "feature"];
+  assertThrown(parse_not_token(new Node(NodeType.VALUE), tokens));
+
+  tokens = null;
+  assertThrown(parse_not_token(null, tokens));
+}
+
+Node parse_binary_token(Node left, string token, ref string[] tokens) {
+  if (left is null)
+    throw new Exception(token ~ " operator requires a value on the left");
+  if (tokens.length == 0)
+    throw new Exception(token ~ " operator requires a value on the right");
+
+  NodeType node_type = map_binary_operator(token);
+  if (node_type == NodeType.NONE)
+    throw new Exception("Error in the code, please report to the maintainer");
+
+  auto node = new Node(node_type);
+  node.text = token;
+
+  auto right = parse_next_token(null, tokens);
+  node.children = [left, right];
+  left.parent = node;
+  right.parent = node;
+
+  return node;
+}
+
+unittest {
+  auto left = new Node(NodeType.FIELD_OPERATOR);
+  auto tokens = ["attr", "feature"];
+  auto node = parse_binary_token(left, "==", tokens);
+  assert(node.type == NodeType.EQUALS_OPERATOR);
+  assert(tokens.length == 0);
+  assert(node.children.length == 2);
+  assert(node.children[0].type == NodeType.FIELD_OPERATOR);
+  assert(node.children[1].type == NodeType.ATTR_OPERATOR);
+
+  tokens = ["attr", "feature", "==", "true"];
+  node = parse_binary_token(left, "==", tokens);
+  assert(node.type == NodeType.EQUALS_OPERATOR);
+  assert(node.children.length == 2);
+  assert(node.children[0].type == NodeType.FIELD_OPERATOR);
+  assert(node.children[1].type == NodeType.ATTR_OPERATOR);
+  assert(tokens.length == 2);
+  assert(tokens[0] == "==");
+  assert(tokens[1] == "true");
+
+  tokens = ["field", "feature"];
+  assertThrown(parse_binary_token(null, "==", tokens));
+
+  tokens = null;
+  assertThrown(parse_binary_token(new Node(NodeType.FIELD_OPERATOR), "==", tokens));
+}
+
+NodeType map_binary_operator(string op) {
+  NodeType node_type;
+  switch(op) {
+    case "=="  : node_type = NodeType.EQUALS_OPERATOR; break;
+    case "!="  : node_type = NodeType.NOT_EQUALS_OPERATOR; break;
+    case "<="  : node_type = NodeType.LOWER_THAN_OR_EQUALS_OPERATOR; break;
+    case ">="  : node_type = NodeType.GREATER_THAN_OR_EQUALS_OPERATOR; break;
+    case ">"   : node_type = NodeType.GREATER_THAN_OPERATOR; break;
+    case "<"   : node_type = NodeType.LOWER_THAN_OPERATOR; break;
+    case "and" : node_type = NodeType.AND_OPERATOR; break;
+    case "or"  : node_type = NodeType.OR_OPERATOR; break;
+    case "+"   : node_type = NodeType.PLUS_OPERATOR; break;
+    case "-"   : node_type = NodeType.MINUS_OPERATOR; break;
+    case "*"   : node_type = NodeType.MULTIPLICATION_OPERATOR; break;
+    case "/"   : node_type = NodeType.DIVISION_OPERATOR; break;
+    case "contains" : node_type = NodeType.CONTAINS_OPERATOR; break;
+    case "starts_with" : node_type = NodeType.STARTS_WITH_OPERATOR; break;
+    default: node_type = NodeType.NONE; break;
+  }
+  return node_type;
+}
+
+unittest {
+  assert(map_binary_operator("==") == NodeType.EQUALS_OPERATOR);
+  assert(map_binary_operator("/") == NodeType.DIVISION_OPERATOR);
+  assert(map_binary_operator("contains") == NodeType.CONTAINS_OPERATOR);
+  assert(map_binary_operator("") == NodeType.NONE);
+  assert(map_binary_operator("&&") == NodeType.NONE);
+}
+
+Node parse_brackets_token(Node left, ref string[] tokens) {
+  if (left !is null)
+    throw new Exception("brackets can't have a value on the left");
+  if (tokens.length == 0)
+    throw new Exception("no closing bracket");
+  if (tokens[0] == ")")
+    throw new Exception("brackets can't work without a value being devised inside them");
+
+  auto node = new Node(NodeType.BRACKETS);
+  node.text = "(";
+
+  Node right;
+  while ((tokens.length != 0) && (tokens[0] != ")")) {
+    right = parse_next_token(right, tokens);
+  }
+
+  if (tokens.length == 0)
+    throw new Exception("no closing bracket");
+  else
+    tokens = tokens[1..$];
+
+  node.children = [right];
+  right.parent = node;
+
+  return node;
+}
+
+unittest {
+  auto tokens = ["field", "feature", ")"];
+  auto node = parse_brackets_token(null, tokens);
+  assert(node.type == NodeType.BRACKETS);
+  assert(tokens.length == 0);
+  assert(node.children.length == 1);
+  assert(node.children[0].type == NodeType.FIELD_OPERATOR);
+
+  tokens = ["field", "feature", "==", "CDS", ")"];
+  node = parse_brackets_token(null, tokens);
+  assert(node.type == NodeType.BRACKETS);
+  assert(node.children.length == 1);
+  assert(node.children[0].type == NodeType.EQUALS_OPERATOR);
+  assert(tokens.length == 0);
+
+  tokens = ["field", "feature", "==", "CDS", ")", "and", "true"];
+  node = parse_brackets_token(null, tokens);
+  assert(node.type == NodeType.BRACKETS);
+  assert(node.children.length == 1);
+  assert(node.children[0].type == NodeType.EQUALS_OPERATOR);
+  assert(tokens.length == 2);
+  assert(tokens[0] == "and");
+  assert(tokens[1] == "true");
+
+  // Test with missing closing bracket
+  tokens = ["field", "feature"];
+  assertThrown(parse_brackets_token(null, tokens));
+
+  // Test with left value not null
+  tokens = ["field", "feature", ")"];
+  assertThrown(parse_brackets_token(new Node(NodeType.VALUE), tokens));
+
+  // Test with no value inside brackets
+  tokens = [")"];
+  assertThrown(parse_brackets_token(null, tokens));
+
+  // Test with no tokens left
+  tokens = null;
+  assertThrown(parse_brackets_token(null, tokens));
+}
 
 
