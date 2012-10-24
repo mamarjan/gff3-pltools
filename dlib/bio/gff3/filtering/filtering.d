@@ -27,6 +27,10 @@ RecordFilter to_filter(string filtering_expression) {
   return filter;
 }
 
+string[] to_tokens(string filtering_expression) {
+  return extract_tokens(filtering_expression);
+}
+
 version(unittest) {
   import std.exception;
   import bio.gff3.line;

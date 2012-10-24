@@ -32,6 +32,7 @@ int main(string[] args) {
   bool gff3_output = false;
   string selection = null;
   bool json = false;
+  bool debug_mode = false;
   bool help = false;
   try {
     getopt(args,
@@ -47,6 +48,7 @@ int main(string[] args) {
         "gff3-output", &gff3_output,
         "select", &selection,
         "json", &json,
+        "debug", &debug_mode,
         "help", &help);
   } catch (Exception e) {
     writeln(e.msg);
@@ -62,6 +64,12 @@ int main(string[] args) {
 
   if (show_version) {
     writeln("gff3-filter (gff3-pltools) " ~ fetch_version());
+    return 0;
+  }
+
+  if (debug_mode) {
+    // Print tokens and exit
+    writeln("Words as understood by compiler: ", args[1].to_tokens());
     return 0;
   }
 
@@ -173,6 +181,8 @@ void print_usage() {
   writeln("  --gtf-output    Output data in GTF format");
   writeln("  --gff3-output   Output data in GFF3 format");
   writeln("  --json          Output data in JSON format");
+  writeln("  --debug         Split filtering expression into words and exit. The resulting");
+  writeln("                  list can be used to check for missing spaces and similar.");
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
