@@ -3,7 +3,8 @@ module bio.gff3.filtering.boolean_op_impl;
 import std.string;
 import bio.gff3.filtering.common, bio.gff3.filtering.node,
        bio.gff3.filtering.string_op_impl, bio.gff3.filtering.floating_op_impl,
-       bio.gff3.filtering.integer_op_impl, bio.gff3.record;
+       bio.gff3.filtering.integer_op_impl, bio.gff3.record,
+       bio.gff3.field_accessor;
 
 package:
 
@@ -36,9 +37,13 @@ RecordToBoolean get_bool_delegate(Node node) {
     case NodeType.BRACKETS:
       filter = get_bool_delegate(node.children[0]);
       break;
-    case NodeType.VALUE:
     case NodeType.FIELD_OPERATOR:
+      filter = get_field_delegate(node);
+      break;
     case NodeType.ATTR_OPERATOR:
+      filter = get_attr_delegate(node);
+      break;
+    case NodeType.VALUE:
     case NodeType.PLUS_OPERATOR:
     case NodeType.MINUS_OPERATOR:
     case NodeType.MULTIPLICATION_OPERATOR:
@@ -247,5 +252,24 @@ RecordToBoolean get_cmp_string_delegate(Node node) {
   }
 
   return filter;
+}
+
+RecordToBoolean get_field_delegate(Node node) {
+  auto field_accessor = get_field_accessor(node.parameter);
+  return (record) {
+    if (field_accessor(record) == "true")
+      return true;
+    else
+      return false;
+  };
+}
+
+RecordToBoolean get_attr_delegate(Node node) {
+  return (record) {
+    if (node.parameter in record.attributes)
+      return record.attributes[node.parameter].first == "true";
+    else
+      return false;
+  };
 }
 

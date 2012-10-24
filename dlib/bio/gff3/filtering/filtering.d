@@ -83,8 +83,6 @@ unittest {
   assertThrown(to_filter("bad (field source == 2) and (field feature == 3) bad"));
 
   // Test with an expression not evaluating to a boolean
-  assertThrown(to_filter("field feature"));
-  assertThrown(to_filter("attr ID"));
   assertThrown(to_filter("field score + 5"));
 }
 

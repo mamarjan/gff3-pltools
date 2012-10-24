@@ -18,7 +18,7 @@ RecordToInteger get_integer_delegate(Node node) {
       filter = get_field_delegate(node);
       break;
     case NodeType.ATTR_OPERATOR:
-      filter = (record) { return (node.parameter in record.attributes) ? to!long(node.parameter) : 0; };
+      filter = (record) { return (node.parameter in record.attributes) ? to!long(record.attributes[node.parameter].first) : 0; };
       break;
     case NodeType.BRACKETS:
       filter = get_integer_delegate(node.children[0]);
