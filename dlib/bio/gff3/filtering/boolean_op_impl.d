@@ -72,7 +72,7 @@ RecordToBoolean get_and_or_delegate(Node node) {
     case NodeType.AND_OPERATOR:
       filter = (record) { return left(record) && right(record); }; break;
     case NodeType.OR_OPERATOR:
-      filter = (record) { return left(record) || right(record); };
+      filter = (record) { return left(record) || right(record); }; break;
     default:
       throw new Exception("This should never happen.");
       break;
