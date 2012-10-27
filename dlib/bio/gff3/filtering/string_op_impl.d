@@ -46,3 +46,37 @@ RecordToString get_string_delegate(Node node) {
   return filter;
 }
 
+version(unittest) {
+  import bio.gff3.attribute;
+}
+
+unittest {
+  auto node = new Node(NodeType.VALUE);
+  node.text = "some value";
+  auto op = get_string_delegate(node);
+  assert(op(new Record()) == "some value");
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.parameter = "feature";
+  auto record = new Record();
+  record.feature = "1";
+  op = get_string_delegate(node);
+  assert(op(record) == "1");
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.parameter = "ID";
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["1"]);
+  op = get_string_delegate(node);
+  assert(op(record) == "1");
+
+  auto bracket_node = new Node(NodeType.BRACKETS);
+  bracket_node.children = [node];
+  bracket_node.text = "(";
+  node.parent = bracket_node;
+  op = get_string_delegate(bracket_node);
+  assert(op(record) == "1");
+
+  assert(get_string_delegate(new Node(NodeType.AND_OPERATOR)) is null);
+}
+

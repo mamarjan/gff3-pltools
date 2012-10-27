@@ -97,3 +97,15 @@ RecordToInteger get_binary_delegate(Node node) {
 
   return filter;
 }
+
+unittest {
+  auto node = new Node(NodeType.VALUE);
+  node.text = "123";
+  auto op = get_integer_delegate(node);
+  assert(op(new Record()) == 123);
+
+  node = new Node(NodeType.VALUE);
+  node.text = "invalid";
+  assert(get_integer_delegate(node) is null);
+}
+
