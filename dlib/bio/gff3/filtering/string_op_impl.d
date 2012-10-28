@@ -5,18 +5,19 @@ import bio.gff3.filtering.common, bio.gff3.filtering.node,
 
 package:
 
-RecordToString get_string_delegate(Node node) {
-  RecordToString filter;
+RecordToStringWV get_string_delegate(Node node) {
+  RecordToStringWV filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
-      filter = (record) { return node.text; };
+      filter = (ref valid, record) { return node.text; };
       break;
     case NodeType.FIELD_OPERATOR:
-      filter = get_field_accessor(node.parameter);
+      auto field_accessor = get_field_accessor(node.parameter);
+      filter = (ref valid, record) { return field_accessor(record); };
       break;
     case NodeType.ATTR_OPERATOR:
-      filter = (record) {
+      filter = (ref valid, record) {
         return (node.parameter in record.attributes) ? record.attributes[node.parameter].first : null;
       };
       break;
@@ -53,29 +54,33 @@ version(unittest) {
 unittest {
   auto node = new Node(NodeType.VALUE);
   node.text = "some value";
+  bool valid = true;
   auto op = get_string_delegate(node);
-  assert(op(new Record()) == "some value");
+  assert(op(valid, new Record()) == "some value");
 
   node = new Node(NodeType.FIELD_OPERATOR);
   node.parameter = "feature";
   auto record = new Record();
   record.feature = "1";
   op = get_string_delegate(node);
-  assert(op(record) == "1");
+  valid = true;
+  assert(op(valid, record) == "1");
 
   node = new Node(NodeType.ATTR_OPERATOR);
   node.parameter = "ID";
   record = new Record();
   record.attributes["ID"] = AttributeValue(["1"]);
   op = get_string_delegate(node);
-  assert(op(record) == "1");
+  valid = true;
+  assert(op(valid, record) == "1");
 
   auto bracket_node = new Node(NodeType.BRACKETS);
   bracket_node.children = [node];
   bracket_node.text = "(";
   node.parent = bracket_node;
   op = get_string_delegate(bracket_node);
-  assert(op(record) == "1");
+  valid = true;
+  assert(op(valid, record) == "1");
 
   assert(get_string_delegate(new Node(NodeType.AND_OPERATOR)) is null);
 }

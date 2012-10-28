@@ -7,8 +7,8 @@ import util.is_integer;
 
 package:
 
-RecordToInteger get_integer_delegate(Node node) {
-  RecordToInteger filter;
+RecordToIntegerWV get_integer_delegate(Node node) {
+  RecordToIntegerWV filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -18,7 +18,7 @@ RecordToInteger get_integer_delegate(Node node) {
       filter = get_field_delegate(node);
       break;
     case NodeType.ATTR_OPERATOR:
-      filter = (record) { return (node.parameter in record.attributes) ? to!long(record.attributes[node.parameter].first) : 0; };
+      filter = get_attr_delegate(node);
       break;
     case NodeType.BRACKETS:
       filter = get_integer_delegate(node.children[0]);
@@ -50,22 +50,44 @@ RecordToInteger get_integer_delegate(Node node) {
 
 private:
 
-RecordToInteger get_value_delegate(Node node) {
+RecordToIntegerWV get_value_delegate(Node node) {
   if (is_integer(node.text)) {
     long integer_value = to!long(node.text);
-    return (record) { return integer_value; };
+    return (ref valid, record) { return integer_value; };
   } else {
     return null;
   }
 }
 
-RecordToInteger get_field_delegate(Node node) {
+RecordToIntegerWV get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
-  return (record) { return to!long(field_accessor(record)); };
+  return (ref valid, record) {
+    if (is_integer(field_accessor(record))) {
+      return to!long(field_accessor(record));
+    } else {
+      valid = false;
+      return 0;
+    }
+  };
 }
 
-RecordToInteger get_binary_delegate(Node node) {
-  RecordToInteger filter;
+RecordToIntegerWV get_attr_delegate(Node node) {
+  return (ref valid, record) {
+    if (node.parameter in record.attributes) {
+      if (is_integer(record.attributes[node.parameter].first))
+        return to!long(record.attributes[node.parameter].first);
+      else
+        valid = false;
+        return 0;
+    } else {
+      valid = false;
+      return 0;
+    }
+  };
+}
+
+RecordToIntegerWV get_binary_delegate(Node node) {
+  RecordToIntegerWV filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -78,16 +100,16 @@ RecordToInteger get_binary_delegate(Node node) {
   } else {
     switch(node.type) {
       case NodeType.PLUS_OPERATOR:
-        filter = (record) { return left_operand(record) + right_operand(record); };
+        filter = (ref valid, record) { return left_operand(valid, record) + right_operand(valid, record); };
         break;
       case NodeType.MINUS_OPERATOR:
-        filter = (record) { return left_operand(record) - right_operand(record); };
+        filter = (ref valid, record) { return left_operand(valid, record) - right_operand(valid, record); };
         break;
       case NodeType.MULTIPLICATION_OPERATOR:
-        filter = (record) { return left_operand(record) * right_operand(record); };
+        filter = (ref valid, record) { return left_operand(valid, record) * right_operand(valid, record); };
         break;
       case NodeType.DIVISION_OPERATOR:
-        filter = (record) { return left_operand(record) / right_operand(record); };
+        filter = (ref valid, record) { return left_operand(valid, record) / right_operand(valid, record); };
         break;
       default:
         throw new Exception("This should never happen.");
@@ -101,8 +123,9 @@ RecordToInteger get_binary_delegate(Node node) {
 unittest {
   auto node = new Node(NodeType.VALUE);
   node.text = "123";
+  bool valid = true;
   auto op = get_integer_delegate(node);
-  assert(op(new Record()) == 123);
+  assert(op(valid, new Record()) == 123);
 
   node = new Node(NodeType.VALUE);
   node.text = "invalid";

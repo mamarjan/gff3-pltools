@@ -8,12 +8,12 @@ import bio.gff3.filtering.common, bio.gff3.filtering.node,
 
 package:
 
-RecordToBoolean get_bool_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_bool_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   final switch(node.type) {
     case NodeType.NONE:
-      filter = (record) { return true; };
+      filter = (ref valid, record) { return true; };
       break;
     case NodeType.AND_OPERATOR:
     case NodeType.OR_OPERATOR:
@@ -57,8 +57,8 @@ RecordToBoolean get_bool_delegate(Node node) {
 
 private:
 
-RecordToBoolean get_and_or_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_and_or_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -70,9 +70,9 @@ RecordToBoolean get_and_or_delegate(Node node) {
 
   switch(node.type) {
     case NodeType.AND_OPERATOR:
-      filter = (record) { return left(record) && right(record); }; break;
+      filter = (ref valid, record) { return left(valid, record) && right(valid, record); }; break;
     case NodeType.OR_OPERATOR:
-      filter = (record) { return left(record) || right(record); }; break;
+      filter = (ref valid, record) { return left(valid, record) || right(valid, record); }; break;
     default:
       throw new Exception("This should never happen.");
       break;
@@ -81,7 +81,7 @@ RecordToBoolean get_and_or_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_not_delegate(Node node) {
+RecordToBooleanWV get_not_delegate(Node node) {
   if (node.children.length != 1)
     throw new Exception("not requires one operand");
 
@@ -89,11 +89,11 @@ RecordToBoolean get_not_delegate(Node node) {
   if (right is null)
     throw new Exception(node.text ~ " requires one boolean operand");
 
-  return (record) { return !right(record); };
+  return (ref valid, record) { return !right(valid, record); };
 }
 
-RecordToBoolean get_str_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_str_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -105,10 +105,10 @@ RecordToBoolean get_str_delegate(Node node) {
 
   switch(node.type) {
     case NodeType.CONTAINS_OPERATOR:
-      filter = (record) { return std.string.indexOf(left(record), right(record)) > -1; };
+      filter = (ref valid, record) { return std.string.indexOf(left(valid, record), right(valid, record)) > -1; };
       break;
     case NodeType.STARTS_WITH_OPERATOR:
-      filter = (record) { return left(record).startsWith(right(record)); };
+      filter = (ref valid, record) { return left(valid, record).startsWith(right(valid, record)); };
       break;
     default:
       throw new Exception("This should never happen.");
@@ -118,11 +118,11 @@ RecordToBoolean get_str_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_cmp_delegate(Node node) {
+RecordToBooleanWV get_cmp_delegate(Node node) {
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
 
-  RecordToBoolean filter;
+  RecordToBooleanWV filter;
 
   filter = get_cmp_float_delegate(node);
   if (filter !is null) return filter;
@@ -138,8 +138,8 @@ RecordToBoolean get_cmp_delegate(Node node) {
   return null;
 }
 
-RecordToBoolean get_cmp_float_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_cmp_float_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   auto left = get_floating_delegate(node.children[0]);
   auto right = get_floating_delegate(node.children[1]);
@@ -147,17 +147,17 @@ RecordToBoolean get_cmp_float_delegate(Node node) {
   if ((left !is null) && (right !is null)) {
     switch(node.type) {
       case NodeType.EQUALS_OPERATOR:
-        filter = (record) { return left(record) == right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) == right(valid, record); }; break;
       case NodeType.NOT_EQUALS_OPERATOR:
-        filter = (record) { return left(record) != right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) != right(valid, record); }; break;
       case NodeType.GREATER_THAN_OPERATOR:
-        filter = (record) { return left(record) > right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) > right(valid, record); }; break;
       case NodeType.LOWER_THAN_OPERATOR:
-        filter = (record) { return left(record) < right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) < right(valid, record); }; break;
       case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
-        filter = (record) { return left(record) >= right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) >= right(valid, record); }; break;
       case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
-        filter = (record) { return left(record) <= right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) <= right(valid, record); }; break;
       default:
         throw new Exception("This should never happen.");
         break;
@@ -167,8 +167,8 @@ RecordToBoolean get_cmp_float_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_cmp_int_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_cmp_int_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   auto left = get_integer_delegate(node.children[0]);
   auto right = get_integer_delegate(node.children[1]);
@@ -176,17 +176,17 @@ RecordToBoolean get_cmp_int_delegate(Node node) {
   if ((left !is null) && (right !is null)) {
     switch(node.type) {
       case NodeType.EQUALS_OPERATOR:
-        filter = (record) { return left(record) == right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) == right(valid, record); }; break;
       case NodeType.NOT_EQUALS_OPERATOR:
-        filter = (record) { return left(record) != right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) != right(valid, record); }; break;
       case NodeType.GREATER_THAN_OPERATOR:
-        filter = (record) { return left(record) > right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) > right(valid, record); }; break;
       case NodeType.LOWER_THAN_OPERATOR:
-        filter = (record) { return left(record) < right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) < right(valid, record); }; break;
       case NodeType.GREATER_THAN_OR_EQUALS_OPERATOR:
-        filter = (record) { return left(record) >= right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) >= right(valid, record); }; break;
       case NodeType.LOWER_THAN_OR_EQUALS_OPERATOR:
-        filter = (record) { return left(record) <= right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) <= right(valid, record); }; break;
       default:
         throw new Exception("This should never happen.");
         break;
@@ -196,8 +196,8 @@ RecordToBoolean get_cmp_int_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_cmp_bool_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_cmp_bool_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   auto left = get_bool_delegate(node.children[0]);
   auto right = get_bool_delegate(node.children[1]);
@@ -205,9 +205,9 @@ RecordToBoolean get_cmp_bool_delegate(Node node) {
   if ((left !is null) && (right !is null)) {
     switch(node.type) {
       case NodeType.EQUALS_OPERATOR:
-        filter = (record) { return left(record) == right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) == right(valid, record); }; break;
       case NodeType.NOT_EQUALS_OPERATOR:
-        filter = (record) { return left(record) != right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) != right(valid, record); }; break;
       case NodeType.GREATER_THAN_OPERATOR:
         filter = null; break;
       case NodeType.LOWER_THAN_OPERATOR:
@@ -225,8 +225,8 @@ RecordToBoolean get_cmp_bool_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_cmp_string_delegate(Node node) {
-  RecordToBoolean filter;
+RecordToBooleanWV get_cmp_string_delegate(Node node) {
+  RecordToBooleanWV filter;
 
   auto left = get_string_delegate(node.children[0]);
   auto right = get_string_delegate(node.children[1]);
@@ -234,9 +234,9 @@ RecordToBoolean get_cmp_string_delegate(Node node) {
   if ((left !is null) && (right !is null)) {
     switch(node.type) {
       case NodeType.EQUALS_OPERATOR:
-        filter = (record) { return left(record) == right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) == right(valid, record); }; break;
       case NodeType.NOT_EQUALS_OPERATOR:
-        filter = (record) { return left(record) != right(record); }; break;
+        filter = (ref valid, record) { return left(valid, record) != right(valid, record); }; break;
       case NodeType.GREATER_THAN_OPERATOR:
         filter = null; break;
       case NodeType.LOWER_THAN_OPERATOR:
@@ -254,22 +254,35 @@ RecordToBoolean get_cmp_string_delegate(Node node) {
   return filter;
 }
 
-RecordToBoolean get_field_delegate(Node node) {
+RecordToBooleanWV get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
-  return (record) {
+  return (ref valid, record) {
     if (field_accessor(record) == "true")
       return true;
-    else
+    else if (field_accessor(record) == "false")
       return false;
+    else {
+      valid = false;
+      return false;
+    }
   };
 }
 
-RecordToBoolean get_attr_delegate(Node node) {
-  return (record) {
-    if (node.parameter in record.attributes)
-      return record.attributes[node.parameter].first == "true";
-    else
+RecordToBooleanWV get_attr_delegate(Node node) {
+  return (ref valid, record) {
+    if (node.parameter in record.attributes) {
+      if (record.attributes[node.parameter].first == "true")
+        return true;
+      else if (record.attributes[node.parameter].first == "false")
+        return false;
+      else {
+        valid = false;
+        return false;
+      }
+    } else {
+      valid = false;
       return false;
+    }
   };
 }
 

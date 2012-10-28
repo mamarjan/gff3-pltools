@@ -24,3 +24,8 @@ RecordFilter get_NO_AFTER_FILTER() {
  return (r) { return true; };
 }
 
+alias string delegate(ref bool valid, Record r) RecordToStringWV;
+alias bool delegate(ref bool valid, Record r) RecordToBooleanWV;
+alias long delegate(ref bool valid, Record r) RecordToIntegerWV;
+alias double delegate(ref bool valid, Record r) RecordToFloatingWV;
+

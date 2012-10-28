@@ -7,8 +7,8 @@ import util.is_float;
 
 package:
 
-RecordToFloating get_floating_delegate(Node node) {
-  RecordToFloating filter;
+RecordToFloatingWV get_floating_delegate(Node node) {
+  RecordToFloatingWV filter;
 
   final switch(node.type) {
     case NodeType.VALUE:
@@ -18,7 +18,7 @@ RecordToFloating get_floating_delegate(Node node) {
       filter = get_field_delegate(node);
       break;
     case NodeType.ATTR_OPERATOR:
-      filter = (record) { return (node.parameter in record.attributes) ? to!double(record.attributes[node.parameter].first) : 0.0; };
+      filter = get_attr_delegate(node);
       break;
     case NodeType.BRACKETS:
       filter = get_floating_delegate(node.children[0]);
@@ -50,22 +50,44 @@ RecordToFloating get_floating_delegate(Node node) {
 
 private:
 
-RecordToFloating get_value_delegate(Node node) {
+RecordToFloatingWV get_value_delegate(Node node) {
   if (is_float(node.text)) {
     double double_value = to!double(node.text);
-    return (record) { return double_value; };
+    return (ref valid, record) { return double_value; };
   } else {
     return null;
   }
 }
 
-RecordToFloating get_field_delegate(Node node) {
+RecordToFloatingWV get_field_delegate(Node node) {
   auto field_accessor = get_field_accessor(node.parameter);
-  return (record) { return to!double(field_accessor(record)); };
+  return (ref valid, record) {
+    if (is_float(field_accessor(record))) {
+      return to!double(field_accessor(record));
+    } else {
+      valid = false;
+      return 0.0;
+    }
+  };
 }
 
-RecordToFloating get_binary_delegate(Node node) {
-  RecordToFloating filter;
+RecordToFloatingWV get_attr_delegate(Node node) {
+  return (ref valid, record) {
+    if (node.parameter in record.attributes) {
+      if (is_float(record.attributes[node.parameter].first))
+        return to!double(record.attributes[node.parameter].first);
+      else
+        valid = false;
+        return 0.0;
+    } else {
+      valid = false;
+      return 0.0;
+    }
+  };
+}
+
+RecordToFloatingWV get_binary_delegate(Node node) {
+  RecordToFloatingWV filter;
 
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
@@ -77,13 +99,13 @@ RecordToFloating get_binary_delegate(Node node) {
     filter = null;
   } else {
     if (node.type == NodeType.PLUS_OPERATOR)
-      filter = (record) { return left_operand(record) + right_operand(record); };
+      filter = (ref valid, record) { return left_operand(valid, record) + right_operand(valid, record); };
     if (node.type == NodeType.MINUS_OPERATOR)
-      filter = (record) { return left_operand(record) - right_operand(record); };
+      filter = (ref valid, record) { return left_operand(valid, record) - right_operand(valid, record); };
     if (node.type == NodeType.MULTIPLICATION_OPERATOR)
-      filter = (record) { return left_operand(record) * right_operand(record); };
+      filter = (ref valid, record) { return left_operand(valid, record) * right_operand(valid, record); };
     if (node.type == NodeType.DIVISION_OPERATOR)
-      filter = (record) { return left_operand(record) / right_operand(record); };
+      filter = (ref valid, record) { return left_operand(valid, record) / right_operand(valid, record); };
   }
 
   return filter;

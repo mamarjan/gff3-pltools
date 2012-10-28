@@ -24,7 +24,11 @@ RecordFilter to_filter(string filtering_expression) {
   if (filter is null)
     throw new Exception("result of the filtering expression has to be a boolean value");
 
-  return filter;
+  return (r) {
+    bool valid = true;
+    bool keep = filter(valid, r);
+    return valid && keep;
+  };
 }
 
 string[] to_tokens(string filtering_expression) {
@@ -74,6 +78,11 @@ unittest {
   assert(to_filter("field seqname contains 55")(parse_line("012\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
   assert(to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=1")) == true);
   assert(to_filter("not (attr ID == 9)")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+
+  // Test with invalid value in record
+  assert(to_filter("attr ID > 8")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == true);
+  assert(to_filter("attr ID > 9")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=9")) == false);
+  assert(to_filter("attr ID > 9")(parse_line("1\t2\t3\t4\t5\t6\t7\t8\tID=abc")) == false);
 
   // Test with invalid operators
   assertThrown(to_filter("(field source == 2) bad (field feature == 3)"));
