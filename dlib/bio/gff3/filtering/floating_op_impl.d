@@ -111,3 +111,143 @@ RecordToFloatingWV get_binary_delegate(Node node) {
   return filter;
 }
 
+version(unittest) {
+  import std.exception;
+  import bio.gff3.attribute;
+}
+
+unittest {
+  auto node = new Node(NodeType.VALUE);
+  node.text = "1.1";
+  bool valid = true;
+  auto op = get_floating_delegate(node);
+  assert(op(valid, new Record()) == 1.1);
+
+  node = new Node(NodeType.VALUE);
+  node.text = "invalid";
+  assert(get_floating_delegate(node) is null);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  op = get_floating_delegate(node);
+  valid = true;
+  auto record = new Record();
+  record.feature = "2.2";
+  assert(op(valid, record) == 2.2);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  op = get_floating_delegate(node);
+  valid = true;
+  record = new Record();
+  record.feature = "invalid";
+  op(valid, record);
+  assert(!valid);
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = "ID";
+  op = get_floating_delegate(node);
+  valid = true;
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["3.3"]);
+  assert(op(valid, record) == 3.3);
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = "ID";
+  op = get_floating_delegate(node);
+  valid = true;
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["invalid"]);
+  op(valid, record);
+  assert(!valid);
+
+  auto brackets_node = new Node(NodeType.BRACKETS);
+  brackets_node.text = "(";
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  brackets_node.children = [node];
+  op = get_floating_delegate(brackets_node);
+  valid = true;
+  record = new Record();
+  record.feature = "4.4";
+  assert(op(valid, record) == 4.4);
+
+  brackets_node = new Node(NodeType.BRACKETS);
+  brackets_node.text = "(";
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  brackets_node.children = [node];
+  op = get_floating_delegate(brackets_node);
+  valid = true;
+  record = new Record();
+  record.feature = "invalid";
+  op(valid, record);
+  assert(!valid);
+
+  node = new Node(NodeType.PLUS_OPERATOR);
+  auto left_node = new Node(NodeType.VALUE);
+  left_node.text = "1.5";
+  auto right_node = new Node(NodeType.VALUE);
+  right_node.text = "2.0";
+  node.children = [left_node, right_node];
+  op = get_floating_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 3.5);
+
+  node = new Node(NodeType.MINUS_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "2.0";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "1.5";
+  node.children = [left_node, right_node];
+  op = get_floating_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 0.5);
+
+  node = new Node(NodeType.MULTIPLICATION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "2.0";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "0.5";
+  node.children = [left_node, right_node];
+  op = get_floating_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 1.0);
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "4.0";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "0.5";
+  node.children = [left_node, right_node];
+  op = get_floating_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 8.0);
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  assertThrown(get_floating_delegate(node));
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "2.0";
+  node.children = [left_node];
+  assertThrown(get_floating_delegate(node));
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "1.0";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "abc";
+  node.children = [left_node, right_node];
+  assert(get_floating_delegate(node) is null);
+
+  node = new Node(NodeType.AND_OPERATOR);
+  assert(get_floating_delegate(node) is null);
+}
+

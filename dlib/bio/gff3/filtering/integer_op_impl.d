@@ -120,6 +120,11 @@ RecordToIntegerWV get_binary_delegate(Node node) {
   return filter;
 }
 
+version(unittest) {
+  import std.exception;
+  import bio.gff3.attribute;
+}
+
 unittest {
   auto node = new Node(NodeType.VALUE);
   node.text = "123";
@@ -129,6 +134,129 @@ unittest {
 
   node = new Node(NodeType.VALUE);
   node.text = "invalid";
+  assert(get_integer_delegate(node) is null);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  op = get_integer_delegate(node);
+  valid = true;
+  auto record = new Record();
+  record.feature = "456";
+  assert(op(valid, record) == 456);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  op = get_integer_delegate(node);
+  valid = true;
+  record = new Record();
+  record.feature = "invalid";
+  op(valid, record);
+  assert(!valid);
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = "ID";
+  op = get_integer_delegate(node);
+  valid = true;
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["789"]);
+  assert(op(valid, record) == 789);
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = "ID";
+  op = get_integer_delegate(node);
+  valid = true;
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["invalid"]);
+  op(valid, record);
+  assert(!valid);
+
+  auto brackets_node = new Node(NodeType.BRACKETS);
+  brackets_node.text = "(";
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  brackets_node.children = [node];
+  op = get_integer_delegate(brackets_node);
+  valid = true;
+  record = new Record();
+  record.feature = "123";
+  assert(op(valid, record) == 123);
+
+  brackets_node = new Node(NodeType.BRACKETS);
+  brackets_node.text = "(";
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  brackets_node.children = [node];
+  op = get_integer_delegate(brackets_node);
+  valid = true;
+  record = new Record();
+  record.feature = "invalid";
+  op(valid, record);
+  assert(!valid);
+
+  node = new Node(NodeType.PLUS_OPERATOR);
+  auto left_node = new Node(NodeType.VALUE);
+  left_node.text = "123";
+  auto right_node = new Node(NodeType.VALUE);
+  right_node.text = "456";
+  node.children = [left_node, right_node];
+  op = get_integer_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 579);
+
+  node = new Node(NodeType.MINUS_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "456";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "123";
+  node.children = [left_node, right_node];
+  op = get_integer_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 333);
+
+  node = new Node(NodeType.MULTIPLICATION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "333";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "3";
+  node.children = [left_node, right_node];
+  op = get_integer_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 999);
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "333";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "3";
+  node.children = [left_node, right_node];
+  op = get_integer_delegate(node);
+  valid = true;
+  assert(op(valid, new Record()) == 111);
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  assertThrown(get_integer_delegate(node));
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "333";
+  node.children = [left_node];
+  assertThrown(get_integer_delegate(node));
+
+  node = new Node(NodeType.DIVISION_OPERATOR);
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "333";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "abc";
+  node.children = [left_node, right_node];
+  assert(get_integer_delegate(node) is null);
+
+  node = new Node(NodeType.AND_OPERATOR);
   assert(get_integer_delegate(node) is null);
 }
 

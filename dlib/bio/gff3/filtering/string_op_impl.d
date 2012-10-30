@@ -52,12 +52,14 @@ version(unittest) {
 }
 
 unittest {
+  // Test string delegate with VALUE node
   auto node = new Node(NodeType.VALUE);
   node.text = "some value";
   bool valid = true;
   auto op = get_string_delegate(node);
   assert(op(valid, new Record()) == "some value");
 
+  // Test string delegate with FIELD node
   node = new Node(NodeType.FIELD_OPERATOR);
   node.parameter = "feature";
   auto record = new Record();
@@ -66,6 +68,7 @@ unittest {
   valid = true;
   assert(op(valid, record) == "1");
 
+  // Test string delegate with ATTRIBUTE node
   node = new Node(NodeType.ATTR_OPERATOR);
   node.parameter = "ID";
   record = new Record();
@@ -74,6 +77,7 @@ unittest {
   valid = true;
   assert(op(valid, record) == "1");
 
+  // Test string delegate with BRACKETS node
   auto bracket_node = new Node(NodeType.BRACKETS);
   bracket_node.children = [node];
   bracket_node.text = "(";
