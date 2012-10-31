@@ -92,24 +92,24 @@ RecordToIntegerWV get_binary_delegate(Node node) {
   if (node.children.length != 2)
     throw new Exception(node.text ~ " requires two operands");
 
-  auto left_operand = get_integer_delegate(node.children[0]);
-  auto right_operand = get_integer_delegate(node.children[1]);
+  auto left = get_integer_delegate(node.children[0]);
+  auto right = get_integer_delegate(node.children[1]);
 
-  if ((left_operand is null) || (right_operand is null)) {
+  if ((left is null) || (right is null)) {
     filter = null;
   } else {
     switch(node.type) {
       case NodeType.PLUS_OPERATOR:
-        filter = (ref valid, record) { return left_operand(valid, record) + right_operand(valid, record); };
+        filter = (ref valid, record) { return left(valid, record) + right(valid, record); };
         break;
       case NodeType.MINUS_OPERATOR:
-        filter = (ref valid, record) { return left_operand(valid, record) - right_operand(valid, record); };
+        filter = (ref valid, record) { return left(valid, record) - right(valid, record); };
         break;
       case NodeType.MULTIPLICATION_OPERATOR:
-        filter = (ref valid, record) { return left_operand(valid, record) * right_operand(valid, record); };
+        filter = (ref valid, record) { return left(valid, record) * right(valid, record); };
         break;
       case NodeType.DIVISION_OPERATOR:
-        filter = (ref valid, record) { return left_operand(valid, record) / right_operand(valid, record); };
+        filter = (ref valid, record) { return left(valid, record) / right(valid, record); };
         break;
       default:
         throw new Exception("This should never happen.");

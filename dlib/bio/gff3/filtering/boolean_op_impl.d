@@ -15,6 +15,9 @@ RecordToBooleanWV get_bool_delegate(Node node) {
     case NodeType.NONE:
       filter = (ref valid, record) { return true; };
       break;
+    case NodeType.VALUE:
+      filter = get_value_delegate(node);
+      break;
     case NodeType.AND_OPERATOR:
     case NodeType.OR_OPERATOR:
       filter = get_and_or_delegate(node);
@@ -43,7 +46,6 @@ RecordToBooleanWV get_bool_delegate(Node node) {
     case NodeType.ATTR_OPERATOR:
       filter = get_attr_delegate(node);
       break;
-    case NodeType.VALUE:
     case NodeType.PLUS_OPERATOR:
     case NodeType.MINUS_OPERATOR:
     case NodeType.MULTIPLICATION_OPERATOR:
@@ -124,9 +126,9 @@ RecordToBooleanWV get_cmp_delegate(Node node) {
 
   RecordToBooleanWV filter;
 
-  filter = get_cmp_float_delegate(node);
-  if (filter !is null) return filter;
   filter = get_cmp_int_delegate(node);
+  if (filter !is null) return filter;
+  filter = get_cmp_float_delegate(node);
   if (filter !is null) return filter;
   filter = get_cmp_bool_delegate(node);
   if (filter !is null) return filter;
@@ -284,5 +286,187 @@ RecordToBooleanWV get_attr_delegate(Node node) {
       return false;
     }
   };
+}
+
+RecordToBooleanWV get_value_delegate(Node node) {
+  if (node.text == "true")
+    return (ref valid, record) { return true; };
+  else if (node.text == "false")
+    return (ref valid, record) { return false; };
+  else
+    return null;
+}
+
+version(unittest) {
+  import std.exception;
+  import bio.gff3.attribute;
+}
+
+unittest {
+  auto node = new Node(NodeType.NONE);
+  bool valid = true;
+  auto op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+
+  node = new Node(NodeType.VALUE);
+  node.text = "true";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+
+  node = new Node(NodeType.VALUE);
+  node.text = "false";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.VALUE);
+  node.text = "invalid";
+  valid = true;
+  assert(get_bool_delegate(node) is null);
+
+  node = new Node(NodeType.AND_OPERATOR);
+  node.text = "and";
+  auto left_node = new Node(NodeType.VALUE);
+  left_node.text = "true";
+  auto right_node = new Node(NodeType.VALUE);
+  right_node.text = "true";
+  node.children = [left_node, right_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+  right_node.text = "false";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.OR_OPERATOR);
+  node.text = "or";
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "false";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "false";
+  node.children = [left_node, right_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+  right_node.text = "true";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+
+  node = new Node(NodeType.CONTAINS_OPERATOR);
+  node.text = "contains";
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "example";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "amp";
+  node.children = [left_node, right_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+  right_node.text = "abc";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.STARTS_WITH_OPERATOR);
+  node.text = "starts_with";
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "example";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "exam";
+  node.children = [left_node, right_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+  right_node.text = "abc";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.EQUALS_OPERATOR);
+  node.text = "==";
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "123";
+  right_node = new Node(NodeType.VALUE);
+  right_node.text = "123";
+  node.children = [left_node, right_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+  right_node.text = "321";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.BRACKETS);
+  node.text = "(";
+  left_node = new Node(NodeType.VALUE);
+  left_node.text = "true";
+  node.children = [left_node];
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == true);
+  assert(valid);
+  left_node.text = "false";
+  valid = true;
+  op = get_bool_delegate(node);
+  assert(op(valid, new Record()) == false);
+  assert(valid);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "feature";
+  valid = true;
+  op = get_bool_delegate(node);
+  auto record = new Record();
+  record.feature = "true";
+  assert(op(valid, record) == true);
+  assert(valid);
+  valid = true;
+  record.feature = "false";
+  assert(op(valid, record) == false);
+  assert(valid);
+  valid = true;
+  record.feature = "invalid";
+  op(valid, record);
+  assert(!valid);
+
+  node = new Node(NodeType.FIELD_OPERATOR);
+  node.text = "field";
+  node.parameter = "invalid";
+  assertThrown(get_bool_delegate(node));
+
+  node = new Node(NodeType.ATTR_OPERATOR);
+  node.text = "attr";
+  node.parameter = "ID";
+  valid = true;
+  op = get_bool_delegate(node);
+  record = new Record();
+  record.attributes["ID"] = AttributeValue(["true"]);
+  assert(op(valid, record) == true);
+  assert(valid);
+  valid = true;
+  record.attributes["ID"] = AttributeValue(["false"]);
+  assert(op(valid, record) == false);
+  assert(valid);
+  valid = true;
+  record.attributes["ID"] = AttributeValue(["invalid"]);
+  op(valid, record);
+  assert(!valid);
 }
 
