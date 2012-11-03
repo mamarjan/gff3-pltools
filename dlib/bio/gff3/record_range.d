@@ -187,13 +187,13 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
         if (!is_fasta_header(line))
           dataPopFront(); // Remove ##FASTA line from data source
         break;
-      } else if (line_is_pragma(line)) {
+      } else if (line.is_pragma()) {
         if (keep_pragmas) {
           result = parse_line(line);
           dataPopFront();
           break;
         }
-      } else if (line_is_comment(line)) {
+      } else if (bio.gff3.line.is_comment(line)) {
         if (keep_comments) {
           result = parse_line(line);
           dataPopFront();

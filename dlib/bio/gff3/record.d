@@ -11,10 +11,8 @@ enum RecordType {
 }
 
 // Aliases for conversion delegates
-alias string delegate(Record) RecordToString;
 alias bool delegate(Record) RecordToBoolean;
-alias long delegate(Record) RecordToInteger;
-alias double delegate(Record) RecordToFloating;
+alias string delegate(Record) RecordToString;
 
 /**
  * Represents a parsed line in a GFF3 file.
@@ -36,7 +34,7 @@ class Record {
   AttributeValue[string] attributes;
 
   /**
-   * Accessor methods for most important attributes:
+   * Accessor methods for most important GFF3 attributes:
    */
   @property string   id()             { return ("ID" in attributes)            ? attributes["ID"].first                      : null;  }
   @property string   name()           { return ("Name" in attributes)          ? attributes["Name"].first                    : null;  }
@@ -70,12 +68,17 @@ class Record {
   @property bool is_pragma() { return record_type == RecordType.PRAGMA; }
 
   /**
-   * The following is required for compiler warnings.
+   * toString() converts the record to a GFF3 line by default.
    */
   string toString() {
     return to_gff3(this);
   }
 
+  /**
+   * This field should be true if the escaped characters in the source file
+   * have been converted to their original form. If false, the fields in this
+   * record still have chars escaped in the URL format.
+   */
   bool esc_chars;
 }
 

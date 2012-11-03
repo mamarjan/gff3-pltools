@@ -12,9 +12,9 @@ public import bio.gff3.data_formats;
 Record parse_line(string line, bool replace_esc_chars = true, DataFormat format = DataFormat.GFF3) {
   Record record;
 
-  if (line_is_pragma(line))
+  if (line.is_pragma())
     record = parse_pragma_line(line);
-  else if (line_is_comment(line))
+  else if (line.is_comment())
     record = parse_comment_line(line);
   else
     record = parse_regular_line(line, replace_esc_chars, format);
@@ -144,7 +144,7 @@ package {
    * By definition a line is a pragma if the first two characters
    * are ##.
    */
-  bool line_is_pragma(T)(T[] line) {
+  bool is_pragma(T)(T[] line) {
     return (line.length >= 2) && (line[0..2] == "##");
   }
 
@@ -152,29 +152,31 @@ package {
    * By definition a line is a comment if the first character is #
    * and the second character is not a #.
    */
-  bool line_is_comment(T)(T[] line) {
+  bool is_comment(T)(T[] line) {
     return (line.length >= 1) && (line[0] == '#') &&
            ((line.length == 1) || (line[1] != '#'));
   }
 }
 
-import std.array;
-import bio.gff3.conv.gtf;
+version(unittest) {
+  import std.array;
+  import bio.gff3.conv.gtf;
+}
 
 unittest {
-  assert(line_is_comment("# test") == true);
-  assert(line_is_comment("## test") == false);
-  assert(line_is_comment("### test") == false);
-  assert(line_is_comment("test") == false);
-  assert(line_is_comment(" # test") == false);
-  assert(line_is_comment("# test\n") == true);
+  assert("# test".is_comment() == true);
+  assert("## test".is_comment() == false);
+  assert("### test".is_comment() == false);
+  assert("test".is_comment() == false);
+  assert(" # test".is_comment() == false);
+  assert("# test\n".is_comment() == true);
 
-  assert(line_is_pragma("# test") == false);
-  assert(line_is_pragma("## test") == true);
-  assert(line_is_pragma(" ## test") == false);
-  assert(line_is_pragma("## test\n") == true);
-  assert(line_is_pragma("test") == false);
-  assert(line_is_pragma("### test") == true);
+  assert("# test".is_pragma() == false);
+  assert("## test".is_pragma() == true);
+  assert(" ## test".is_pragma() == false);
+  assert("## test\n".is_pragma() == true);
+  assert("test".is_pragma() == false);
+  assert("### test".is_pragma() == true);
 }
 
 unittest {
