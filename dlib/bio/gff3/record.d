@@ -82,44 +82,61 @@ class Record {
   bool esc_chars;
 }
 
-import bio.gff3.line;
-
 unittest {
   // Test id() method/property
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1")).id == "1");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=")).id == "");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).id is null);
+  auto record = new Record();
+  assert(record.id is null);
+  record.attributes["ID"] = AttributeValue(["1"]);
+  assert(record.id == "1");
 
   // Test name() method/property
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tName=my_name")).name == "my_name");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tName=")).name == "");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).name is null);
+  record = new Record();
+  assert(record.name is null);
+  record.attributes["Name"] = AttributeValue(["my_name"]);
+  assert(record.name == "my_name");
 
   // Test isCircular() method/property
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).is_circular == false);
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=false")).is_circular == false);
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tIs_circular=true")).is_circular == true);
+  record = new Record();
+  assert(record.is_circular == false);
+  record.attributes["Is_circular"] = AttributeValue(["false"]);
+  assert(record.is_circular == false);
+  record.attributes["Is_circular"] = AttributeValue(["true"]);
+  assert(record.is_circular == true);
 
   // Test the Parent() method/property
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t.")).parent is null);
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tParent=test")).parent == "test");
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=test;")).parent == "test");
+  record = new Record();
+  assert(record.parent is null);
+  record.attributes["Parent"] = AttributeValue(["test"]);
+  assert(record.parent == "test");
 
   // Test is_comment
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_comment == false);
-  assert((parse_line("# test")).is_comment == true);
-  assert((parse_line("## test")).is_comment == false);
-  assert((parse_line("# test")).toString == "# test");
+  record = new Record();
+  assert(record.is_comment == false);
+  record.record_type = RecordType.REGULAR;
+  assert(record.is_comment == false);
+  record.record_type = RecordType.PRAGMA;
+  assert(record.is_comment == false);
+  record.record_type = RecordType.COMMENT;
+  assert(record.is_comment == true);
 
   // Test is_pragma
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_pragma == false);
-  assert((parse_line("# test")).is_pragma == false);
-  assert((parse_line("## test")).is_pragma == true);
-  assert((parse_line("## test")).toString == "## test");
+  record = new Record();
+  assert(record.is_pragma == false);
+  record.record_type = RecordType.REGULAR;
+  assert(record.is_pragma == false);
+  record.record_type = RecordType.PRAGMA;
+  assert(record.is_pragma == true);
+  record.record_type = RecordType.COMMENT;
+  assert(record.is_pragma == false);
 
   // Test is_regular
-  assert((parse_line(".\t.\t.\t.\t.\t.\t.\t.\t%2C=%2C")).is_regular == true);
-  assert((parse_line("# test")).is_regular == false);
-  assert((parse_line("## test")).is_regular == false);
+  record = new Record();
+  assert(record.is_regular == true);
+  record.record_type = RecordType.REGULAR;
+  assert(record.is_regular == true);
+  record.record_type = RecordType.PRAGMA;
+  assert(record.is_regular == false);
+  record.record_type = RecordType.COMMENT;
+  assert(record.is_regular == false);
 }
 
