@@ -302,7 +302,9 @@ FeatureData[] collect_features(RecordData[] all_records, string child_feature_ty
   // Collect all ID's of parents
   foreach(rec; all_records) {
     if (equals_ci(rec.feature, parent_feature_type)) {
-      if (rec.id !in lookup_table) {
+      if (rec.id.length == 0) {
+        warn(parent_feature_type ~ " record without an ID");
+      } else if (rec.id !in lookup_table) {
         auto new_feature = new FeatureData;
         lookup_table[rec.id] = new_feature;
         features.put(new_feature);
@@ -312,7 +314,9 @@ FeatureData[] collect_features(RecordData[] all_records, string child_feature_ty
 
   foreach(rec; all_records) {
     if (equals_ci(rec.feature, child_feature_type)) {
-      if (rec.parent in lookup_table) {
+      if (rec.parent.length == 0) {
+        warn(child_feature_type ~ " record without a Parent attribute");
+      } else if (rec.parent in lookup_table) {
         rec.id = rec.parent;
         lookup_table[rec.parent].records ~= rec;
       } else {
