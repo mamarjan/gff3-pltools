@@ -18,8 +18,10 @@ class GenericFastaRange : RangeWithCache!FastaRecord {
    */
   @property string[string] all() {
     string[string] all_data;
-    foreach(rec; this)
-      all_data[rec.header] = rec.sequence;
+    foreach(rec; this) {
+      auto id = split(rec.header)[0];
+      all_data[id] = rec.sequence;
+    }
 
     return all_data;
   }
