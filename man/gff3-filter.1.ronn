@@ -15,7 +15,7 @@ gff3-filter(1) -- filter GFF3/GTF files
 
 **gff3-filter** uses the filtering expression to select which records
 will be written to the output. The filtering expression is specified
-using a mini language designed for this purpose.
+using a small DSL designed for this tool.
 
 Supported output formats are GFF3, GTF, JSON and table output (using
 the `--select` option).
@@ -32,45 +32,49 @@ A slightly more complicated example would be:
           m_hapla.annotations.gff3
 
 Quite a few keywords and operators are available for creating custom
-filtering expressions:
+filtering expressions. The operator precedence is always from left to
+right. Make sure to use brackets to get a different result. Space is
+mandatory between all values and operators, except for brackets.
 
-field
+A list of available operators follows.
+
+### field
 
   This operator takes one parameter to the right, a field name, and
   represents the field for the current record. Possible field names
   are: seqname, source, feature, start, end, score, strand and phase.
 
-attr
+### attr
 
   This operator takes one parameter to the right, an attribute name.
   In case the attribute is not defined for the current record, it
   equals to an empty string.
 
-==, !=
+### ==, !=
 
   Equality and non-equality operators can be used to compare strings,
   numbers, floats and boolean values.
 
->, <, >=, <=
+### >, <<, >=, <=
 
   These operators can be used to compare integer and float values. In
   case there is a field or attr operator as an operand, the value of
   the field/attribute is first converted to a value good for
   comparison.
 
-and, or, not
+### and, or, not
 
   Boolean operators, with expected function.
 
-contains, starts_with
+### contains, starts_with
 
   Operators accept only string values.
 
-()
+### ()
 
 Brackets, for setting custom operator precedence.
 
-+, -, *, /
+### +, -, *, /
 
 Math operators for addition, subtracting, multiplication and division
 of integer and floating point values.

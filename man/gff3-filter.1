@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "GFF3\-FILTER" "1" "August 2012" "OpenBio" "gff3-pltools Manual"
+.TH "GFF3\-FILTER" "1" "November 2012" "OpenBio" "gff3-pltools Manual"
 .
 .SH "NAME"
 \fBgff3\-filter\fR \- filter GFF3/GTF files
@@ -54,49 +54,28 @@ $ gff3\-filter "(field feature == CDS) and (attr ID != \e"\e")" \e
 .P
 Quite a few keywords and operators are available for creating custom filtering expressions:
 .
-.P
-field
-.
-.P
+.SS "field"
 This operator takes one parameter to the right, a field name, and represents the field for the current record\. Possible field names are: seqname, source, feature, start, end, score, strand and phase\.
 .
-.P
-attr
-.
-.P
+.SS "attr"
 This operator takes one parameter to the right, an attribute name\. In case the attribute is not defined for the current record, it equals to an empty string\.
 .
-.P
-==, !=
-.
-.P
+.SS "==, !="
 Equality and non\-equality operators can be used to compare strings, numbers, floats and boolean values\.
 .
-.P
+.SS ">, <var><,</var>=, <="
 These operators can be used to compare integer and float values\. In case there is a field or attr operator as an operand, the value of the field/attribute is first converted to a value good for comparison\.
 .
-.P
-and, or, not
-.
-.P
+.SS "and, or, not"
 Boolean operators, with expected function\.
 .
-.P
-contains, starts_with
-.
-.P
+.SS "contains, starts_with"
 Operators accept only string values\.
 .
-.P
-()
-.
-.P
+.SS "()"
 Brackets, for setting custom operator precedence\.
 .
-.P
-+, \-, *, /
-.
-.P
+.SS "+, \-, *, /"
 Math operators for addition, subtracting, multiplication and division of integer and floating point values\.
 .
 .SH "OPTIONS"

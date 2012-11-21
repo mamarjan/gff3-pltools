@@ -34,43 +34,43 @@ A slightly more complicated example would be:
 Quite a few keywords and operators are available for creating custom
 filtering expressions:
 
-field
+### field
 
   This operator takes one parameter to the right, a field name, and
   represents the field for the current record. Possible field names
   are: seqname, source, feature, start, end, score, strand and phase.
 
-attr
+### attr
 
   This operator takes one parameter to the right, an attribute name.
   In case the attribute is not defined for the current record, it
   equals to an empty string.
 
-==, !=
+### ==, !=
 
   Equality and non-equality operators can be used to compare strings,
   numbers, floats and boolean values.
 
->, <var>, </var>=, <=
+### >, <var><, </var>=, <=
 
   These operators can be used to compare integer and float values. In
   case there is a field or attr operator as an operand, the value of
   the field/attribute is first converted to a value good for
   comparison.
 
-and, or, not
+### and, or, not
 
   Boolean operators, with expected function.
 
-contains, starts_with
+### contains, starts_with
 
   Operators accept only string values.
 
-()
+### ()
 
 Brackets, for setting custom operator precedence.
 
-+, -, *, /
+### +, -, *, /
 
 Math operators for addition, subtracting, multiplication and division
 of integer and floating point values.
@@ -143,6 +143,8 @@ gff3-select(1), gff3-ffetch(1)
 [SYNOPSIS]: #SYNOPSIS "SYNOPSIS"
 [DESCRIPTION]: #DESCRIPTION "DESCRIPTION"
 [FILTER LANGUAGE]: #FILTER-LANGUAGE "FILTER LANGUAGE"
+[field]: #field "field"
+[attr]: #attr "attr"
 [OPTIONS]: #OPTIONS "OPTIONS"
 [EXAMPLES]: #EXAMPLES "EXAMPLES"
 [BUGS]: #BUGS "BUGS"
