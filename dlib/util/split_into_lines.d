@@ -1,7 +1,7 @@
 module util.split_into_lines;
 
-import std.string, std.conv;
-import util.range_with_cache;
+import std.string;
+import util.lines_range;
 
 /**
  * A string splitter, which defers parsing until front is called.
@@ -10,7 +10,7 @@ import util.range_with_cache;
  * detected and retrieved. Also, there is no copying involved, only
  * slicing.
  */
-class SplitIntoLines : RangeWithCache!string {
+class SplitIntoLines : LinesRange {
   this(string data) {
     this.data = data;
     this.newline = detect_newline_delim(data);
@@ -48,6 +48,10 @@ string detect_newline_delim(string data) {
   // FIXME: We can assume newlines are platform specific. D has a way of handling these. 
   //        Any digressions are resposibility of the user, not this library.
   return "\n";
+}
+
+version(unittest) {
+  import std.conv;
 }
 
 unittest {

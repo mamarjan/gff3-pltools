@@ -8,7 +8,7 @@ private {
   bool ignore;
 }
 
-void to_gff3(GenericRecordRange records, File output, long at_most = -1, out bool limit_reached = ignore) {
+void to_gff3(RecordRange records, File output, long at_most = -1, out bool limit_reached = ignore) {
   limit_reached = false;
   long counter = 0;
   foreach(rec; records) {

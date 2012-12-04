@@ -25,7 +25,7 @@ import util.split_into_lines, util.array_includes, util.equals_ci, util.logger;
  *     trim_end =             trim the end of each sequence part to get modulo 3 length
  *     output =               File object where the fasta data will be written
  */
-void to_fasta(GenericRecordRange records, string feature_type, string parent_feature_type,
+void to_fasta(RecordRange records, string feature_type, string parent_feature_type,
               string[string] fasta_data, bool no_assemble, bool phase, bool frame,
               bool trim_end, bool translate, File output) {
   RecordData[] all_records;
@@ -47,7 +47,7 @@ void to_fasta(GenericRecordRange records, string feature_type, string parent_fea
   if (fasta_data is null) {
     auto fasta_range = records.get_fasta_range();
     if (fasta_range is null) {
-      error("No FASTA data found at the end of GFF3 file: " ~ records.get_filename());
+      error("No FASTA data found at the end of GFF3 file: " ~ records.filename);
     } else {
       fasta_data = records.get_fasta_range().all;
     }
@@ -70,7 +70,7 @@ private:
 /**
  * Collect all records whose type is in the feature_types array.
  */
-RecordData[] collect_data(GenericRecordRange records, string[] feature_types) {
+RecordData[] collect_data(RecordRange records, string[] feature_types) {
   Appender!(RecordData[]) all_records;
   foreach(rec; records) {
     if (feature_types.includes_ci(rec.feature)) {

@@ -1,7 +1,7 @@
 module bio.fasta;
 
 import std.conv, std.array, std.stdio, std.algorithm, std.string;
-import util.split_into_lines, util.range_with_cache;
+import util.split_into_lines, util.range_with_cache, util.lines_range;
 
 /**
  * A minimal class for grouping the header and sequence
@@ -30,15 +30,13 @@ class GenericFastaRange : RangeWithCache!FastaRecord {
 /**
  * Fasta range for FASTA sequences appended to the end of GFF3 data.
  */
-class FastaRange(SourceRangeType) : GenericFastaRange {
-  this(SourceRangeType data) {
+class FastaRange : GenericFastaRange {
+  this(LinesRange data) {
     this.data = data;
   }
 
   private {
-    alias typeof(SourceRangeType.front()) Array;
-
-    SourceRangeType data;
+    LinesRange data;
 
     protected FastaRecord next_item() {
       auto header = next_fasta_line().idup;
@@ -53,7 +51,7 @@ class FastaRange(SourceRangeType) : GenericFastaRange {
       }
       data.popFront();
 
-      auto sequence = appender!Array();
+      auto sequence = appender!string();
       auto current_fasta_line = next_fasta_line();
       while ((current_fasta_line != null) && (!is_fasta_header(current_fasta_line)) && (!data.empty)) {
         sequence.put(current_fasta_line);
@@ -70,7 +68,7 @@ class FastaRange(SourceRangeType) : GenericFastaRange {
       return result;
     }
 
-    Array next_fasta_line() {
+    string next_fasta_line() {
       if (data.empty)
         return null;
       auto line = data.front;
@@ -105,9 +103,12 @@ private {
   }
 }
 
+version (unittest) {
+  import util.split_file;
+}
 
 unittest {
-  auto fasta = new FastaRange!(typeof(File.byLine()))(File("./test/data/fasta.fa", "r").byLine());
+  auto fasta = new FastaRange(new SplitFile(File("./test/data/fasta.fa", "r")));
   assert(fasta.empty == false);
   auto seq1 = fasta.front; fasta.popFront();
   assert(fasta.empty == false);

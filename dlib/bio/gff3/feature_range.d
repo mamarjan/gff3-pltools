@@ -17,7 +17,7 @@ class FeatureRange : RangeWithCache!Feature {
    *     link_features =       The parser will link features into parent-child relationships
    *                           if this parameter is true.
    */
-  this(GenericRecordRange records, size_t feature_cache_size = 1000, bool link_features = false) {
+  this(RecordRange records, size_t feature_cache_size = 1000, bool link_features = false) {
     this.records = records;
     this.data = new FeatureCache(feature_cache_size, link_features);
   }
@@ -59,7 +59,7 @@ class FeatureRange : RangeWithCache!Feature {
   }
 
   private {
-    GenericRecordRange records;
+    RecordRange records;
     FeatureCache data;
   }
 }
@@ -200,7 +200,7 @@ unittest {
   string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
                         ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
-  auto records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  auto records = new RecordRange(new SplitIntoLines(test_records));
   auto features = new FeatureRange(records);
   assert(features.front.id == "1");
   features.popFront();
@@ -213,7 +213,7 @@ unittest {
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=3\n";
-  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange(new SplitIntoLines(test_records));
   features = new FeatureRange(records);
   assert(features.empty == false);
   assert(features.front.id == "1");
@@ -231,7 +231,7 @@ unittest {
       test_records ~= ".\t.\t.\t.\t.\t.\t.\t.\tID=" ~ to!string(i) ~ ";value=" ~ to!string(j) ~ "\n";
     }
   }
-  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange(new SplitIntoLines(test_records));
   features = new FeatureRange(records);
   assert(features.empty == false);
   foreach(i; 1..1003) {
@@ -243,7 +243,7 @@ unittest {
   assert(features.empty == true);
 
   // Retest with a smaller feature cache
-  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange(new SplitIntoLines(test_records));
   features = new FeatureRange(records, 97);
   assert(features.empty == false);
   foreach(i; 1..1003) {
@@ -261,7 +261,7 @@ unittest {
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=5;Parent=3\n";
-  records = new RecordRange!SplitIntoLines(new SplitIntoLines(test_records));
+  records = new RecordRange(new SplitIntoLines(test_records));
   features = new FeatureRange(records, 10, true);
   assert(features.empty == false);
   uint count_features = 0;

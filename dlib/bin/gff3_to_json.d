@@ -91,7 +91,7 @@ int main(string[] args) {
 
     features.to_json(output);
   } else {
-    RecordRange!SplitFile records;
+    RecordRange records;
     if (filename == "-") {
       if (!gtf_input)
         records = GFF3File.parse_by_records(stdin);

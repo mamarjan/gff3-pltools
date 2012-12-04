@@ -8,13 +8,13 @@ class GFF3File {
    * Parses a file with GFF3 data.
    * Returns: a range of records.
    */
-  static RecordRange!SplitFile parse_by_records(T)(T filename) {
-    RecordRange!SplitFile records;
+  static RecordRange parse_by_records(T)(T filename) {
+    RecordRange records;
     static if (is(T == string)) {
-      records = new RecordRange!(SplitFile)(new SplitFile(File(filename, "r")));
+      records = new RecordRange(new SplitFile(File(filename, "r")));
       records.set_filename(filename);
     } else if (is(T == File)) {
-      records = new RecordRange!(SplitFile)(new SplitFile(filename));
+      records = new RecordRange(new SplitFile(filename));
     }
     return records;
   }
@@ -36,7 +36,7 @@ class GTFFile {
    * Parses a file with GTF data.
    * Returns: a range of records.
    */
-  static RecordRange!SplitFile parse_by_records(T)(T filename) {
+  static RecordRange parse_by_records(T)(T filename) {
     auto records = GFF3File.parse_by_records(filename);
     records.set_data_format(DataFormat.GTF);
     return records;

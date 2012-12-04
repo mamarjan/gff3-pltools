@@ -125,7 +125,7 @@ int main(string[] args) {
     if (fasta_data is null) {
       if (fasta_filename !is null) {
         fasta_data = read(File(fasta_filename, "r"));
-        fasta_map = (new FastaRange!SplitIntoLines(new SplitIntoLines(fasta_data))).all;
+        fasta_map = (new FastaRange(new SplitIntoLines(fasta_data))).all;
       }
     }
 

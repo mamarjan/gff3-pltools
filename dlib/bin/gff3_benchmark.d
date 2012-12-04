@@ -67,7 +67,7 @@ int main(string[] args) {
     writeln("Parsed " ~ to!string(counter) ~ " features");
   } else {
     // Open file and loop over all records
-    GenericRecordRange records;
+    RecordRange records;
     if (!gtf_input) {
       records = GFF3File.parse_by_records(filename);
     } else {

@@ -93,13 +93,13 @@ void to_json(Feature feature, ref Appender!string app) {
   app.put("]}");
 }
 
-string to_json(GenericRecordRange records) {
+string to_json(RecordRange records) {
   Appender!string app;
   to_json(records, app);
   return app.data;
 }
 
-void to_json(GenericRecordRange records, ref Appender!string app) {
+void to_json(RecordRange records, ref Appender!string app) {
   app.put("{\"records\":[");
 
   bool first_attr = true;
@@ -118,7 +118,7 @@ private {
   bool ignore;
 }
 
-void to_json(GenericRecordRange records, File output, long at_most = -1, string selection = null, ref bool limit_reached = ignore) {
+void to_json(RecordRange records, File output, long at_most = -1, string selection = null, ref bool limit_reached = ignore) {
   limit_reached = false;
   // First prepare the selector delegate
   ColumnsSelector selector = null;

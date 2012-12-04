@@ -3,7 +3,7 @@ module bio.gff3.conv.table;
 import std.array, std.stdio;
 import bio.gff3.record_range, bio.gff3.selection, bio.gff3.record;
 
-void to_table(GenericRecordRange records, File output, long at_most, string selection, out bool limit_reached = ignore) {
+void to_table(RecordRange records, File output, long at_most, string selection, out bool limit_reached = ignore) {
   limit_reached = false;
   ColumnsSelector selector = to_selector(selection);
   string[] columns = split(selection, ",");

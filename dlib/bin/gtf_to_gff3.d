@@ -46,7 +46,7 @@ int main(string[] args) {
   }
 
   // Open file and loop over all records
-  GenericRecordRange records;
+  RecordRange records;
   if (input_filename == "-")
     records = GTFFile.parse_by_records(stdin);
   else

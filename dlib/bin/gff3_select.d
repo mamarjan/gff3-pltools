@@ -79,7 +79,7 @@ int main(string[] args) {
   output.setvbuf(1048576);
 
   // Prepare for parsing
-  RecordRange!SplitFile records;
+  RecordRange records;
   if (filename == "-") {
     if (!gtf_input)
       records = GFF3File.parse_by_records(stdin);

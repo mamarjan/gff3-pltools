@@ -8,8 +8,8 @@ class GFF3Data {
    * Parses a string of GFF3 data.
    * Returns: a range of records.
    */
-  static RecordRange!SplitIntoLines parse_by_records(string data) {
-    auto records = new RecordRange!SplitIntoLines(new SplitIntoLines(data));
+  static RecordRange parse_by_records(string data) {
+    auto records = new RecordRange(new SplitIntoLines(data));
     return records;
   }
 

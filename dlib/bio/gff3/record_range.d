@@ -5,12 +5,21 @@ import std.conv, std.array, std.string, std.range, std.exception,
 import bio.fasta, bio.gff3.record, bio.gff3.validation,
        bio.gff3.filtering.filtering, bio.gff3.line;
 import util.join_lines, util.split_into_lines, util.read_file,
-       util.range_with_cache, util.split_file;
+       util.range_with_cache, util.split_file, util.lines_range;
 
 public import bio.gff3.data_formats;
 
-class GenericRecordRange : RangeWithCache!Record {
-  this() {
+/**
+ * Represents a range of GFF3 or GTF records derived from a range of lines.
+ */
+class RecordRange : RangeWithCache!Record {
+  /**
+   * Creates a record range with data as the _data source. data has
+   * to be a range of strings/lines without newlines.
+   */
+  this(LinesRange data) {
+    this.data = data;
+
     this.validate = EXCEPTIONS_ON_ERROR;
     this.before_filter = NO_BEFORE_FILTER;
     this.after_filter = NO_AFTER_FILTER;
@@ -20,15 +29,15 @@ class GenericRecordRange : RangeWithCache!Record {
    * Set filename which is used in validation reports
    */
   void set_filename(string filename) {
-    this.filename = filename;
+    this._filename = filename;
   }
 
   /**
    * Return the filename which is the source of this data. Returns null
    * if something else was used as the source of this data.
    */
-  string get_filename() {
-    return this.filename;
+  @property string filename() {
+    return this._filename;
   }
 
   /**
@@ -93,63 +102,10 @@ class GenericRecordRange : RangeWithCache!Record {
    * Retrieve a range of FASTA sequences appended to
    * GFF3 data.
    */
-  abstract GenericFastaRange get_fasta_range();
-
-  /**
-   * Retrieves the FASTA data at the end of file
-   * in a string.
-   */
-  abstract string get_fasta_data();
-
-  private {
-    RecordValidator validate;
-    bool replace_esc_chars = true;
-
-    StringFilter before_filter;
-    RecordFilter after_filter;
-    string filename;
-
-    bool keep_comments = false;
-    bool keep_pragmas = false;
-
-    DataFormat data_format = DataFormat.GFF3;
-
-
-    /**
-     * Skips all the GFF3 records until it gets to the start of
-     * the FASTA section or end of file
-     */
-    void scroll_until_fasta() {
-      while(!empty) popFront();
-    }
-  }
-}
-
-/**
- * Represents a range of GFF3 or GTF records derived from a range of lines.
- * The class takes a type parameter, which is the class or the struct
- * which is used as a data source. It's enough for the data source to
- * support front, popFront() and empty methods to be used by this
- * class.
- */
-class RecordRange(SourceRangeType) : GenericRecordRange {
-  /**
-   * Creates a record range with data as the _data source. data can
-   * be any range of lines without newlines and with front, popFront()
-   * and empty defined.
-   */
-  this(SourceRangeType data) {
-    this.data = data;
-  }
-
-  /**
-   * Retrieve a range of FASTA sequences appended to
-   * GFF3 data.
-   */
-  GenericFastaRange get_fasta_range() {
+  FastaRange get_fasta_range() {
     scroll_until_fasta();
     if (empty && fasta_mode)
-      return new FastaRange!(SourceRangeType)(data);
+      return new FastaRange(data);
     else
       return null;
   }
@@ -218,10 +174,30 @@ class RecordRange(SourceRangeType) : GenericRecordRange {
   }
 
   private {
-    SourceRangeType data;
+    LinesRange data;
     bool fasta_mode = false;
 
     int line_number = 1;
+
+    RecordValidator validate;
+    bool replace_esc_chars = true;
+
+    StringFilter before_filter;
+    RecordFilter after_filter;
+    string _filename;
+
+    bool keep_comments = false;
+    bool keep_pragmas = false;
+
+    auto data_format = DataFormat.GFF3;
+
+    /**
+     * Skips all the GFF3 records until it gets to the start of
+     * the FASTA section or end of file
+     */
+    void scroll_until_fasta() {
+      while(!empty) popFront();
+    }
 
     /**
      * Helper method for line counting
@@ -271,7 +247,7 @@ GATTACA
 EOS";
 
   // Test with comments
-  auto range = new RecordRange!SplitIntoLines(new SplitIntoLines(test_data));
+  auto range = new RecordRange(new SplitIntoLines(test_data));
   range.set_keep_comments();
   assert(range.front.is_comment == true);
   assert(range.front.is_pragma == false);
@@ -311,7 +287,7 @@ EOS";
   assert(range.empty == true);
 
   // Test with both comments and pragmas
-  range = new RecordRange!SplitIntoLines(new SplitIntoLines(test_data));
+  range = new RecordRange(new SplitIntoLines(test_data));
   range.set_keep_comments();
   range.set_keep_pragmas();
   assert(range.front.is_comment == true);
