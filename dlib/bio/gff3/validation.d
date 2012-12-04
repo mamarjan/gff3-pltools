@@ -2,7 +2,7 @@ module bio.gff3.validation;
 
 import std.conv, std.stdio, std.array, std.string, std.exception;
 import std.ascii;
-import bio.exceptions, util.split_line, util.is_float;
+import util.split_line, util.is_float;
 
 
 /**
@@ -12,6 +12,14 @@ import bio.exceptions, util.split_line, util.is_float;
  * a Record object with the default values.
  */
 alias bool function(string filename, int line_number, string line) RecordValidator;
+
+/**
+ * This exception is thrown when a parsing error is found when using
+ * EXCEPTIONS_ON_ERROR.
+ */
+class ParsingException : Exception {
+  this(string message) { super(message); }
+}
 
 /**
  * This function will perform validation, and in case there is a problem,
