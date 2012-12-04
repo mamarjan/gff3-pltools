@@ -4,7 +4,8 @@
 
 Note: this software is under active development!
 
-gff3-pltools is a fast GFF3 and GTF parser library, with command line tools.
+**gff3-pltools** is a fast library and a suite of command line tools for
+working with GFF3 and GTF.
 
 ## Installation
 
@@ -23,15 +24,15 @@ OS X users can install DMD using homebrew:
 
 Optionally, rake is used to run the automated build scripts.
 
+*Note*: the current trunk can't be built with GDC.
+
 ### Build and install instructions
 
 Users of 32-bit and 64-bit Linux can download pre-build binary
 packages.
 
 For other plaforms download the source package, and build
-with dmd or gdc.
-
-For example 
+with DMD like this:
 
 ```sh
     tar -zxvf gff3-pltools-X.Y.Z.tar.gz
@@ -82,25 +83,25 @@ See manual page for more options and examples.
 ### gff3-filter utility
 
 gff3-filter can filter a GFF3/GTF file, and render GFF3/GTF
-output, as well as, JSON and table output. For example, you can use the
-following command to keep only CDS features from a GFF3 file:
+output, as well as, JSON and table output. For example, the following command
+can be used to keep only CDS features in a GFF3 file:
 
 ```sh
     gff3-filter "field feature == CDS" path-to-file.gff3
 ```
 
 If you need to filter a GTF file instead, use --gtf-input and
---gtf-output options, or use the "gtf-filter" command instead.
+--gtf-output options, or use the *gtf-filter* command instead.
 
 The utility will use the fast (and soon parallel) D library to do the
-parsing and filtering. You can then parse the result using your
-programming language and library of choice.
+parsing and filtering.
 
 The parsing language supports any logical combination of a few
 operators with values: field, attr,  ==, !=, >, <, >=, <=, +, -, *,
 /, (, ), "and" and "or".
 
-To keep only CDS features which have the ID attribute defined, use:
+To keep only CDS features which have the ID attribute defined, the following
+can be used:
 
 ```sh
     gff3-filter "(field feature == CDS) and (attr ID != \"\"" path-to-file.gff3
@@ -112,12 +113,17 @@ To keep records which are above 200 nucleotides in length, use this:
     gff3-filter "(field end - field start) > 200" path-to-file.gff3
 ```
 
+Space is important, and has to be used to differentiate between elements,
+except when braces are used. There is also no operator predecence, operations
+are executed from left to right, and braces can be used to get different
+operator precedence.
+
 See manual page for more options and examples.
 
 ### gff3-select utility
 
 This tool can be used to convert a GFF3 or GTF file to a
-tab-separated table format with columns being selected fields
+tab-separated table format, with columns being selected fields
 and/or attributes.
 
 For example:
@@ -146,16 +152,16 @@ strand and phase, and the format of attributes.
 
 ### Benchmarking utility
 
-There is a D application for performance benchmarking.
-You can run it like this:
+There is a D application for performance benchmarking, which is useful only
+while developing this library. It can be used like this:
 
 ```sh
     gff3-benchmark path/to/file.gff3
 ```
 
-The most basic case for the banchmarking utility is to parse the
-file into records. More functionality is available using command
-line options:
+The most basic case for the banchmarking utility is to parse the file into
+records, without replacing escaped characters. More functionality is available
+using command line options:
 
 ```
   -v     turn on validation
@@ -165,14 +171,12 @@ line options:
   -l     link feature into parent-child relationships
 ```
 
-Before exiting the utility prints the number of records or features
+Before exiting, the utility prints the number of records or features
 it parsed.
 
 To use GTF files for benchmarking, uset the --gtf-input option or use
-the "gtf-benchmark" command instead. There is no support for joining
-records into features for now, so that the -f, -c and -l options
-cannot be used for now. There is also no support for validation of
-GTF data.
+the "gtf-benchmark" command instead. There is also no support for validation
+of GTF data.
 
 ### Counting features
 
