@@ -14,9 +14,7 @@ GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 
 DFILES = (Dir.glob("dlib/bio/**/*.d") +
           Dir.glob("dlib/bin/**/*.d") +
-          Dir.glob("dlib/util/**/*.d"))
-          .reject{|filename| filename == "dlib/bin/gff3_parser.d"}
-          .join(" ")
+          Dir.glob("dlib/util/**/*.d")).reject{|f| f == "dlib/bin/gff3_parser.d"}.join(" ")
 
 
 ALL_SYMLINKS = [
