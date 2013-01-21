@@ -1,11 +1,9 @@
 module bio.gff3.record_range;
 
-import std.conv, std.array, std.string, std.range, std.exception,
-       std.ascii;
+import std.array, std.string;
 import bio.fasta, bio.gff3.record, bio.gff3.validation,
        bio.gff3.filtering.filtering, bio.gff3.line;
-import util.join_lines, util.split_into_lines, util.read_file,
-       util.range_with_cache, util.split_file, util.lines_range;
+import util.join_lines, util.range_with_cache, util.lines_range;
 
 public import bio.gff3.data_formats;
 
@@ -28,8 +26,8 @@ class RecordRange : RangeWithCache!Record {
   /**
    * Set filename which is used in validation reports
    */
-  void set_filename(string filename) {
-    this._filename = filename;
+  auto set_filename(string filename) {
+    this._filename = filename; return this;
   }
 
   /**
@@ -104,7 +102,7 @@ class RecordRange : RangeWithCache!Record {
    */
   FastaRange get_fasta_range() {
     scroll_until_fasta();
-    if (empty && fasta_mode)
+    if (fasta_mode)
       return new FastaRange(data);
     else
       return null;
@@ -116,11 +114,10 @@ class RecordRange : RangeWithCache!Record {
    */
   string get_fasta_data() {
     scroll_until_fasta();
-    if (empty && fasta_mode) {
+    if (fasta_mode)
       return join_lines(data);
-    } else {
+    else
       return null;
-    }
   }
 
   /**
@@ -218,6 +215,10 @@ private {
     return (((line.length >= 7) && (line[0..7] == "##FASTA")) ||
             ((line.length >= 1) && is_fasta_header(line)));
   }
+}
+
+version (unittest) {
+  import util.split_into_lines, util.split_file;
 }
 
 unittest {

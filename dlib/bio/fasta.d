@@ -12,7 +12,14 @@ class FastaRecord {
   string sequence;
 }
 
-class GenericFastaRange : RangeWithCache!FastaRecord {
+/**
+ * Fasta range for FASTA sequences appended to the end of GFF3 data.
+ */
+class FastaRange : RangeWithCache!FastaRecord {
+  this(LinesRange data) {
+    this.data = data;
+  }
+
   /**
    * Return all remaining sequences as a dictionary.
    */
@@ -24,15 +31,6 @@ class GenericFastaRange : RangeWithCache!FastaRecord {
     }
 
     return all_data;
-  }
-}
-
-/**
- * Fasta range for FASTA sequences appended to the end of GFF3 data.
- */
-class FastaRange : GenericFastaRange {
-  this(LinesRange data) {
-    this.data = data;
   }
 
   private {

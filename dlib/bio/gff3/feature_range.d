@@ -1,7 +1,7 @@
 module bio.gff3.feature_range;
 
-import bio.gff3.feature, bio.gff3.record, bio.gff3.validation;
-import bio.gff3.filtering.filtering;
+import bio.gff3.feature, bio.gff3.record, bio.gff3.validation,
+       bio.gff3.filtering.filtering, bio.gff3.record_range;
 import util.range_with_cache, util.dlist, util.string_hash;
 
 /**
@@ -191,9 +191,10 @@ struct FeatureCacheItem {
   FeatureCacheItem * next;
 }
 
-import std.conv;
-import bio.gff3.record_range;
-import util.split_into_lines;
+version (unittest) {
+  import std.conv;
+  import util.split_into_lines;
+}
 
 unittest {
   // Test with only one feature
