@@ -1,3 +1,5 @@
+module bin.gff3_count_features;
+
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation;
 import util.string_hash, util.version_helper;
@@ -68,9 +70,5 @@ void print_usage() {
   writeln("Options:");
   writeln("  --version      Output version information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_count_features(args);
 }
 

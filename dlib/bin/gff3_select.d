@@ -1,3 +1,5 @@
+module bin.gff3_select;
+
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
@@ -127,9 +129,5 @@ void print_usage() {
   writeln("See manual page for more information on what filtering expressions");
   writeln("are allowed.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_select(args);
 }
 

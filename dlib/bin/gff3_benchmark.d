@@ -1,3 +1,5 @@
+module bin.gff3_benchmark;
+
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation;
 import util.version_helper;
@@ -95,9 +97,5 @@ void print_usage() {
   writeln("  --gtf-input  Input data is in GTF format");
   writeln("  --version    Output version information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_benchmark(args);
 }
 

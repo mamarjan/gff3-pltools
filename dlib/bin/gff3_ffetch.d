@@ -1,3 +1,5 @@
+module bin.gff3_ffetch;
+
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
@@ -163,9 +165,5 @@ void print_usage() {
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_ffetch(args);
 }
 

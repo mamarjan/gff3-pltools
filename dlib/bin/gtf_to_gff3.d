@@ -1,3 +1,5 @@
+module bin.gtf_to_gff3;
+
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation,
        bio.gff3.conv.gff3;
@@ -71,9 +73,5 @@ void print_usage() {
   writeln("               this file.");
   writeln("  --version    Output version information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gtf_to_gff3(args);
 }
 

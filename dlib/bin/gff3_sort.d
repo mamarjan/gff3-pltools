@@ -1,3 +1,5 @@
+module bin.gff3_sort;
+
 import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.feature,
        bio.gff3.conv.json;
@@ -154,9 +156,5 @@ void print_usage() {
   writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_sort(args);
 }
 

@@ -1,3 +1,5 @@
+module bin.gff3_to_json;
+
 import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.validation, bio.gff3.record_range,
        bio.gff3.conv.json, bio.gff3.feature_range;
@@ -130,9 +132,5 @@ void print_usage() {
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
-}
-
-int main(string[] args) {
-  return gff3_to_json(args);
 }
 

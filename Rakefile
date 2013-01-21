@@ -13,18 +13,29 @@ GDC_RELEASE_FLAGS = "-O3 -finline -funroll-all-loops -finline-limit=8192 -frelea
 GDC_DEBUG_FLAGS = "-O0 -lpthread -fdebug -fversion=serial -J."
 
 DFILES = (Dir.glob("dlib/bio/**/*.d") +
-          Dir.glob("dlib/util/**/*.d")).join(" ")
+          Dir.glob("dlib/bin/**/*.d") +
+          Dir.glob("dlib/util/**/*.d"))
+          .reject{|filename| filename == "dlib/bin/gff3_parser.d"}
+          .join(" ")
 
-ALL_UTILITIES = [ "gff3-select", "gff3-ffetch", "gff3-benchmark",
-    "gff3-validate", "gff3-count-features", "gff3-filter", "gff3-to-gtf",
-    "gtf-to-gff3", "gff3-to-json", "gff3-sort" ]
 
 ALL_SYMLINKS = [
   # "----target----", "----link_name---"
-  [ "gff3-benchmark", "gtf-benchmark"],
-  [ "gff3-filter", "gtf-filter"],
-  [ "gff3-select", "gtf-select"],
-  [ "gff3-to-json", "gtf-to-json"] ]
+  [ "gff3-parser",    "gff3-select"        ], 
+  [ "gff3-parser",    "gff3-ffetch"        ],
+  [ "gff3-parser",    "gff3-benchmark"     ],
+  [ "gff3-parser",    "gff3-validate"      ],
+  [ "gff3-parser",    "gff3-count-features"],
+  [ "gff3-parser",    "gff3-filter"        ],
+  [ "gff3-parser",    "gff3-to-gtf"        ],
+  [ "gff3-parser",    "gtf-to-gff3"        ],
+  [ "gff3-parser",    "gff3-to-json"       ],
+  [ "gff3-parser",    "gff3-sort"          ],
+  [ "gff3-benchmark", "gtf-benchmark"      ],
+  [ "gff3-filter",    "gtf-filter"         ],
+  [ "gff3-select",    "gtf-select"         ],
+  [ "gff3-to-json",   "gtf-to-json"        ],
+ ]
 
 desc "Shorthand for test:dmd"
 task :test => ["test:dmd"]
@@ -53,23 +64,13 @@ def build_lib compiler, flags
 end
 
 def build_all_utilities compiler, flags
-  ALL_UTILITIES.each do |utility|
-    build_utility compiler, bin_main_path(utility), bin_output_path(utility), flags
-  end
+  build_utility compiler, "dlib/bin/gff3_parser.d", "bin/gff3-parser", flags
   rm_f Dir.glob("bin/*.o")
   create_symlinks
 end
 
-def bin_main_path util_name
-  "dlib/bin/" + hyphens_to_underscores(util_name) + ".d"
-end
-
 def hyphens_to_underscores text
   text.gsub("-", "_")
-end
-
-def bin_output_path util_name
-  "bin/" + util_name
 end
 
 def build_utility compiler, main_file_path, output_path, flags
@@ -186,21 +187,6 @@ namespace :release do
 
   desc "Shorthand for utilities:release:gdc"
   task :gdc => ["utilities:release:gdc"]
-end
-
-# Per-utility tasks for building:
-ALL_UTILITIES.each do |utility|
-  desc "Build the #{utility} utility with dmd"
-  task utility => [:bin, "libs:debug:dmd"] do |t|
-    build_utility :dmd, bin_main_path(t.name), bin_output_path(t.name), DMD_DEBUG_FLAGS
-  end
-
-  namespace :gdc do
-    desc "Build the #{utility} utility with gdc"
-    task utility => :bin do |t|
-      build_utility :gdc, bin_main_path(t.name), bin_output_path(t.name), GDC_DEBUG_FLAGS
-    end
-  end
 end
 
 #### Man pages
