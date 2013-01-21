@@ -14,7 +14,7 @@ import util.split_file, util.version_helper, util.read_file,
  * See package README for more information.
  */
 
-int main(string[] args) {
+int gff3_ffetch(string[] args) {
   // Parse command line arguments
   string parent_feature_type = null;
   string output_filename = null;
@@ -163,5 +163,9 @@ void print_usage() {
   writeln("  --version       Output version information and exit.");
   writeln("  --help          Print this information and exit.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_ffetch(args);
 }
 

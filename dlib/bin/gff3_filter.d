@@ -15,7 +15,7 @@ import util.split_file, util.version_helper;
  * See manual page for more information.
  */
 
-int main(string[] args) {
+int gff3_filter(string[] args) {
   // Parse command line arguments
   string output_filename = null;
   long at_most = -1;
@@ -189,5 +189,9 @@ void print_usage() {
   writeln("See package README for more information on what filtering expressions");
   writeln("are allowed.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_filter(args);
 }
 

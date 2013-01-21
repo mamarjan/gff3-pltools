@@ -3,7 +3,7 @@ import bio.gff3.file, bio.gff3.validation, bio.gff3.feature,
        bio.gff3.conv.json;
 import util.string_hash, util.version_helper;
 
-int main(string[] args) {
+int gff3_sort(string[] args) {
   // Parse command line arguments
   string output_filename = null;
   bool keep_fasta = false;
@@ -141,7 +141,7 @@ struct IDData {
 }
 
 void print_usage() {
-  writeln("Usage: count-features [OPTIONS] FILE");
+  writeln("Usage: gff3-sort [OPTIONS] FILE");
   writeln("Sort features in FILE so that records which are part of the same feature");
   writeln("are in the same place in the file.");
   writeln();
@@ -154,5 +154,9 @@ void print_usage() {
   writeln("  --json          Output data in JSON format");
   writeln("  --version       Output version information and exit.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_sort(args);
 }
 

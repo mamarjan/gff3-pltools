@@ -3,7 +3,7 @@ import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation,
        bio.gff3.conv.gff3;
 import util.version_helper;
 
-int main(string[] args) {
+int gtf_to_gff3(string[] args) {
   // Parse command line arguments
   string output_filename = null;
   bool show_version = false;
@@ -71,5 +71,9 @@ void print_usage() {
   writeln("               this file.");
   writeln("  --version    Output version information and exit.");
   writeln();
+}
+
+int main(string[] args) {
+  return gtf_to_gff3(args);
 }
 

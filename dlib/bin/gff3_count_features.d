@@ -2,7 +2,7 @@ import std.stdio, std.file, std.conv, std.getopt;
 import bio.gff3.file, bio.gff3.validation;
 import util.string_hash, util.version_helper;
 
-int main(string[] args) {
+int gff3_count_features(string[] args) {
   // Parse command line arguments
   bool show_version = false;
   try {
@@ -68,5 +68,9 @@ void print_usage() {
   writeln("Options:");
   writeln("  --version      Output version information and exit.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_count_features(args);
 }
 

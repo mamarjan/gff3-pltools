@@ -13,7 +13,7 @@ import util.split_file, util.version_helper;
  *
  * See package README for more information.
  */
-int main(string[] args) {
+int gff3_select(string[] args) {
   // Parse command line arguments
   string output_filename = null;
   bool show_version = false;
@@ -127,5 +127,9 @@ void print_usage() {
   writeln("See manual page for more information on what filtering expressions");
   writeln("are allowed.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_select(args);
 }
 

@@ -2,7 +2,7 @@ import std.stdio, std.file, std.conv, std.getopt, std.string;
 import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation;
 import util.version_helper;
 
-int main(string[] args) {
+int gff3_benchmark(string[] args) {
   // Parse command line arguments
   bool replace_escaped_chars = false;
   bool validate = false;
@@ -95,5 +95,9 @@ void print_usage() {
   writeln("  --gtf-input  Input data is in GTF format");
   writeln("  --version    Output version information and exit.");
   writeln();
+}
+
+int main(string[] args) {
+  return gff3_benchmark(args);
 }
 
