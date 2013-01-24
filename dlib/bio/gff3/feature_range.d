@@ -1,8 +1,11 @@
 module bio.gff3.feature_range;
 
+import std.stdio;
 import bio.gff3.feature, bio.gff3.record, bio.gff3.validation,
        bio.gff3.filtering.filtering, bio.gff3.record_range;
 import util.range_with_cache, util.dlist, util.string_hash;
+
+public import bio.gff3.data_formats;
 
 /**
  * FeatureRange is a range of features from a range of records.
@@ -17,9 +20,36 @@ class FeatureRange : RangeWithCache!Feature {
    *     link_features =       The parser will link features into parent-child relationships
    *                           if this parameter is true.
    */
-  this(RecordRange records, size_t feature_cache_size = 1000, bool link_features = false) {
-    this.records = records;
-    this.data = new FeatureCache(feature_cache_size, link_features);
+  this() {
+    this.data = new FeatureCache(1000, false);
+  }
+
+  auto set_input_data(string data) {
+    this.records = (new RecordRange).set_input_data(data); return this;
+  }
+
+  auto set_input_file(File input_file) {
+    this.records = (new RecordRange).set_input_file(input_file); return this;
+  }
+
+  auto set_input_file(string filename) {
+    this.records = (new RecordRange).set_input_file(filename); return this;
+  }
+
+  auto set_feature_cache_size(size_t new_size) {
+    this.data.set_feature_cache_size(new_size); return this;
+  }
+
+  auto set_link_features(bool link_features) {
+    this.data.set_link_features(link_features); return this;
+  }
+
+  /**
+   * Use this to set the input format of the data. DataFormat.GFF3 and GTF are currently
+   * supported.
+   */
+  auto set_data_format(DataFormat format) {
+    this.records.set_data_format(format); return this;
   }
 
   auto set_validate(RecordValidator validate) {
@@ -79,6 +109,14 @@ class FeatureCache {
     this.list = new FeatureCacheItem[max_size];
   }
 
+  auto set_feature_cache_size(size_t new_size) {
+    this.max_size = new_size; return this;
+  }
+
+  auto set_link_features(bool link_features) {
+    this.link_features = link_features; return this;
+  }
+
   /**
    * If the feature with the same ID is already in the cache, this method
    * adds the new record to that feature and returns null. Otherwise it
@@ -104,7 +142,7 @@ class FeatureCache {
     }
     auto new_item = FeatureCacheItem(record_hash, hash(new_record.parent), new Feature(new_record), null, null);
     Feature result;
-    if (current_size != max_size) {
+    if (current_size < max_size) {
       list[current_size] = new_item;
       dlist.insert_front(&(list[current_size]));
       current_size++;
@@ -198,24 +236,22 @@ version (unittest) {
 
 unittest {
   // Test with only one feature
-  string test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
-                        ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
-                        ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
-  auto records = new RecordRange(new SplitIntoLines(test_records));
-  auto features = new FeatureRange(records);
+  string test_data = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
+                     ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
+                     ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3";
+  auto features = (new FeatureRange).set_input_data(test_data);
   assert(features.front.id == "1");
   features.popFront();
   assert(features.empty == true);
 
   // Test with two features
-  test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=1\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=2\n" ~
-                 ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=3\n";
-  records = new RecordRange(new SplitIntoLines(test_records));
-  features = new FeatureRange(records);
+  test_data = ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=1\n" ~
+              ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=2\n" ~
+              ".\t.\t.\t.\t.\t.\t.\t.\tID=1;value=3\n" ~
+              ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=1\n" ~
+              ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=2\n" ~
+              ".\t.\t.\t.\t.\t.\t.\t.\tID=2;value=3\n";
+  features = (new FeatureRange).set_input_data(test_data);
   assert(features.empty == false);
   assert(features.front.id == "1");
   assert(features.front.records.length == 3);
@@ -229,11 +265,10 @@ unittest {
   // Test with more then the default number of features in cache
   foreach(i; 3..1003) {
     foreach(j; 1..4) {
-      test_records ~= ".\t.\t.\t.\t.\t.\t.\t.\tID=" ~ to!string(i) ~ ";value=" ~ to!string(j) ~ "\n";
+      test_data ~= ".\t.\t.\t.\t.\t.\t.\t.\tID=" ~ to!string(i) ~ ";value=" ~ to!string(j) ~ "\n";
     }
   }
-  records = new RecordRange(new SplitIntoLines(test_records));
-  features = new FeatureRange(records);
+  features = (new FeatureRange).set_input_data(test_data);
   assert(features.empty == false);
   foreach(i; 1..1003) {
     assert(features.empty == false);
@@ -244,8 +279,8 @@ unittest {
   assert(features.empty == true);
 
   // Retest with a smaller feature cache
-  records = new RecordRange(new SplitIntoLines(test_records));
-  features = new FeatureRange(records, 97);
+  features = (new FeatureRange).set_input_data(test_data)
+                               .set_feature_cache_size(97);
   assert(features.empty == false);
   foreach(i; 1..1003) {
     assert(features.empty == false);
@@ -256,14 +291,15 @@ unittest {
   assert(features.empty == true);
 
   // Test parent-child linking
-  test_records = ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
+  test_data = ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=2;Parent=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=2\n" ~
                  ".\t.\t.\t.\t.\t.\t.\t.\tID=5;Parent=3\n";
-  records = new RecordRange(new SplitIntoLines(test_records));
-  features = new FeatureRange(records, 10, true);
+  features = (new FeatureRange).set_input_data(test_data)
+                               .set_feature_cache_size(10)
+                               .set_link_features(true);
   assert(features.empty == false);
   uint count_features = 0;
   foreach(feature; features) {

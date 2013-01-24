@@ -1,8 +1,8 @@
 module bin.gff3_sort;
 
 import std.stdio, std.file, std.conv, std.getopt;
-import bio.gff3.file, bio.gff3.validation, bio.gff3.feature,
-       bio.gff3.conv.json;
+import bio.gff3.validation, bio.gff3.feature, bio.gff3.conv.json,
+       bio.gff3.record_range;
 import util.string_hash, util.version_helper;
 
 int gff3_sort(string[] args) {
@@ -61,7 +61,7 @@ int gff3_sort(string[] args) {
   output.setvbuf(1_048_576);
 
   // First pass - collecting info
-  auto records = GFF3File.parse_by_records(filename);
+  auto records = (new RecordRange).set_input_file(filename);
   records.set_validate(NO_VALIDATION)
          .set_replace_esc_chars(false);
   IDData[string] IDs;
@@ -75,7 +75,7 @@ int gff3_sort(string[] args) {
   }
 
   // Second pass - collect and output features
-  records = GFF3File.parse_by_records(filename);
+  records = (new RecordRange).set_input_file(filename);
   records.set_validate(NO_VALIDATION)
          .set_replace_esc_chars(false)
          .set_keep_comments(keep_comments)

@@ -1,7 +1,7 @@
 module bin.gff3_validate;
 
 import std.stdio, std.file, std.conv, std.getopt;
-import bio.gff3.file, bio.gff3.validation;
+import bio.gff3.validation, bio.gff3.record_range;
 import util.version_helper;
 
 int gff3_validate(string[] args) {
@@ -40,7 +40,7 @@ int gff3_validate(string[] args) {
   }
 
   // Open file and loop over all records, while printing error messages
-  foreach(rec; GFF3File.parse_by_records(filename).set_validate(WARNINGS_ON_ERROR)) {}
+  foreach(rec; (new RecordRange).set_input_file(filename).set_validate(WARNINGS_ON_ERROR)) {}
 
   return 0;
 }

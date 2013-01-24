@@ -1,7 +1,7 @@
 module bin.gff3_select;
 
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.validation,
+import bio.gff3.validation,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
        bio.gff3.conv.gtf;
@@ -81,20 +81,14 @@ int gff3_select(string[] args) {
   output.setvbuf(1048576);
 
   // Prepare for parsing
-  RecordRange records;
-  if (filename == "-") {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(stdin);
-    else
-      records = GTFFile.parse_by_records(stdin);
-  } else {
-    if (!gtf_input)
-      records = GFF3File.parse_by_records(filename);
-    else
-      records = GTFFile.parse_by_records(filename);
-  }
+  RecordRange records = new RecordRange;
+  if (filename == "-")
+    records.set_input_file(stdin);
+  else
+    records.set_input_file(filename);
 
-  records.set_validate(NO_VALIDATION)
+  records.set_data_format(gtf_input ? DataFormat.GTF : DataFormat.GFF3)
+         .set_validate(NO_VALIDATION)
          .set_replace_esc_chars(false)
          .set_keep_comments(false)
          .set_keep_pragmas(false);

@@ -1,7 +1,7 @@
 module bin.gff3_benchmark;
 
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation;
+import bio.gff3.record_range, bio.gff3.validation, bio.gff3.feature_range;
 import util.version_helper;
 
 int gff3_benchmark(string[] args) {
@@ -59,9 +59,9 @@ int gff3_benchmark(string[] args) {
       return 4;
     }
     // Open file and loop over all features
-    auto features = GFF3File.parse_by_features(filename,
-                                               feature_cache_size,
-                                               link_features);
+    auto features = (new FeatureRange).set_input_file(filename)
+                                      .set_feature_cache_size(feature_cache_size)
+                                      .set_link_features(link_features);
     features.set_validate(validate ? WARNINGS_ON_ERROR : NO_VALIDATION)
             .set_replace_esc_chars(replace_escaped_chars);
     size_t counter = 0;
@@ -69,13 +69,10 @@ int gff3_benchmark(string[] args) {
     writeln("Parsed " ~ to!string(counter) ~ " features");
   } else {
     // Open file and loop over all records
-    RecordRange records;
-    if (!gtf_input) {
-      records = GFF3File.parse_by_records(filename);
-    } else {
-      records = GTFFile.parse_by_records(filename);
-    }
-    records.set_validate(validate ? WARNINGS_ON_ERROR : NO_VALIDATION)
+    RecordRange records = new RecordRange;
+    records.set_input_file(filename)
+           .set_data_format(gtf_input ? DataFormat.GTF : DataFormat.GFF3)
+           .set_validate(validate ? WARNINGS_ON_ERROR : NO_VALIDATION)
            .set_replace_esc_chars(replace_escaped_chars);
     size_t counter = 0;
     foreach(rec; records) { counter++; }

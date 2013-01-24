@@ -1,9 +1,10 @@
 module bio.gff3.record_range;
 
-import std.array, std.string;
+import std.array, std.string, std.stdio;
 import bio.fasta, bio.gff3.record, bio.gff3.validation,
        bio.gff3.filtering.filtering, bio.gff3.line;
-import util.join_lines, util.range_with_cache, util.lines_range;
+import util.join_lines, util.range_with_cache, util.lines_range, util.split_file,
+       util.split_into_lines;
 
 public import bio.gff3.data_formats;
 
@@ -12,15 +13,25 @@ public import bio.gff3.data_formats;
  */
 class RecordRange : RangeWithCache!Record {
   /**
-   * Creates a record range with data as the _data source. data has
-   * to be a range of strings/lines without newlines.
+   * Creates an empty record range.
    */
-  this(LinesRange data) {
-    this.data = data;
-
+  this() {
     this.validate = EXCEPTIONS_ON_ERROR;
     this.before_filter = NO_BEFORE_FILTER;
     this.after_filter = NO_AFTER_FILTER;
+  }
+
+  auto set_input_data(string data) {
+    this.data = new SplitIntoLines(data); return this;
+  }
+
+  auto set_input_file(File input_file) {
+    this.data = new SplitFile(input_file); return this;
+  }
+
+  auto set_input_file(string filename) {
+    this._filename = filename;
+    return set_input_file(File(filename, "r"));
   }
 
   /**
@@ -218,7 +229,8 @@ private {
 }
 
 version (unittest) {
-  import util.split_into_lines, util.split_file;
+  import std.stdio;
+  import util.split_into_lines, util.split_file, util.read_file;
 }
 
 unittest {
@@ -248,7 +260,7 @@ GATTACA
 EOS";
 
   // Test with comments
-  auto range = new RecordRange(new SplitIntoLines(test_data));
+  auto range = (new RecordRange).set_input_data(test_data);
   range.set_keep_comments();
   assert(range.front.is_comment == true);
   assert(range.front.is_pragma == false);
@@ -288,7 +300,7 @@ EOS";
   assert(range.empty == true);
 
   // Test with both comments and pragmas
-  range = new RecordRange(new SplitIntoLines(test_data));
+  range = (new RecordRange).set_input_data(test_data);
   range.set_keep_comments();
   range.set_keep_pragmas();
   assert(range.front.is_comment == true);
@@ -337,6 +349,122 @@ EOS";
   assert(range.front.toString.startsWith("chr17"));
   range.popFront();
   assert(range.empty == true);
+
+  /* TODO: refactor following tests */
+
+  // Parse file
+  auto records = (new RecordRange).set_input_file("./test/data/records.gff3");
+  auto record1 = records.front; records.popFront();
+  auto record2 = records.front; records.popFront();
+  auto record3 = records.front; records.popFront();
+  assert(records.empty == true);
+
+  // Check the results
+  with(record1) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+    assert(attributes.length == 7);
+    assert(attributes["ID"].all == ["ENSRNOG00000019422"]);
+    assert(attributes["Dbxref"].all == ["taxon:10116"]);
+    assert(attributes["organism"].all == ["Rattus norvegicus"]);
+    assert(attributes["chromosome"].all == ["18"]);
+    assert(attributes["name"].all == ["EGR1_RAT"]);
+    assert(attributes["source"].all == ["UniProtKB/Swiss-Prot"]);
+    assert(attributes["Is_circular"].all == ["true"]);
+  }
+  with(record2) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["", "", "", "", "", "", "", ""]);
+    assert(attributes.length == 0);
+  }
+  with(record3) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", "", "+", ""]);
+    assert(attributes.length == 2); 
+    assert(attributes["ID"].all == ["EXON=00000131935"]);
+    assert(attributes["Parent"].all == ["TRAN;00000017239"]);
+  }
+
+  // Testing with various files
+  uint[string] file_records_n = [
+      "messy_protein_domains.gff3" : 1009,
+      "gff3_with_syncs.gff3" : 19,
+      "au9_scaffold_subset.gff3" : 1005,
+      "tomato_chr4_head.gff3" : 87,
+      "directives.gff3" : 0,
+      "hybrid1.gff3" : 6,
+      "hybrid2.gff3" : 6,
+      "knownGene.gff3" : 15,
+      "knownGene2.gff3" : 15,
+      "mm9_sample_ensembl.gff3" : 190,
+      "tomato_test.gff3" : 249,
+      "spec_eden.gff3" : 23,
+      "spec_match.gff3" : 3 ];
+  foreach(filename, records_n; file_records_n) {
+    uint counter = 0;
+    foreach(rec; (new RecordRange).set_input_file("./test/data/" ~ filename))
+      counter++;
+    assert(counter == records_n);
+  }
+
+  // Retrieve test file into a string
+  File gff3_file;
+  gff3_file.open("./test/data/records.gff3", "r");
+  auto data = gff3_file.read();
+
+  // Parse data
+  records = (new RecordRange).set_input_data(data);
+  record1 = records.front; records.popFront();
+  record2 = records.front; records.popFront();
+  record3 = records.front; records.popFront();
+  assert(records.empty == true);
+
+  // Check the results
+  with(record1) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["ENSRNOG00000019422", "Ensembl", "gene", "27333567", "27357352", "1.0", "+", "2"]);
+    assert(attributes.length == 7);
+    assert(attributes["ID"].all == ["ENSRNOG00000019422"]);
+    assert(attributes["Dbxref"].all == ["taxon:10116"]);
+    assert(attributes["organism"].all == ["Rattus norvegicus"]);
+    assert(attributes["chromosome"].all == ["18"]);
+    assert(attributes["name"].all == ["EGR1_RAT"]);
+    assert(attributes["source"].all == ["UniProtKB/Swiss-Prot"]);
+    assert(attributes["Is_circular"].all == ["true"]);
+  }
+  with(record2) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["", "", "", "", "", "", "", ""]);
+    assert(attributes.length == 0);
+  }
+  with(record3) {
+    assert([seqname, source, feature, start, end, score, strand, phase] ==
+           ["EXON=00000131935", "ASTD%", "exon&", "27344088", "27344141", "", "+", ""]);
+    assert(attributes["ID"].all == ["EXON=00000131935"]);
+    assert(attributes["Parent"].all == ["TRAN;00000017239"]);
+  }
+
+  // Test scrolling to FASTA data
+  records = (new RecordRange).set_input_data(data);
+  assert(records.get_fasta_data() ==
+      ">ctg123\n" ~
+      "cttctgggcgtacccgattctcggagaacttgccgcaccattccgccttg\n" ~
+      "tgttcattgctgcctgcatgttcattgtctacctcggctacgtgtggcta\n" ~
+      "tctttcctcggtgccctcgtgcacggagtcgagaaaccaaagaacaaaaa\n" ~
+      "aagaaattaaaatatttattttgctgtggtttttgatgtgtgttttttat\n" ~
+      "aatgatttttgatgtgaccaattgtacttttcctttaaatgaaatgtaat\n" ~
+      "cttaaatgtatttccgacgaattcgaggcctgaaaagtgtgacgccattc\n" ~
+      "gtatttgatttgggtttactatcgaataatgagaattttcaggcttaggc\n" ~
+      "ttaggcttaggcttaggcttaggcttaggcttaggcttaggcttaggctt\n" ~
+      "aggcttaggcttaggcttaggcttaggcttaggcttaggcttaggcttag\n" ~
+      "aatctagctagctatccgaaattcgaggcctgaaaagtgtgacgccattc\n" ~
+      ">cnda0123\n" ~
+      "ttcaagtgctcagtcaatgtgattcacagtatgtcaccaaatattttggc\n" ~
+      "agctttctcaagggatcaaaattatggatcattatggaatacctcggtgg\n" ~
+      "aggctcagcgctcgatttaactaaaagtggaaagctggacgaaagtcata\n" ~
+      "tcgctgtgattcttcgcgaaattttgaaaggtctcgagtatctgcatagt\n" ~
+      "gaaagaaaaatccacagagatattaaaggagccaacgttttgttggaccg\n" ~
+      "tcaaacagcggctgtaaaaatttgtgattatggttaaagg\n\n");
 
 }
 

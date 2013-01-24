@@ -1,8 +1,7 @@
 module bin.gff3_to_gtf;
 
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.record_range, bio.gff3.validation,
-       bio.gff3.conv.gtf;
+import bio.gff3.record_range, bio.gff3.validation, bio.gff3.conv.gtf;
 import util.version_helper;
 
 int gff3_to_gtf(string[] args) {
@@ -50,9 +49,9 @@ int gff3_to_gtf(string[] args) {
   // Open file and loop over all records
   RecordRange records;
   if (input_filename == "-")
-    records = GFF3File.parse_by_records(stdin);
+    records = (new RecordRange).set_input_file(stdin);
   else
-    records = GFF3File.parse_by_records(input_filename);
+    records = (new RecordRange).set_input_file(input_filename);
 
   records.set_validate(NO_VALIDATION)
          .set_replace_esc_chars(false)

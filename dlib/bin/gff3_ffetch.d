@@ -1,7 +1,7 @@
 module bin.gff3_ffetch;
 
 import std.stdio, std.file, std.conv, std.getopt, std.string;
-import bio.gff3.file, bio.gff3.validation,
+import bio.gff3.validation,
        bio.gff3.record_range, bio.gff3.selection, bio.gff3.record,
        bio.gff3.conv.json, bio.gff3.conv.table, bio.gff3.conv.gff3,
        bio.gff3.conv.gtf, bio.gff3.conv.fasta, bio.fasta;
@@ -131,7 +131,7 @@ int gff3_ffetch(string[] args) {
       }
     }
 
-    auto records = GFF3File.parse_by_records(filename);
+    auto records = (new RecordRange).set_input_file(filename);
     records.set_validate(NO_VALIDATION)
            .set_replace_esc_chars(false)
            .set_keep_comments(false)
