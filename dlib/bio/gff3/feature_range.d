@@ -179,19 +179,19 @@ class FeatureCache {
   private {
     void check_for_children_and_parents(Feature feature) {
       if (feature !is null) {
-        bool search_for_parent = ((feature.parent_feature is null) &&
-                                  (feature.parent !is null));
+        bool search_for_parent = ((feature.parent is null) &&
+                                  (feature.parent_id !is null));
         bool search_for_children = feature.id !is null;
         // Search for parents or children
         if (search_for_parent || search_for_children) {
           int feature_hash = hash(feature.id);
-          int parent_hash = hash(feature.parent);
+          int parent_hash = hash(feature.parent_id);
           FeatureCacheItem * item = dlist.first;
           while((item !is null) && (search_for_parent || search_for_children)) {
             if (search_for_parent) {
               if (item.id_hash == parent_hash) {
-                if (item.feature.id == feature.parent) {
-                  feature.set_parent_feature(item.feature);
+                if (item.feature.id == feature.parent_id) {
+                  feature.set_parent(item.feature);
                   item.feature.add_child(feature);
                   search_for_parent = false;
                 }
@@ -199,8 +199,8 @@ class FeatureCache {
             }
             if (search_for_children) {
               if (item.parent_hash == feature_hash) {
-                if (item.feature.parent == feature.id) {
-                  item.feature.set_parent_feature(feature);
+                if (item.feature.parent_id == feature.id) {
+                  item.feature.set_parent(feature);
                   feature.add_child(item.feature);
                 }
               }
@@ -304,25 +304,25 @@ unittest {
   uint count_features = 0;
   foreach(feature; features) {
     if (feature.id == "1") {
-      assert(feature.parent_feature is null);
+      assert(feature.parent is null);
       assert(features.front.children.length == 2);
     } else if (feature.id == "2") {
-      assert(feature.parent_feature !is null);
-      assert(feature.parent_feature.id == "1");
+      assert(feature.parent !is null);
+      assert(feature.parent.id == "1");
       assert(feature.children.length == 1);
       assert(feature.children[0].id == "4");
     } else if (feature.id == "3") {
-      assert(feature.parent_feature !is null);
-      assert(feature.parent_feature.id == "1");
+      assert(feature.parent !is null);
+      assert(feature.parent.id == "1");
       assert(feature.children.length == 1);
       assert(feature.children[0].id == "5");
     } else if (feature.id == "4") {
-      assert(feature.parent_feature !is null);
-      assert(feature.parent_feature.id == "2");
+      assert(feature.parent !is null);
+      assert(feature.parent.id == "2");
       assert(feature.children.length == 0);
     } else if (feature.id == "5") {
-      assert(feature.parent_feature !is null);
-      assert(feature.parent_feature.id == "3");
+      assert(feature.parent !is null);
+      assert(feature.parent.id == "3");
       assert(feature.children.length == 0);
     }
     count_features++;

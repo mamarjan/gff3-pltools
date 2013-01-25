@@ -1,7 +1,8 @@
 module bio.gff3.conv.gff3;
 
 import std.stdio, std.array;
-import bio.gff3.record_range, bio.gff3.record, bio.gff3.validation;
+import bio.gff3.record_range, bio.gff3.record, bio.gff3.validation,
+       bio.gff3.feature;
 import util.esc_char_conv;
 
 private {
@@ -59,6 +60,34 @@ void to_gff3(Record record, bool add_newline, Appender!string app) {
 
   if (add_newline)
     app.put('\n');
+}
+
+string to_gff3(Feature feature, bool recursive = false) {
+  auto result = appender!string();
+  feature.to_gff3(false, result, recursive);
+  return result.data;
+}
+
+void to_gff3(Feature feature, bool add_newline, Appender!string app, bool recursive = false) {
+  auto records = feature.records;
+  if (records.length > 0) {
+    foreach(rec; records[0..$-1])
+      rec.to_gff3(true, app);
+
+    records[$-1].to_gff3(false, app);
+    if (add_newline && !recursive)
+      app.put('\n');
+  }
+
+  if (recursive) {
+    foreach(child; feature.children) {
+      app.put('\n');
+      child.to_gff3(false, app, true);
+    }
+
+    if (add_newline)
+        app.put('\n');
+  }
 }
 
 void append_fields(T)(Record record, Appender!T app) {

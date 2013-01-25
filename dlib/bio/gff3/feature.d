@@ -1,54 +1,36 @@
 module bio.gff3.feature;
 
 import std.array;
-import bio.gff3.record, bio.gff3.conv.gff3;
+import bio.gff3.record, bio.gff3.conv.gff3, bio.gff3.attribute;
 
 class Feature {
   this(Record first_record = null) {
-    if (first_record !is null)
-      add_record(first_record);
+    add_record(first_record);
   }
 
   void add_record(Record record) {
-    _records ~= record;
+    if (record !is null)
+      _records ~= record;
   }
 
-  /**
-   * Returns the ID of this feature, which is equal to the ID attribute
-   * of its records.
-   */
-  @property string id() {
-    return (_records.length > 0) ? _records[0].id : null;
-  }
+  @property string id()  { return (_records.length > 0) ? _records[0].id : null; }
+  @property string parent_id()  { return (_records.length > 0) ? _records[0].parent : null; }
+  @property Feature parent()  { return _parent_feature; }
 
   /**
-   * Returns the Parent attribute of this feature, which is equal to the
-   * Parent attribute of its records. Return null if the parent attribute
-   * for this feature is not defined.
+   * Returns a list of all children of this feature.
    */
-  @property string parent() {
-    return (_records.length > 0) ? _records[0].parent : null;
-  }
-
-  /**
-   * Returns the parent feature of this feature, or null if there is no parent.
-   */
-  @property Feature parent_feature() {
-    return _parent_feature;
-  }
-
-  /**
-   * Returns a dynamic list of children of this feature.
-   */
-  @property Feature[] children() {
-    return _children;
-  }
+  @property Feature[] children() { return _children; }
 
   /**
    * Sets the parent feature of this feature.
    */
-  void set_parent_feature(Feature parent) {
+  void set_parent(Feature parent) {
     _parent_feature = parent;
+    if (_records.length > 0)
+      if (_records[0].parent == parent.id)
+        foreach(record; _records)
+          record.attributes["Parent"] = AttributeValue([parent.id]);
   }
 
   /**
@@ -66,39 +48,10 @@ class Feature {
   }
 
   /**
-   * Appends the feature to an Appender object.
-   */
-  void append_to(Appender!(string) app, bool add_newline = false) {
-    foreach(i, rec; _records) {
-      if (i != (_records.length - 1))
-        rec.to_gff3(true, app);
-      else
-        // don't add newline to last line
-        rec.to_gff3(false, app);
-    }
-
-    if (add_newline)
-      app.put('\n');
-  }
-
-  /**
    * Converts this object to one or more GFF3 lines.
    */
   string toString() {
-    auto result = appender!(string)();
-    append_to(result);
-    return result.data;
-  }
-
-  void recursive_append_to(Appender!(string) app, bool add_newline = false) {
-    append_to(app, false);
-    foreach(child; _children) {
-      app.put('\n');
-      child.recursive_append_to(app, false);
-    }
-
-    if (add_newline)
-        app.put('\n');
+    return to_gff3(this);
   }
 
   /**
@@ -106,14 +59,13 @@ class Feature {
    * of the current feature in a format ready for output to a GFF3
    * file.
    */
-  string recursive_to_string() {
-    auto result = appender!(string)();
-    recursive_append_to(result);
-    return result.data;
+  string to_string(bool recursive = false) {
+    return to_gff3(this, recursive);
   }
 
   private {
     Feature _parent_feature = null;
+    string _parent = null;
     Record[] _records;
     Feature[] _children;
   }
@@ -135,13 +87,13 @@ unittest {
 
   feature = new Feature();
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1;Parent=2"));
-  assert(feature.parent == "2");
+  assert(feature.parent_id == "2");
   feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=3;Parent=1")));
   feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=4;Parent=1")));
   assert(feature.children.length == 2);
-  feature.set_parent_feature(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1")));
-  assert(feature.parent_feature !is null);
-  assert(feature.parent_feature.id == "1");
+  feature.set_parent(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1")));
+  assert(feature.parent !is null);
+  assert(feature.parent .id == "1");
 
   // Testing to String()
   feature = new Feature();
@@ -152,7 +104,7 @@ unittest {
   feature = new Feature();
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   auto app = appender!(string)();
-  feature.append_to(app, true);
+  feature.to_gff3(true, app);
   assert(app.data == ".\t.\t.\t.\t.\t.\t.\t.\tID=1\n");
 
   // Testing toString() with a feature with multiple records
@@ -164,15 +116,15 @@ unittest {
                                 "2\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
                                 "3\t.\t.\t.\t.\t.\t.\t.\tID=1"));
 
-  // Testing recursive_to_string()
+  // Testing to_string(recursive = true)
   feature = new Feature();
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=1"));
   feature.add_record(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=2"));
   feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=3")));
   feature.add_child(new Feature(parse_line(".\t.\t.\t.\t.\t.\t.\t.\tID=4")));
-  assert(feature.recursive_to_string() == (".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
-                                           ".\t.\t.\t.\t.\t.\t.\t.\tID=2\n" ~
-                                           ".\t.\t.\t.\t.\t.\t.\t.\tID=3\n" ~
-                                           ".\t.\t.\t.\t.\t.\t.\t.\tID=4"));
+  assert(feature.to_string(true) == (".\t.\t.\t.\t.\t.\t.\t.\tID=1\n" ~
+                                     ".\t.\t.\t.\t.\t.\t.\t.\tID=2\n" ~
+                                     ".\t.\t.\t.\t.\t.\t.\t.\tID=3\n" ~
+                                     ".\t.\t.\t.\t.\t.\t.\t.\tID=4"));
 }
 

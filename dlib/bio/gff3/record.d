@@ -34,7 +34,14 @@ class Record {
   AttributeValue[string] attributes;
 
   /**
-   * Accessor methods for most important GFF3 attributes:
+   * This esc_chars field should be true if the escaped characters in the source
+   * file have been converted to their original form. If false, the fields in
+   * this record still have chars escaped in the URL format.
+   */
+  bool esc_chars;
+
+  /**
+   * Accessor methods for common GFF3 attributes:
    */
   @property string   id()             { return ("ID" in attributes)            ? attributes["ID"].first                      : null;  }
   @property string   name()           { return ("Name" in attributes)          ? attributes["Name"].first                    : null;  }
@@ -54,7 +61,7 @@ class Record {
   @property bool     is_circular()    { return ("Is_circular" in attributes)   ? (attributes["Is_circular"].first == "true") : false; }
 
   /**
-   * Accessor methods for GTF attributes:
+   * Accessor methods for common GTF attributes:
    */
   @property string   gene_id()        { return ("gene_id" in attributes)       ? attributes["gene_id"].first                 : null;  }
   @property string   transcript_id()  { return ("transcript_id" in attributes) ? attributes["transcript_id"].first           : null;  }
@@ -70,16 +77,7 @@ class Record {
   /**
    * toString() converts the record to a GFF3 line by default.
    */
-  string toString() {
-    return to_gff3(this);
-  }
-
-  /**
-   * This field should be true if the escaped characters in the source file
-   * have been converted to their original form. If false, the fields in this
-   * record still have chars escaped in the URL format.
-   */
-  bool esc_chars;
+  string toString() { return to_gff3(this); }
 }
 
 unittest {
