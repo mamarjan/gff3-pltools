@@ -1,4 +1,4 @@
-module bio.gff3.field;
+module bio.gff3.fields;
 
 enum
    FIELD_SEQNAME = "seqname",

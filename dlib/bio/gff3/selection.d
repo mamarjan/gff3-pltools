@@ -1,7 +1,7 @@
 module bio.gff3.selection;
 
 import std.string;
-import bio.gff3.record, bio.gff3.field;
+import bio.gff3.record, bio.gff3.fields;
 import util.split_line;
 
 alias string[] delegate(Record record) ColumnsSelector;

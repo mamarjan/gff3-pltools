@@ -1,6 +1,6 @@
 module bio.gff3.field_accessor;
 
-import bio.gff3.record, bio.gff3.field;
+import bio.gff3.record, bio.gff3.fields;
 
 /**
  * Returns a delegate which when given a Record object returns
